@@ -172,8 +172,6 @@ bool			DoPackageSub(std::string& ioPath)
 char * fgets_multiplatform(char * s, int n, FILE * file)
 {
 	char *	p = s;
-	int			c;
-	int			c1;
 
 	// Save one slot for the null.  If we do not have enough memory
 	// to do this, bail.	
@@ -182,14 +180,15 @@ char * fgets_multiplatform(char * s, int n, FILE * file)
 	
 	// Only bother to read if we have enough space in the char buf.
 	if (n)
-    {
+	{
+		int c;
 		do
 		{
 			c = getc(file);
 			
 			// EOF: this could mean I/O error or end of file.
 			if (c == EOF)
-            {
+			{
 				if (feof(file) && p != s)	// We read something and now the file's done, ok.
 					break;
 				else
@@ -205,20 +204,20 @@ char * fgets_multiplatform(char * s, int n, FILE * file)
 		// Note that the \r\n IS written to the line.
 		while (c != '\n' && c != '\r' && --n);
 
-	    // Ben's special code: eat a \n if it follows a \r, etc.  Mac stdio
-	    // swizzles these guys a bit, so we will consolidate BOTH \r\n and \n\r into
-	    // just the first.
-	    if (c == '\r')
-	    {
-		    c1 = getc(file);
-		    if (c1 != '\n') ungetc(c1, file);
-	    }
-	    if (c == '\n')
-	    {
-		    c1 = getc(file);
-		    if (c1 != '\r') ungetc(c1, file);
-	    }
-    }
+		// Ben's special code: eat a \n if it follows a \r, etc.  Mac stdio
+		// swizzles these guys a bit, so we will consolidate BOTH \r\n and \n\r into
+		// just the first.
+		if (c == '\r')
+		{
+			int c1 = getc(file);
+			if (c1 != '\n') ungetc(c1, file);
+		}
+		if (c == '\n')
+		{
+			int c1 = getc(file);
+			if (c1 != '\r') ungetc(c1, file);
+		}
+	}
 
 	// Unless we're bailing with NULL, we MUST null terminate.	
 	*p = 0;
@@ -296,7 +295,6 @@ bool	LoadOnePackage(const string& inPath, int pass)
 	FILE * fi = fopen(path.c_str(), "r");
 
 	XPLMGetVersions(&sim, &xplm, &host);
-	int lineNum = 0;
 
 	if (fi != NULL)
 	{
@@ -320,6 +318,7 @@ bool	LoadOnePackage(const string& inPath, int pass)
 //		tokens.push_back("");
 
 		// Go through the file and handle each token.
+        int lineNum = 0;
 		while(!feof(fi))
 		{
 			if (!fgets_multiplatform(line, sizeof(line), fi))
