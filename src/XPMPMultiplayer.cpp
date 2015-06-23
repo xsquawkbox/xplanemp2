@@ -398,6 +398,7 @@ XPMPPlaneCallbackResult			XPMPGetPlaneData(
 			
 			XPMPPlanePosition_t *	posD = (XPMPPlanePosition_t *) outData;
 			memcpy(posD, &plane->pos, XPMP_TMIN(posD->size, plane->pos.size));
+			result = xpmpData_Unchanged;
 
 			break;
 		}
@@ -412,6 +413,8 @@ XPMPPlaneCallbackResult			XPMPGetPlaneData(
 			
 			XPMPPlaneSurfaces_t *	surfD = (XPMPPlaneSurfaces_t *) outData;
 			memcpy(surfD, &plane->surface, XPMP_TMIN(surfD->size, plane->surface.size));
+			result = xpmpData_Unchanged;
+
 			break;
 		}
 	case xpmpDataType_Radar:
@@ -425,6 +428,8 @@ XPMPPlaneCallbackResult			XPMPGetPlaneData(
 			
 			XPMPPlaneRadar_t *	radD = (XPMPPlaneRadar_t *) outData;
 			memcpy(radD, &plane->radar, XPMP_TMIN(radD->size, plane->radar.size));
+			result = xpmpData_Unchanged;
+
 			break;
 		}
 	}
