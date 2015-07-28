@@ -51,5 +51,5 @@ target_link_libraries(xplanemp
 	PRIVATE ${XPSDK_XPLM_LIBRARIES}
 	${PNG_LIBRARIES}
 	${XPMP_PLATFORM_LIBRARIES})
-set_target_properties(xplanemp PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_compile_definitions(xplanemp PUBLIC XUTILS_EXCLUDE_MAC_CRAP=1)
+
