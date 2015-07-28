@@ -43,6 +43,10 @@
 #define	DISABLE_SHARING 0
 #define BLEND_NORMALS 1
 
+#ifdef IBM
+#define snprintf _snprintf
+#endif
+
 using namespace std;
 
 const	double	kMetersToNM = 0.000539956803;

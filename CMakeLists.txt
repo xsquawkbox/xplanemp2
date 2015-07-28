@@ -12,6 +12,7 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	add_definitions(-DIBM=1)
 	#set(XPMP_PLATFORM_SOURCES
 	#	src/PlatformUtils.win.cpp)
+	set(XPMP_PLATFORM_LIBRARIES opengl32)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	add_definitions(-DAPL=1)
 	#set(XPMP_PLATFORM_SOURCES
@@ -47,7 +48,7 @@ target_include_directories(xplanemp
 		${CMAKE_CURRENT_SOURCE_DIR}/src
 		${PNG_INCLUDE_DIRS})
 target_link_libraries(xplanemp
-	PUBLIC ${XPSDK_XPLM_LIBRARIES}
+	PRIVATE ${XPSDK_XPLM_LIBRARIES}
 	${PNG_LIBRARIES}
 	${XPMP_PLATFORM_LIBRARIES})
 set_target_properties(xplanemp PROPERTIES POSITION_INDEPENDENT_CODE ON)
