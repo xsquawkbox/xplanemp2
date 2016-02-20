@@ -274,6 +274,7 @@ struct	LODObjInfo_t {
 struct	ObjInfo_t {
 
 	string					path;
+	string                  defaultTexture;
 	int						texnum;
 	int						texnum_lit;
 	XObj					obj;
@@ -495,6 +496,11 @@ int		OBJ_LoadModel(const char * inFilePath)
 	}
 	sObjects.back().obj.cmds.clear();
 	return static_cast<int>(sObjects.size())-1;
+}
+
+std::string OBJ_DefaultModel(int model)
+{
+    return sObjects[model].obj.texture;
 }
 
 /*****************************************************

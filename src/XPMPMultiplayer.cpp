@@ -306,7 +306,7 @@ void XPMPGetModelInfo(int inIndex, const char** outModelName, const char** outIc
         }
 
         int positionInPackage =  inIndex - counter;
-        *outModelName = package.planes[positionInPackage].modelName.c_str();
+        *outModelName = package.planes[positionInPackage].getModelName().c_str();
         *outIcao = package.planes[positionInPackage].icao.c_str();
         *outAirline = package.planes[positionInPackage].airline.c_str();
         *outLivery = package.planes[positionInPackage].livery.c_str();
@@ -365,7 +365,7 @@ XPMPPlaneID     XPMPCreatePlaneWithModelName(const char *inModelName, const char
     // Find the model
     for (auto &package : gPackages)
     {
-        auto cslPlane = std::find_if(package.planes.begin(), package.planes.end(), [inModelName](CSLPlane_t p) { return CompareCaseInsensitive(p.modelName, inModelName); });
+        auto cslPlane = std::find_if(package.planes.begin(), package.planes.end(), [inModelName](CSLPlane_t p) { return CompareCaseInsensitive(p.getModelName(), inModelName); });
         if (cslPlane != package.planes.end())
         {
             plane->model = &(*cslPlane);

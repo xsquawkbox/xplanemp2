@@ -33,6 +33,9 @@ bool	OBJ_Init(const char * inTexturePath);
 // Load one model - return -1 if it can't be loaded.
 int		OBJ_LoadModel(const char * inFilePath);
 
+// Get name of objects default model
+std::string OBJ_DefaultModel(int model);
+
 // MODEL DRAWING
 // Note that texID and litTexID are OPTIONAL! They will only be filled
 // in if the user wants to override the default texture specified by the

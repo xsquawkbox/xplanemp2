@@ -78,7 +78,23 @@ enum {
 // and then implementation-specifc stuff.
 struct	CSLPlane_t {
 
-    string                      modelName;       // Unique model name
+    string getModelName() const
+    {
+        string modelName;
+        for (const auto &dir : dirNames)
+        {
+            modelName += dir;
+            modelName += ' ';
+        }
+        modelName += objectName;
+        modelName += ' ';
+        modelName += textureName;
+        return modelName;
+    }
+
+    vector<string>              dirNames;       // Relative directories from xsb_aircrafts.txt down to object file
+    string                      objectName;     // Basename of the object file
+    string                      textureName;    // Basename of the texture file
     string                      icao;           // Icao type of this model
     string                      airline;        // Airline identifier. Can be empty.
     string                      livery;         // Livery identifier. Can be empty.

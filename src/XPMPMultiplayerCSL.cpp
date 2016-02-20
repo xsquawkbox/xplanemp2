@@ -343,14 +343,28 @@ bool ParseObjectCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
         return false;
     }
 
+    std::vector<std::string> dirNames;
+    BreakStringPvt(relativePath.c_str(), dirNames, 0, "/");
+    // Replace the first one being the package name with the package root dir
+    std::string packageRootDir = package.path.substr(package.path.find_last_of('/') + 1);
+    dirNames[0] = packageRootDir;
+    // Remove the last one being the obj itself
+    string objFileName = dirNames.back();
+    dirNames.pop_back();
+
+    // Remove *.obj extension
+    objFileName.erase(objFileName.find_last_of('.'));
+
     package.planes.push_back(CSLPlane_t());
-    package.planes.back().modelName = relativePath;
+    package.planes.back().dirNames = dirNames;
+    package.planes.back().objectName = objFileName;
     package.planes.back().plane_type = plane_Obj;
     package.planes.back().file_path = fullPath;
     package.planes.back().moving_gear = true;
     package.planes.back().texID = 0;
     package.planes.back().texLitID = 0;
     package.planes.back().obj_idx = OBJ_LoadModel(fullPath.c_str());
+    package.planes.back().textureName = OBJ_DefaultModel(package.planes.back().obj_idx);
     if (package.planes.back().obj_idx == -1)
     {
         XPLMDump(path, lineNum, line) << "xbus WARNING: the model " << fullPath << " failed to load.\n";
@@ -383,8 +397,13 @@ bool ParseTextureCommand(const std::vector<std::string> &tokens, CSLPackage_t &p
         return false;
     }
 
-    package.planes.back().modelName += " ";
-    package.planes.back().modelName += relativeTexPath;
+    string textureFilename = absoluteTexPath;
+    // Remove directory if present.
+    textureFilename.erase(0, textureFilename.find_last_of('/') + 1);
+    // Remove extension if present.
+    textureFilename.erase(textureFilename.find_last_of('.'));
+
+    package.planes.back().textureName = textureFilename;
     package.planes.back().texID = OBJ_LoadTexture(absoluteTexPath.c_str(), false);
     if (package.planes.back().texID == -1)
     {
@@ -393,7 +412,7 @@ bool ParseTextureCommand(const std::vector<std::string> &tokens, CSLPackage_t &p
     }
     // Load the lit texture
     string texLitPath = absoluteTexPath;
-    string::size_type pos2 = texLitPath.find_last_of(".");
+    string::size_type pos2 = texLitPath.find_last_of('.');
     if(pos2 != string::npos)
     {
         texLitPath.insert(pos2, "LIT");
@@ -432,7 +451,7 @@ bool ParseAircraftCommand(const std::vector<std::string> &tokens, CSLPackage_t &
             return false;
         }
         package.planes.push_back(CSLPlane_t());
-        package.planes.back().modelName = relativePath;
+        //! \todo Fill in acf model name information
         package.planes.back().plane_type = plane_Austin;
         package.planes.back().file_path = absolutePath;
         package.planes.back().moving_gear = true;
@@ -502,7 +521,7 @@ bool ParseObj8Command(const std::vector<std::string> &tokens, CSLPackage_t &pack
 
     string relativePath = tokens[3];
     MakePartialPathNativeObj(relativePath);
-    package.planes.back().modelName = relativePath;
+    //! \todo Fill in Obj8 model name information
     string absolutePath(relativePath);
     if (!DoPackageSub(absolutePath))
     {
@@ -876,6 +895,7 @@ bool CSL_LoadCSL(const char * inFolderPath, const char * inRelatedFile, const ch
 		string	path(inFolderPath);
 		path += "/";//XPLMGetDirectorySeparator();
 		path += foo;
+		MakePartialPathNativeObj(path);
 		pckgs.push_back(path);		
 	}
 	free(name_buf);
