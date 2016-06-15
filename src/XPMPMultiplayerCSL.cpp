@@ -895,7 +895,6 @@ bool CSL_LoadCSL(const char * inFolderPath, const char * inRelatedFile, const ch
 		string	path(inFolderPath);
 		path += "/";//XPLMGetDirectorySeparator();
 		path += foo;
-		MakePartialPathNativeObj(path);
 		pckgs.push_back(path);		
 	}
 	free(name_buf);
