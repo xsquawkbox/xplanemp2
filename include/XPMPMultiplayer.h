@@ -26,6 +26,14 @@
 
 #include "XPLMDefs.h"
 
+#ifndef XPMP_CLIENT_NAME
+#define XPMP_CLIENT_NAME "XSB"
+#endif
+
+#ifndef XPMP_CLIENT_LONGNAME
+#define XPMP_CLIENT_LONGNAME "XSquawkBox"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
