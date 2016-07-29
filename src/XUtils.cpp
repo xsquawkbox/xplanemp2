@@ -42,27 +42,31 @@
 static char * my_fgets(char * s, int n, FILE * file)
 {
 	char *	p = s;
-	int			c;
 	
 	if (--n < 0)
 		return(NULL);
 	
 	if (n)
+	{
+		int c;
 		do
 		{
 			c = fgetc(file);
 			
 			if (c == EOF)
+			{
 				if (/*feof(file) &&*/ p != s)
 					break;
 				else
 				{
 					return(NULL);
 				}
+			}
 			
 			*p++ = c;
 		}
 		while (c != '\n' && c != '\r' && --n);
+	}
 	
 	*p = 0;
 	
@@ -109,7 +113,7 @@ void	StTextFileScanner::read_next(void)
 
 	while (mFile && /*!feof(mFile) &&*/ my_fgets(buf, sizeof(buf), mFile))
 	{
-		int len = strlen(buf);
+		int len = static_cast<int>(strlen(buf));
 		while ((len > 0) && (buf[len-1] == '\r' || buf[len-1] == '\n'))
 		{
 			buf[len-1] = 0;
@@ -223,13 +227,13 @@ int		PickRandom(vector<double>& chances)
 {
 	double	v = (double) (rand() % RAND_MAX) / (double) RAND_MAX;
 	
-	for (int n = 0; n < chances.size(); ++n)
+	for (size_t n = 0; n < chances.size(); ++n)
 	{
 		if (v < chances[n])
-			return n;
+			return static_cast<int>(n);
 		v -= chances[n];
 	}
-	return chances.size();
+	return static_cast<int>(chances.size());
 }
 
 bool	RollDice(double inProb)
@@ -351,8 +355,8 @@ void	ExtractFixedRecordString(
 {
 	int	sp = inBegin-1;
 	int ep = inEnd;
-	if (ep > inLine.length()) ep = inLine.length();
-	if (sp > inLine.length()) sp = inLine.length();
+	if (ep > static_cast<int>(inLine.length())) ep = static_cast<int>(inLine.length());
+	if (sp > static_cast<int>(inLine.length())) sp = static_cast<int>(inLine.length());
 	
 	while ((sp < ep) && (inLine[sp] == ' '))
 		++sp;
@@ -389,7 +393,7 @@ bool	ExtractFixedRecordUnsignedLong(
 	return true;
 }				
 
-#pragma mark -
+//#pragma mark -
 
 struct	XPointPool::XPointPoolImp {
 
@@ -408,9 +412,10 @@ struct	XPointPool::XPointPoolImp {
 	
 	int		count(void)
 	{
-		return pts.size();
+		return static_cast<int>(pts.size());
 	}
 	
+#if 0
 	int		accumulate(const float xyz[3], const float st[2])
 	{
 		static	char	buf[256];
@@ -427,10 +432,11 @@ struct	XPointPool::XPointPoolImp {
 		memcpy(p.xyz, xyz, sizeof(p.xyz));
 		memcpy(p.st, st, sizeof(p.st));
 		pts.push_back(p);
-		index.insert(map<string,int>::value_type(key, pts.size()));
+		index.insert(map<string,int>::value_type(key, static_cast<int>(pts.size())));
 		pts.push_back(p);
-		return pts.size()-1;
+		return static_cast<int>(pts.size())-1;
 	}
+#endif
 	
 	void	get(int i, float xyz[3], float st[2])
 	{
@@ -455,10 +461,12 @@ void	XPointPool::clear()
 	mImp->clear();
 }
 
+#if 0
 int		XPointPool::accumulate(const float xyz[3], const float st[2])
 {
 	return mImp->accumulate(xyz, st);
 }
+#endif
 
 void	XPointPool::get(int index, float xyz[3], float st[2])
 {
@@ -501,12 +509,12 @@ void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmds, int maxVale
 	case obj_Polygon:
 		// Polygons might be ok.  But if we have to break them down,
 		// we generate N-2 triangles in a fan configuration.
-		if (maxValence < inCmd.st.size())
+		if (maxValence < static_cast<int>(inCmd.st.size()))
 		{
 			c.st.push_back(inCmd.st[0]);
 			c.st.push_back(inCmd.st[1]);
 			c.st.push_back(inCmd.st[2]);
-			for (int n = 2; n < inCmd.st.size(); ++n)
+			for (size_t n = 2; n < inCmd.st.size(); ++n)
 			{
 				c.st[1] = inCmd.st[n-1];
 				c.st[2] = inCmd.st[n  ];
@@ -521,7 +529,7 @@ void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmds, int maxVale
 		c.st.push_back(inCmd.st[0]);
 		c.st.push_back(inCmd.st[1]);
 		c.st.push_back(inCmd.st[2]);
-		for (int n = 2; n < inCmd.st.size(); ++n)
+		for (size_t n = 2; n < inCmd.st.size(); ++n)
 		{
 			if (n%2)
 			{
@@ -542,7 +550,7 @@ void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmds, int maxVale
 		c.st.push_back(inCmd.st[0]);
 		c.st.push_back(inCmd.st[1]);
 		c.st.push_back(inCmd.st[2]);
-		for (int n = 2; n < inCmd.st.size(); ++n)
+		for (size_t n = 2; n < inCmd.st.size(); ++n)
 		{
 			c.st[1] = inCmd.st[n-1];
 			c.st[2] = inCmd.st[n  ];
@@ -558,7 +566,7 @@ void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmds, int maxVale
 			c.st.push_back(inCmd.st[1]);
 			c.st.push_back(inCmd.st[2]);
 			c.st.push_back(inCmd.st[3]);
-			for (int n = 2; n < inCmd.st.size(); n += 2)
+			for (size_t n = 2; n < inCmd.st.size(); n += 2)
 			{
 				c.st[0] = inCmd.st[n-2];
 				c.st[1] = inCmd.st[n-1];
@@ -570,7 +578,7 @@ void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmds, int maxVale
 			c.st.push_back(inCmd.st[0]);
 			c.st.push_back(inCmd.st[1]);
 			c.st.push_back(inCmd.st[2]);
-			for (int n = 2; n < inCmd.st.size(); ++n)
+			for (size_t n = 2; n < inCmd.st.size(); ++n)
 			{
 				if (n%2)
 				{

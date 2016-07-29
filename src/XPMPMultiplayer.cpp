@@ -104,7 +104,7 @@ static	int				XPMPControlPlaneCount(
  ********************************************************************************/
 
 
-const char * 	XPMPMultiplayerInit(
+const char * 	XPMPMultiplayerInitLegacyData(
 						const char * inCSLFolder, const char * inRelatedPath,
 						const char * inTexturePath, const char * inDoc8643,
 						const char * inDefaultPlane,
@@ -114,11 +114,30 @@ const char * 	XPMPMultiplayerInit(
 	gDefaultPlane = inDefaultPlane;
 	gIntPrefsFunc = inIntPrefsFunc;
 	gFloatPrefsFunc = inFloatPrefsFunc;
-	char	myPath[1024];
-	char	airPath[1024];
-	char	line[256];
-	char	sysPath[1024];
-	FILE *	fi;
+
+	bool	problem = false;
+
+	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
+		problem = true;
+
+	if (!CSL_Init(inTexturePath))
+		problem = true;
+
+	if (problem)		return "There were problems initializing XSquawkBox.  Please examine X-Plane's error.out file for detailed information.";
+	else 				return "";
+}
+
+const char * 	XPMPMultiplayerInit(
+						int (* inIntPrefsFunc)(const char *, const char *, int),
+						float (* inFloatPrefsFunc)(const char *, const char *, float))
+{
+	gIntPrefsFunc = inIntPrefsFunc;
+	gFloatPrefsFunc = inFloatPrefsFunc;
+	//char	myPath[1024];
+	//char	airPath[1024];
+	//char	line[256];
+	//char	sysPath[1024];
+	//FILE *	fi;
 	
 	bool	problem = false;
 
@@ -127,13 +146,7 @@ const char * 	XPMPMultiplayerInit(
 	// Initialize our OpenGL Utilities
 	OGL_UtilsInit();
 
-	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
-		problem = true;
-
 	XPMPInitDefaultPlaneRenderer();	
-
-	if (!CSL_Init(inTexturePath))
-		problem = true;
 
 	// Register the plane control calls.
 	XPLMRegisterDrawCallback(XPMPControlPlaneCount,
@@ -150,6 +163,13 @@ const char * 	XPMPMultiplayerInit(
 	else 				return "";
 }
 
+void XPMPMultiplayerCleanup(void)
+{
+    XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 0, 0);
+    XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 1, (void *) -1);
+    XPLMUnregisterDrawCallback(XPMPRenderMultiplayerPlanes, xplm_Phase_Airplanes, 0, 0);
+}
+
 
 // We use this array to track Austin's planes, since we have to mess with them.
 static	vector<string>	gPlanePaths;
@@ -162,13 +182,13 @@ const  char * XPMPMultiplayerEnable(void)
 	std::vector<char *>		ptrs;
 	gPlanePaths.push_back("");
 	
-	for (int p = 0; p < gPackages.size(); ++p)
+	for (size_t p = 0; p < gPackages.size(); ++p)
 	{
-		for (int pp = 0; pp < gPackages[p].planes.size(); ++pp)
+		for (size_t pp = 0; pp < gPackages[p].planes.size(); ++pp)
 		{
 			if (gPackages[p].planes[pp].plane_type == plane_Austin)
 			{
-				gPackages[p].planes[pp].austin_idx = gPlanePaths.size();
+				gPackages[p].planes[pp].austin_idx = static_cast<int>(gPlanePaths.size());
 				char	buf[1024];
 				strcpy(buf,gPackages[p].planes[pp].file_path.c_str());
 				#if APL
@@ -180,11 +200,11 @@ const  char * XPMPMultiplayerEnable(void)
 	}
 	
 	// Copy the list into something that's not permanent, but is needed by the XPLM.
-	for (int n = 0; n < gPlanePaths.size(); ++n)
+	for (size_t n = 0; n < gPlanePaths.size(); ++n)
 	{
 #if DEBUG_MANUAL_LOADING
 		char	strbuf[1024];
-		sprintf(strbuf, "Plane %d = '%s'\n", n, gPlanePaths[n].c_str());
+		sprintf(strbuf, "Plane %d = '%s'\n", static_cast<int>(n), gPlanePaths[n].c_str());
 		XPLMDebugString(strbuf);
 #endif	
 		ptrs.push_back((char *) gPlanePaths[n].c_str());
@@ -197,7 +217,7 @@ const  char * XPMPMultiplayerEnable(void)
 	if (result)
 		XPLMSetActiveAircraftCount(1);
 	else
-		XPLMDebugString("WARNING: XSquawkBox did not acquire multiplayer planes!!\n");
+		XPLMDebugString("WARNING: " XPMP_CLIENT_LONGNAME " did not acquire multiplayer planes!!\n");
 
 		int	total, 		active;
 		XPLMPluginID	who;
@@ -210,6 +230,23 @@ const  char * XPMPMultiplayerEnable(void)
 		return "";
 }
 
+void XPMPMultiplayerDisable(void)
+{
+    XPLMReleasePlanes();
+}
+
+
+const char * 	XPMPLoadCSLPackage(
+						const char * inCSLFolder, const char * inRelatedPath, const char * inDoc8643)
+{
+	bool	problem = false;
+
+	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
+		problem = true;
+
+	if (problem)		return "There were problems initializing XSquawkBox.  Please examine X-Plane's error.out file for detailed information.";
+	else 				return "";
+}
 
 // This routine checks plane loading and grabs anyone we're missing.
 void	XPMPLoadPlanesIfNecessary(void)
@@ -220,8 +257,8 @@ void	XPMPLoadPlanesIfNecessary(void)
 	if (owner != XPLMGetMyID())
 		return;
 		
-	if (models > gPlanePaths.size())
-		models = gPlanePaths.size();
+	if (models > static_cast<int>(gPlanePaths.size()))
+		models = static_cast<int>(gPlanePaths.size());
 	for (int n = 1; n < models; ++n)
 	{
 		if (!gPlanePaths[n].empty())
@@ -327,13 +364,13 @@ void	XPMPSetDefaultPlaneICAO(
 
 long			XPMPCountPlanes(void)
 {
-	return gPlanes.size();
+	return static_cast<long>(gPlanes.size());
 }
 
 XPMPPlaneID		XPMPGetNthPlane(
 							long 					index)
 {
-	if ((index < 0) || (index >= gPlanes.size()))
+	if ((index < 0) || (index >= static_cast<long>(gPlanes.size())))
 		return NULL;
 		
 	return gPlanes[index];
@@ -438,7 +475,7 @@ XPMPPlaneCallbackResult			XPMPGetPlaneData(
 
 XPMPPlanePtr	XPMPPlaneIsValid(XPMPPlaneID inID, XPMPPlaneVector::iterator * outIter)
 {
-	XPMPPlanePtr 	ptr = (XPMPPlanePtr) inID;
+	XPMPPlanePtr 	ptr = static_cast<XPMPPlanePtr>(inID);
 	XPMPPlaneVector::iterator iter = std::find(gPlanes.begin(), gPlanes.end(), ptr);
 	if (iter == gPlanes.end())
 		return NULL;
@@ -462,8 +499,8 @@ void		XPMPSetPlaneRenderer(
 // This callback ping-pongs the multiplayer count up and back depending 
 // on whether we're drawing the TCAS gauges or not.
 int	XPMPControlPlaneCount(
-                                   XPLMDrawingPhase     inPhase,    
-                                   int                  inIsBefore,    
+                                   XPLMDrawingPhase     /*inPhase*/,    
+                                   int                  /*inIsBefore*/,    
                                    void *               inRefcon)
 {
 	if (inRefcon == NULL)
@@ -478,9 +515,9 @@ int	XPMPControlPlaneCount(
 
 // This routine draws the actual planes.
 int	XPMPRenderMultiplayerPlanes(
-                                   XPLMDrawingPhase     inPhase,    
-                                   int                  inIsBefore,    
-                                   void *               inRefcon)
+                                   XPLMDrawingPhase     /*inPhase*/,    
+                                   int                  /*inIsBefore*/,    
+                                   void *               /*inRefcon*/)
 {
 	static int is_blend = 0;
 	

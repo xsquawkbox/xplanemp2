@@ -34,12 +34,12 @@
 inline void BMP_EndianFlipInt(int * x) { int t = Endian32_Swap(*x); *x = t; }
 inline void BMP_EndianFlipShort(short * x) { short t = Endian16_Swap(*x); *x = t; }
 #else
-#define BMP_EndianFlipInt(x) 	(x)
-#define BMP_EndianFlipShort(x) (x)
+#define BMP_EndianFlipInt(x)
+#define BMP_EndianFlipShort(x)
 #endif
 #else
-	#define BMP_EndianFlipInt(x) 	(x)
-	#define BMP_EndianFlipShort(x) (x)
+	#define BMP_EndianFlipInt(x)
+	#define BMP_EndianFlipShort(x)
 #endif
 
 #if BITMAP_USE_JPEG
@@ -69,7 +69,13 @@ inline void BMP_EndianFlipShort(short * x) { short t = Endian16_Swap(*x); *x = t
  * that they do not belong here!
  *
  */
-#include "../png.h"
+//#include "../png.h"
+/*
+ * MAT SAYS 2014-06-23: on Windows, swift's fork of libxplanemp uses the libpng contained in swift's external dependencies package.
+ * On other operating systems, it uses the libpng which the developer has installed on their system. There are no libpng or zlib
+ * headers, source code, or binaries, anywhere in swift's git repository (which includes our fork of libxplanemp).
+ */
+#include <png.h>
 
 int		CreateBitmapFromFile(const char * inFilePath, struct ImageInfo * outImageInfo)
 {
@@ -510,7 +516,7 @@ int	ConvertBitmapToAlpha(
 			struct ImageInfo *		ioImage)
 {
 		unsigned char * 	oldData, * newData, * srcPixel, * dstPixel;
-		int 	count;
+		//int 	count;
 		int	x,y;
 		
 	if (ioImage->channels == 4)
@@ -525,7 +531,7 @@ int	ConvertBitmapToAlpha(
 	
 	srcPixel = oldData;
 	dstPixel = newData;
-	count = ioImage->width * ioImage->height;
+	//count = ioImage->width * ioImage->height;
 	for (y = 0; y < ioImage->height; ++y)
 	for (x = 0; x < ioImage->width; ++x)
 	{
@@ -567,7 +573,7 @@ int	ConvertAlphaToBitmap(
 			struct ImageInfo *		ioImage)
 {
 		unsigned char * 	oldData, * newData, * srcPixel, * dstPixel;
-		int 	count;
+		//int 	count;
 		int 	x,y;
 		
 	if (ioImage->channels == 3)
@@ -590,7 +596,7 @@ int	ConvertAlphaToBitmap(
 	
 	srcPixel = oldData;
 	dstPixel = newData;
-	count = ioImage->width * ioImage->height;
+	//count = ioImage->width * ioImage->height;
 	
 	for (y = 0; y < ioImage->height; ++y)
 	for (x = 0; x < ioImage->width; ++x)
@@ -633,7 +639,7 @@ int	ConvertAlphaToBitmap(
 	return 0;
 }			
 
-#pragma mark -
+//#pragma mark -
 
 #if BITMAP_USE_JPEG
 
@@ -842,8 +848,8 @@ int		CreateBitmapFromJPEGData(void * inBytes, int inLength, struct ImageInfo * o
 
 #endif /* BITMAP_USE_JPEG */
 
-void my_error  (png_structp,png_const_charp err){}
-void my_warning(png_structp,png_const_charp err){}
+void my_error  (png_structp,png_const_charp /*err*/){}
+void my_warning(png_structp,png_const_charp /*err*/){}
 
 unsigned char *			png_start_pos 	= NULL;
 unsigned char *			png_end_pos 	= NULL;
@@ -865,11 +871,11 @@ int		CreateBitmapFromPNG(const char * inFilePath, struct ImageInfo * outImageInf
 
 	png_structp		pngPtr = NULL;
 	png_infop		infoPtr = NULL;
-	unsigned char *	buffer = NULL;
-	FILE *			file = NULL;
-	int				fileLength = 0;
+	unsigned char *	volatile buffer = NULL;
+	FILE * volatile	file = NULL;
+	size_t			fileLength = 0;
 	outImageInfo->data = NULL;
-	char** 			rows = NULL;
+	char** volatile	rows = NULL;
 	double lcl_gamma;			// This will be the gamma of the file if it has one.
 #if APL							// Macs and PCs have different gamma responses.
 	double screen_gamma=1.8;	// Darks look darker and brights brighter on the PC.
@@ -902,7 +908,7 @@ int		CreateBitmapFromPNG(const char * inFilePath, struct ImageInfo * outImageInf
 	if (png_sig_cmp(png_current_pos,0,8)) goto bail;
 
 	png_set_interlace_handling(pngPtr);
-	if(setjmp(pngPtr->jmpbuf))
+	if(setjmp(png_jmpbuf(pngPtr)))
 	{
 		goto bail;
 	}
@@ -947,7 +953,7 @@ int		CreateBitmapFromPNG(const char * inFilePath, struct ImageInfo * outImageInf
 	rows=(char**)malloc(height*sizeof(char*));
 	if (!rows) goto bail;
 	
-	for(int i=0;i<height;i++)
+	for(png_uint_32 i=0;i<height;i++)
 	{
 		rows[i]=(char*)outImageInfo->data     +((outImageInfo->height-1-i)*(outImageInfo->width)*(outImageInfo->channels));
 	}
