@@ -364,11 +364,12 @@ bool ParseObjectCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
     package.planes.back().texID = 0;
     package.planes.back().texLitID = 0;
     package.planes.back().obj_idx = OBJ_LoadModel(fullPath.c_str());
-    package.planes.back().textureName = OBJ_DefaultModel(package.planes.back().obj_idx);
     if (package.planes.back().obj_idx == -1)
     {
         XPLMDump(path, lineNum, line) << "xbus WARNING: the model " << fullPath << " failed to load.\n";
+        return false;
     }
+    package.planes.back().textureName = OBJ_DefaultModel(package.planes.back().obj_idx);
 #if DEBUG_CSL_LOADING
     XPLMDebugString("      Got Object: ");
     XPLMDebugString(fullPath.c_str());
