@@ -763,7 +763,6 @@ void ParseFullPackage(const std::string &content, CSLPackage_t &package)
                     XPLMDebugString("xbus WARNING: Ignoring CSL package!");
                     XPLMDebugString(tokens[0].c_str());
                     XPLMDebugString("\n");
-                    break;
                 }
             }
             else
@@ -771,7 +770,6 @@ void ParseFullPackage(const std::string &content, CSLPackage_t &package)
                 XPLMDebugString("xbus WARNING: Unrecognized command in xsb_aircraft.txt: ");
                 XPLMDebugString(tokens[0].c_str());
                 XPLMDebugString("\n");
-                break;
             }
         }
     }
