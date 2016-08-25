@@ -150,7 +150,7 @@ struct XPLMDump {
 	}
 
     XPLMDump(const string& inFileName, int lineNum, const string& line) {
-        XPLMDebugString("xbus WARNING: Parse Error in file ");
+        XPLMDebugString(XPMP_CLIENT_NAME " WARNING: Parse Error in file ");
         XPLMDebugString(inFileName.c_str());
         XPLMDebugString(" line ");
         char buf[32];
@@ -309,7 +309,7 @@ bool ParseExportCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
 {
     if (tokens.size() != 2)
     {
-        XPLMDump(path, lineNum, line)  << "xbus WARNING: EXPORT_NAME command requires 1 argument.\n";
+        XPLMDump(path, lineNum, line)  << XPMP_CLIENT_NAME " WARNING: EXPORT_NAME command requires 1 argument.\n";
         return false;
     }
 
@@ -322,7 +322,7 @@ bool ParseExportCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
     }
     else
     {
-        XPLMDump(path, lineNum, line)  << "xbus WARNING: Package name " << tokens[1].c_str() << " already in use by " << p->path.c_str() << " reqested by use by " << path.c_str() << "'\n";
+        XPLMDump(path, lineNum, line)  << XPMP_CLIENT_NAME " WARNING: Package name " << tokens[1].c_str() << " already in use by " << p->path.c_str() << " reqested by use by " << path.c_str() << "'\n";
         return false;
     }
 }
@@ -331,13 +331,13 @@ bool ParseDependencyCommand(const std::vector<std::string> &tokens, CSLPackage_t
 {
     if (tokens.size() != 2)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: DEPENDENCY command needs 1 argument.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: DEPENDENCY command needs 1 argument.\n";
         return false;
     }
 
     if (std::count_if(gPackages.begin(), gPackages.end(), [&tokens](CSLPackage_t p) { return p.name == tokens[1]; }) == 0)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: required package " << tokens[1] << " not found. Aborting processing of this package.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: required package " << tokens[1] << " not found. Aborting processing of this package.\n";
         return false;
     }
 
@@ -350,7 +350,7 @@ bool ParseObjectCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
     BreakStringPvt(line.c_str(), dupTokens, 2, " \t\r\n");
     if (tokens.size() != 2)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: OBJECT command takes 1 argument.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJECT command takes 1 argument.\n";
         return false;
     }
     std::string relativePath(tokens[1]);
@@ -358,7 +358,7 @@ bool ParseObjectCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
     std::string fullPath(relativePath);
     if (!DoPackageSub(fullPath))
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: package not found.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: package not found.\n";
         return false;
     }
 
@@ -385,7 +385,7 @@ bool ParseObjectCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
     package.planes.back().obj_idx = OBJ_LoadModel(fullPath.c_str());
     if (package.planes.back().obj_idx == -1)
     {
-        XPLMDebugString("xbus WARNING: Failed to load model in file ");
+        XPLMDebugString(XPMP_CLIENT_NAME " WARNING: Failed to load model in file ");
         XPLMDebugString(path.c_str());
         XPLMDebugString(" line ");
         char buf[32];
@@ -410,7 +410,7 @@ bool ParseTextureCommand(const std::vector<std::string> &tokens, CSLPackage_t &p
 {
     if(tokens.size() != 2)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: TEXTURE command takes 1 argument.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: TEXTURE command takes 1 argument.\n";
         return false;
     }
 
@@ -421,7 +421,7 @@ bool ParseTextureCommand(const std::vector<std::string> &tokens, CSLPackage_t &p
 
     if (!DoPackageSub(absoluteTexPath))
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: package not found.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: package not found.\n";
         return false;
     }
 
@@ -461,7 +461,7 @@ bool ParseAircraftCommand(const std::vector<std::string> &tokens, CSLPackage_t &
     // AIRCAFT <min> <max> <path>
     if (tokens.size() != 4)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: AIRCRAFT command takes 3 arguments.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: AIRCRAFT command takes 3 arguments.\n";
     }
 
     int sim, xplm;
@@ -475,7 +475,7 @@ bool ParseAircraftCommand(const std::vector<std::string> &tokens, CSLPackage_t &
         string absolutePath(relativePath);
         if (!DoPackageSub(absolutePath))
         {
-            XPLMDump(path, lineNum, line) << "xbus WARNING: package not found.\n";
+            XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: package not found.\n";
             return false;
         }
         package.planes.push_back(CSLPlane_t());
@@ -500,7 +500,7 @@ bool ParseObj8AircraftCommand(const std::vector<std::string> &tokens, CSLPackage
     // OBJ8_AIRCRAFT <path>
     if (tokens.size() != 2)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: OBJ8_AIRCARFT command takes 1 argument.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJ8_AIRCARFT command takes 1 argument.\n";
     }
 
     package.planes.push_back(CSLPlane_t());
@@ -518,7 +518,7 @@ bool ParseObj8Command(const std::vector<std::string> &tokens, CSLPackage_t &pack
     // OBJ8 <group> <animate YES|NO> <filename>
     if (tokens.size() != 4)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: OBJ8_AIRCARFT command takes 1 argument.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJ8_AIRCARFT command takes 1 argument.\n";
     }
 
     // err - obj8 record at stupid place in file
@@ -553,7 +553,7 @@ bool ParseObj8Command(const std::vector<std::string> &tokens, CSLPackage_t &pack
     string absolutePath(relativePath);
     if (!DoPackageSub(absolutePath))
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: package not found.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: package not found.\n";
         return false;
     }
 
@@ -585,7 +585,7 @@ bool ParseHasGearCommand(const std::vector<std::string> &tokens, CSLPackage_t &p
     // HASGEAR YES|NO
     if (tokens.size() != 2 || (tokens[1] != "YES" && tokens[1] != "NO"))
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: HASGEAR takes one argument that must be YES or NO.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: HASGEAR takes one argument that must be YES or NO.\n";
         return false;
     }
 
@@ -601,7 +601,7 @@ bool ParseHasGearCommand(const std::vector<std::string> &tokens, CSLPackage_t &p
     }
     else
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: HASGEAR must have a YES or NO argument, but we got " << tokens[1] << ".\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: HASGEAR must have a YES or NO argument, but we got " << tokens[1] << ".\n";
         return false;
     }
 }
@@ -611,7 +611,7 @@ bool ParseIcaoCommand(const std::vector<std::string> &tokens, CSLPackage_t &pack
     // ICAO <code>
     if (tokens.size() != 2)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: ICAO command takes 1 argument.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: ICAO command takes 1 argument.\n";
         return false;
     }
 
@@ -632,7 +632,7 @@ bool ParseAirlineCommand(const std::vector<std::string> &tokens, CSLPackage_t &p
     // AIRLINE <code> <airline>
     if (tokens.size() != 3)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: AIRLINE command takes two arguments.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: AIRLINE command takes two arguments.\n";
         return false;
     }
 
@@ -665,7 +665,7 @@ bool ParseLiveryCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
     // LIVERY <code> <airline> <livery>
     if (tokens.size() != 4)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: LIVERY command takes two arguments.\n";
+        XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: LIVERY command takes two arguments.\n";
         return false;
     }
 
