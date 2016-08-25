@@ -107,6 +107,25 @@ int HFS2PosixPath(const char *path, char *result, int resultLen)
 
 #endif
 
+// trim from start (in place)
+static inline void ltrim(std::string &s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](char c) { return ! std::isspace(c); }));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string &s)
+{
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](char c) { return ! std::isspace(c); }).base(), s.end());
+}
+
+// trim from both ends (in place)
+static inline void trim(std::string &s)
+{
+    ltrim(s);
+    rtrim(s);
+}
+
 static void MakePartialPathNativeObj(string& io_str)
 {
 //	char sep = *XPLMGetDirectorySeparator();
@@ -125,7 +144,7 @@ struct XPLMDump {
 		char buf[32];
 		sprintf(buf,"%d", lineNum);
 		XPLMDebugString(buf);
-		XPLMDebugString(".\n             ");
+		XPLMDebugString(".\n              ");
 		XPLMDebugString(line);
 		XPLMDebugString(".\n");
 	}
@@ -137,7 +156,7 @@ struct XPLMDump {
         char buf[32];
         sprintf(buf,"%d", lineNum);
         XPLMDebugString(buf);
-        XPLMDebugString(".\n             ");
+        XPLMDebugString(".\n              ");
         XPLMDebugString(line.c_str());
         XPLMDebugString(".\n");
     }
@@ -366,7 +385,15 @@ bool ParseObjectCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
     package.planes.back().obj_idx = OBJ_LoadModel(fullPath.c_str());
     if (package.planes.back().obj_idx == -1)
     {
-        XPLMDump(path, lineNum, line) << "xbus WARNING: the model " << fullPath << " failed to load.\n";
+        XPLMDebugString("xbus WARNING: Failed to load model in file ");
+        XPLMDebugString(path.c_str());
+        XPLMDebugString(" line ");
+        char buf[32];
+        sprintf(buf,"%d", lineNum);
+        XPLMDebugString(buf);
+        XPLMDebugString(".\n              ");
+        XPLMDebugString(line.c_str());
+        XPLMDebugString(".\n");
         return false;
     }
     package.planes.back().textureName = OBJ_DefaultModel(package.planes.back().obj_idx);
@@ -746,30 +773,27 @@ void ParseFullPackage(const std::string &content, CSLPackage_t &package)
     stringstream sin(content);
     if (!sin.good()) { return; } // exit if file not found
 
+    std::string packageFilePath(package.path);
+    packageFilePath += "/";
+    packageFilePath += "xsb_aircraft.txt";
+
     std::string line;
     int lineNum = 0;
     while (std::getline(sin, line))
     {
         ++lineNum;
+        trim(line);
         auto tokens = tokenize(line, " \t\r\n");
         if (!tokens.empty())
         {
             auto it = commands.find(tokens[0]);
             if (it != commands.end())
             {
-                bool result = it->second(tokens, package, package.path, lineNum, line);
-                if (!result)
-                {
-                    XPLMDebugString("xbus WARNING: Ignoring CSL package!");
-                    XPLMDebugString(tokens[0].c_str());
-                    XPLMDebugString("\n");
-                }
+                it->second(tokens, package, packageFilePath, lineNum, line);
             }
             else
             {
-                XPLMDebugString("xbus WARNING: Unrecognized command in xsb_aircraft.txt: ");
-                XPLMDebugString(tokens[0].c_str());
-                XPLMDebugString("\n");
+                XPLMDump(packageFilePath, lineNum, line);
             }
         }
     }
