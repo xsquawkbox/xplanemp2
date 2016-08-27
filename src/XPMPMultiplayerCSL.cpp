@@ -34,6 +34,7 @@
 #include <fstream>
 #include <sstream>
 #include <functional>
+#include <cctype>
 
 using std::max;
 
