@@ -293,13 +293,14 @@ int	   OBJ_LoadTexture(const char * inFilePath, bool inForceMaxTex)
 	if (sTexes.count(path) > 0)
 		return sTexes[path];
 	
-	int texNum;
-	XPLMGenerateTextureNumbers(&texNum, 1);
+
 	
 	int derez = 5 - gIntPrefsFunc("planes", "resolution", 3);
 	if (inForceMaxTex)
 		derez = 0;
-	bool ok = LoadTextureFromFile(path.c_str(), texNum, true, false, true, NULL, NULL, derez);
+
+	int texNum = 0;
+	bool ok = LoadTextureFromFile(path, true, false, true, derez, &texNum, NULL, NULL);
 	if (!ok) return 0;
 	
 	sTexes[path] = texNum;
