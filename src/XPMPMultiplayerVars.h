@@ -26,7 +26,7 @@
 
 /*
  * This file contains the various internal definitions
- * and globals for the model rendering code. 
+ * and globals for the model rendering code.
  *
  */
 
@@ -78,26 +78,26 @@ enum {
 // and then implementation-specifc stuff.
 struct	CSLPlane_t {
 
-    string getModelName() const
-    {
-        string modelName;
-        for (const auto &dir : dirNames)
-        {
-            modelName += dir;
-            modelName += ' ';
-        }
-        modelName += objectName;
-        modelName += ' ';
-        modelName += textureName;
-        return modelName;
-    }
+	string getModelName() const
+	{
+		string modelName;
+		for (const auto &dir : dirNames)
+		{
+			modelName += dir;
+			modelName += ' ';
+		}
+		modelName += objectName;
+		modelName += ' ';
+		modelName += textureName;
+		return modelName;
+	}
 
-    vector<string>              dirNames;       // Relative directories from xsb_aircrafts.txt down to object file
-    string                      objectName;     // Basename of the object file
-    string                      textureName;    // Basename of the texture file
-    string                      icao;           // Icao type of this model
-    string                      airline;        // Airline identifier. Can be empty.
-    string                      livery;         // Livery identifier. Can be empty.
+	vector<string>              dirNames;       // Relative directories from xsb_aircrafts.txt down to object file
+	string                      objectName;     // Basename of the object file
+	string                      textureName;    // Basename of the texture file
+	string                      icao;           // Icao type of this model
+	string                      airline;        // Airline identifier. Can be empty.
+	string                      livery;         // Livery identifier. Can be empty.
 
 	int							plane_type;		// What kind are we?
 	string						file_path;		// Where do we load from (oz and obj, debug-use-only for OBJ8)
@@ -133,13 +133,13 @@ enum {
 // keys to the internal index of the plane.
 struct	CSLPackage_t {
 
-    bool hasValidHeader() const
-    {
-        return !name.empty() && !path.empty();
-    }
+	bool hasValidHeader() const
+	{
+		return !name.empty() && !path.empty();
+	}
 
 	string						name;
-    string                      path;
+	string                      path;
 	vector<CSLPlane_t>			planes;
 	map<string, int>			matches[match_count];
 
@@ -170,12 +170,12 @@ struct	XPMPPlane_t {
 	string					icao;
 	string					airline;
 	string					livery;
-    CSLPlane_t *			model = nullptr; // May be null if no good match
+	CSLPlane_t *			model = nullptr; // May be null if no good match
 	bool					good_livery;	// is our paint correctly matched?
 	
 	// This callback is used to pull data from the client for posiitons, etc.
 	XPMPPlaneData_f			dataFunc;
-    void *					ref = nullptr;
+	void *					ref = nullptr;
 	
 	// This is last known data we got for the plane, with timestamps.
 	int						posAge;

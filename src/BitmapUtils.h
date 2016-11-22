@@ -1,22 +1,22 @@
 /* 
  * Copyright (c) 2006, Laminar Research.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
  */
@@ -117,53 +117,53 @@ int		CreateNewBitmap(int inWidth, int inHeight, int inChannels, struct ImageInfo
 void	FillBitmap(const struct ImageInfo * inImageInfo, char c);
 
 /* This routine deallocates a bitmap that was created with CreateBitmapFromFile or
- * CreateNewBitmap. */ 
+ * CreateNewBitmap. */
 void	DestroyBitmap(const struct ImageInfo * inImageInfo);
 
 /* Given two bitmaps, this routine copies a section from one bitmap to another.  
- * This routine will use bicubic and bilinear interpolation to copy the bitmap 
+ * This routine will use bicubic and bilinear interpolation to copy the bitmap
  * as cleanly as possible.  However, if the bitmap contains alpha, the copy routine
  * will create a jagged edge to keep from smearing the alpha channel. */
 void	CopyBitmapSection(
-			const struct ImageInfo *	inSrc,
-			const struct ImageInfo *	inDst,
-			int				inSrcLeft,
-			int				inSrcTop,
-			int				inSrcRight,
-			int				inSrcBottom,
-			int				inDstLeft,
-			int				inDstTop,
-			int				inDstRight,
-			int				inDstBottom);
-			
+		const struct ImageInfo *	inSrc,
+		const struct ImageInfo *	inDst,
+		int				inSrcLeft,
+		int				inSrcTop,
+		int				inSrcRight,
+		int				inSrcBottom,
+		int				inDstLeft,
+		int				inDstTop,
+		int				inDstRight,
+		int				inDstBottom);
+
 void	CopyBitmapSectionWarped(
-			const struct ImageInfo *	inSrc,
-			const struct ImageInfo *	inDst,
-			int				inTopLeftX,
-			int				inTopLeftY,
-			int				inTopRightX,
-			int				inTopRightY,
-			int				inBotRightX,
-			int				inBotRightY,
-			int				inBotLeftX,
-			int				inBotLeftY,
-			int				inDstLeft,
-			int				inDstTop,
-			int				inDstRight,
-			int				inDstBottom);
-			
+		const struct ImageInfo *	inSrc,
+		const struct ImageInfo *	inDst,
+		int				inTopLeftX,
+		int				inTopLeftY,
+		int				inTopRightX,
+		int				inTopRightY,
+		int				inBotRightX,
+		int				inBotRightY,
+		int				inBotLeftX,
+		int				inBotLeftY,
+		int				inDstLeft,
+		int				inDstTop,
+		int				inDstRight,
+		int				inDstBottom);
+
 /* This routine rotates a bitmap counterclockwise 90 degrees, exchanging its width
  * and height. */
 void	RotateBitmapCCW(
-			struct ImageInfo *	ioBitmap);
+		struct ImageInfo *	ioBitmap);
 
 /* This routine converts a 3-channel bitmap to a 4-channel bitmap by converting
  * magenta pixels to alpha. */
 int	ConvertBitmapToAlpha(
-			struct ImageInfo *		ioImage);
-			
+		struct ImageInfo *		ioImage);
+
 /* This routine converts a 4-channel bitmap to a 3-channel bitmap by converting
  * alpha back to magenta. */
 int	ConvertAlphaToBitmap(
-			struct ImageInfo *		ioImage);
+		struct ImageInfo *		ioImage);
 #endif

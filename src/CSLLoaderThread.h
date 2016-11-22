@@ -16,13 +16,13 @@ const int LOADING_OBJ=-2;
 class loadjobthread: public pt::thread
 {
 protected:
-    int id;
-    pt::jobqueue* jq;
-    virtual void execute();
+	int id;
+	pt::jobqueue* jq;
+	virtual void execute();
 public:
-    loadjobthread(int iid, pt::jobqueue* ijq)
-        : thread(true), id(iid), jq(ijq)  {}
-    ~loadjobthread()  { }
+	loadjobthread(int iid, pt::jobqueue* ijq)
+		: thread(true), id(iid), jq(ijq)  {}
+	~loadjobthread()  { }
 };
 
 
@@ -30,12 +30,12 @@ public:
 class CSLLoaderType
 {
 protected:
-    pt::jobqueue *jq;
+	pt::jobqueue *jq;
 public:
-    CSLLoaderType()  { jq=new pt::jobqueue(); }
-    ~CSLLoaderType()  {}
-    CSLLoaderType(const CSLLoaderType &) = delete;
-    CSLLoaderType &operator =(const CSLLoaderType &) = delete;
+	CSLLoaderType()  { jq=new pt::jobqueue(); }
+	~CSLLoaderType()  {}
+	CSLLoaderType(const CSLLoaderType &) = delete;
+	CSLLoaderType &operator =(const CSLLoaderType &) = delete;
 	void startthreads();
 	void load(CSLPlane_t* toload);
 	void loadTex(CSLPlane_t* toload);

@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  *
  */
- #include "XOGLUtils.h"
+#include "XOGLUtils.h"
 
 // This had to be renamed because on Linux, namespaces appear to be shared between ourselves and XPlane
 // so i would end up overwritting XPlanes function pointer!
@@ -50,25 +50,25 @@ CFBundleRef	gBundleRefOpenGL = NULL;
 // Utility routine to get a bundle from the system folder by file name....typically used to find OpenGL to get extension functions.
 int load_bundle_by_filename (const char * in_filename, CFBundleRef * io_bundle_ref)
 {
-    OSStatus		err = noErr;
+	OSStatus		err = noErr;
 	FSRef			framework_fs;
-    CFURLRef		framework_url = NULL;
+	CFURLRef		framework_url = NULL;
 	CFURLRef		bundle_url = NULL;
 	CFStringRef		bundle_name = NULL;
 	CFBundleRef		bundle_ref = NULL;
 	
 	bundle_name = CFStringCreateWithCString(kCFAllocatorDefault, in_filename, kCFStringEncodingUTF8);
-    if (bundle_name == NULL) {
+	if (bundle_name == NULL) {
 		err = paramErr;
-    	goto bail; }
+		goto bail; }
 	
 	err = FSFindFolder(kSystemDomain, kFrameworksFolderType, false, &framework_fs);
-    if (noErr != err) {
+	if (noErr != err) {
 		err = dirNFErr;
-    	goto bail; }
+		goto bail; }
 	
-    // create URL to folder
-    framework_url = CFURLCreateFromFSRef (kCFAllocatorDefault, &framework_fs);
+	// create URL to folder
+	framework_url = CFURLCreateFromFSRef (kCFAllocatorDefault, &framework_fs);
 	if(framework_url == NULL) {
 		err = ioErr;
 		goto bail; }
@@ -78,24 +78,24 @@ int load_bundle_by_filename (const char * in_filename, CFBundleRef * io_bundle_r
 		err = fnfErr;
 		goto bail; }
 	
-    bundle_ref = CFBundleCreate (kCFAllocatorDefault, bundle_url);
+	bundle_ref = CFBundleCreate (kCFAllocatorDefault, bundle_url);
 	if(bundle_ref == NULL) {
 		err = permErr;
 		goto bail; }
 	
-    if (!CFBundleLoadExecutable (bundle_ref)) {
-        err = bdNamErr;
+	if (!CFBundleLoadExecutable (bundle_ref)) {
+		err = bdNamErr;
 		goto bail;
-    }
+	}
 	
 	if (io_bundle_ref) { *io_bundle_ref = bundle_ref; bundle_ref = NULL; }
 bail:
-		if(bundle_ref)		CFRelease(bundle_ref);
+	if(bundle_ref)		CFRelease(bundle_ref);
 	if(bundle_name)		CFRelease(bundle_name);
 	if(bundle_url)		CFRelease(bundle_url);
 	if(framework_url)	CFRelease(framework_url);
 	
-    return err;
+	return err;
 }
 
 
@@ -111,11 +111,11 @@ void * aglGetProcAddress (char * pszProc)
 	{
 		first_time = false;
 		if (aglInitEntryPoints() != noErr)
-			return NULL;			
+			return NULL;
 	}
-    return CFBundleGetFunctionPointerForName (gBundleRefOpenGL,
-                CFStringCreateWithCStringNoCopy (NULL,
-                     pszProc, CFStringGetSystemEncoding (), NULL));
+	return CFBundleGetFunctionPointerForName (gBundleRefOpenGL,
+											  CFStringCreateWithCStringNoCopy (NULL,
+																			   pszProc, CFStringGetSystemEncoding (), NULL));
 }
 
 #define 	wglGetProcAddress(x)		aglGetProcAddress(x)
@@ -139,7 +139,7 @@ bool	OGL_UtilsInit()
 	{
 		// Initialize all OGL Function Pointers
 #if APL
-//		glBindBufferARB 		 = (PFNGLBINDBUFFERARBPROC)			 wglGetProcAddress("glBindBufferARB"		 );
+		//		glBindBufferARB 		 = (PFNGLBINDBUFFERARBPROC)			 wglGetProcAddress("glBindBufferARB"		 );
 #endif		
 #if IBM		
 		glBindBufferARB			 = (PFNGLBINDBUFFERARBPROC)			 wglGetProcAddress("glBindBufferARB"		);
@@ -154,17 +154,17 @@ bool	OGL_UtilsInit()
 #if IBM
 	// Make sure everything got initialized
 	if(glBindBufferARB &&
-	   glActiveTextureARB &&
-	   glClientActiveTextureARB &&
-	   glMultiTexCoord2fARB &&
-	   glMultiTexCoord2fvARB)
+			glActiveTextureARB &&
+			glClientActiveTextureARB &&
+			glMultiTexCoord2fARB &&
+			glMultiTexCoord2fvARB)
 	{
-	   return true;
+		return true;
 	}
 	else
 		return false;
 #else
-    return true;
+	return true;
 #endif
 
 }

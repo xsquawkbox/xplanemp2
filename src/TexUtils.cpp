@@ -1,22 +1,22 @@
 /* 
  * Copyright (c) 2006, Laminar Research.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
  */
@@ -135,7 +135,7 @@ static void HalfBitmap(ImageInfo& ioImage)
 			srcp2 += row_b;
 			srcp2 += ioImage.pad;
 		}
-	}	
+	}
 	ioImage.pad = 0;
 
 }
@@ -156,7 +156,7 @@ bool LoadTextureFromFile(const char * inFileName, int inTexNum, bool magentaAlph
 			HalfBitmap(im);
 			--inDeres;
 		}
-	
+
 		if (!magentaAlpha || ConvertBitmapToAlpha(&im) == 0)
 		{
 			if (im.pad == 0)
@@ -191,16 +191,16 @@ bool LoadTextureFromFile(const char * inFileName, int inTexNum, bool magentaAlph
 					}
 #endif				
 					if (mipmap)
-						gluBuild2DMipmaps(GL_TEXTURE_2D, 3, im.width, im.height, GL_RGB, GL_UNSIGNED_BYTE, im.data);					
+						gluBuild2DMipmaps(GL_TEXTURE_2D, 3, im.width, im.height, GL_RGB, GL_UNSIGNED_BYTE, im.data);
 					else
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, im.width ,im.height, 0, GL_RGB, GL_UNSIGNED_BYTE, im.data);
-						if (outWidth) *outWidth = im.width;
-						if (outHeight) *outHeight = im.height;
+						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, im.width ,im.height, 0, GL_RGB, GL_UNSIGNED_BYTE, im.data);
+					if (outWidth) *outWidth = im.width;
+					if (outHeight) *outHeight = im.height;
 				}
 				ok = true;
-			}	
+			}
 		}
-				
+
 		DestroyBitmap(&im);
 	}
 	
@@ -215,25 +215,25 @@ bool LoadTextureFromFile(const char * inFileName, int inTexNum, bool magentaAlph
 		static const char * ver_str = (const char *) glGetString(GL_VERSION);
 		static const char * ext_str = (const char *) glGetString(GL_EXTENSIONS);
 		
-		static bool tex_clamp_avail = 
-			strstr(ext_str,"GL_SGI_texture_edge_clamp"		) ||
-			strstr(ext_str,"GL_SGIS_texture_edge_clamp"		) || 
-			strstr(ext_str,"GL_ARB_texture_edge_clamp"		) || 
-			strstr(ext_str,"GL_EXT_texture_edge_clamp"		) ||
-			strncmp(ver_str,"1.2", 3) ||
-			strncmp(ver_str,"1.3", 3) ||
-			strncmp(ver_str,"1.4", 3) ||
-			strncmp(ver_str,"1.5", 3);
+		static bool tex_clamp_avail =
+				strstr(ext_str,"GL_SGI_texture_edge_clamp"		) ||
+				strstr(ext_str,"GL_SGIS_texture_edge_clamp"		) ||
+				strstr(ext_str,"GL_ARB_texture_edge_clamp"		) ||
+				strstr(ext_str,"GL_EXT_texture_edge_clamp"		) ||
+				strncmp(ver_str,"1.2", 3) ||
+				strncmp(ver_str,"1.3", 3) ||
+				strncmp(ver_str,"1.4", 3) ||
+				strncmp(ver_str,"1.5", 3);
 
 		
-			 if(inWrap 		   ){glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT		 );
-								 glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT		 );}
+		if(inWrap 		   ){glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT		 );
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT		 );}
 		else if(tex_clamp_avail){glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
-								 glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);}
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);}
 		else					{glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP		 );
-								 glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP		 );}
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP		 );}
 		
-	}	
+	}
 	int err = glGetError();
 	if (err)
 	{

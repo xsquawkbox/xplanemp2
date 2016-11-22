@@ -1,22 +1,22 @@
 /* 
  * Copyright (c) 2004, Laminar Research.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
  */
@@ -56,7 +56,7 @@ pascal void event_proc(NavEventCallbackMessage callBackSelector, NavCBRecPtr cal
 
 template <typename T>
 struct CFSmartPtr {
-	 CFSmartPtr(T p) : p_(p) {						  }
+	CFSmartPtr(T p) : p_(p) {						  }
 	~CFSmartPtr()			 { if (p_) CFRelease(p_); }
 	operator T ()			 { return p_; }
 	T p_;
@@ -77,7 +77,7 @@ int HFS2PosixPath(const char *path, char *result, int resultLen)
 	
 	if (!CFStringGetCString(outStr, result, resultLen, kCFStringEncodingMacRoman))
 		return -1;
-		
+
 	if(is_dir) strcat(result, "/");
 
 	return 0;
@@ -129,22 +129,22 @@ const char * GetApplicationPath(void)
 }
 
 int		GetFilePathFromUser(
-					int					inType,
-					const char * 		inPrompt, 
-					const char *		inAction,
-					int					inID,
-					char * 				outFileName)
+		int					inType,
+		const char * 		inPrompt,
+		const char *		inAction,
+		int					inID,
+		char * 				outFileName)
 {
-		OSErr				err;
-		NavReplyRecord		reply;
-		NavDialogOptions	options;
-		FSSpec				fileSpec;
-		
+	OSErr				err;
+	NavReplyRecord		reply;
+	NavDialogOptions	options;
+	FSSpec				fileSpec;
+
 	reply.version = kNavReplyRecordVersion;
 	err = NavGetDefaultDialogOptions(&options);
 	if (err != noErr)
 		return 0;
-		
+
 	if (inType == getFile_Save)
 	{
 		options.savedFileName[0] = strlen(outFileName);
@@ -175,8 +175,8 @@ int		GetFilePathFromUser(
 		if ((err != noErr) && (err != userCanceledErr))
 			return 0;
 		break;
-	}	
-	DisposeNavEventUPP(eventUPP);			
+	}
+	DisposeNavEventUPP(eventUPP);
 	if (!reply.validRecord)
 		goto bail;
 
@@ -206,9 +206,9 @@ void	DoUserAlert(const char * inMsg)
 	size_t	sl;
 	
 	sl = strlen(inMsg);
-	if (sl > 255) 
+	if (sl > 255)
 		sl = 255;
-		
+
 	p1[0] = sl;
 	memcpy(p1+1, inMsg, sl);
 	
@@ -233,7 +233,7 @@ void	ShowProgressMessage(const char * inMsg, float * progress)
 	CFStringRef ref = CFStringCreateWithCString(NULL, inMsg, smSystemScript);
 	EraseRect(&windBounds);
 	InsetRect(&windBounds, 20, 15);
-	DrawThemeTextBox(ref, kThemeSystemFont, kThemeStateActive, true, &windBounds, teJustLeft, NULL);		
+	DrawThemeTextBox(ref, kThemeSystemFont, kThemeStateActive, true, &windBounds, teJustLeft, NULL);
 	CFRelease(ref);
 	
 	if (progress)
@@ -284,7 +284,7 @@ int		ConfirmMessage(const char * inMsg, const char * proceedBtn, const char * ca
 
 	StandardAlert(kAlertCautionAlert, pStr, p2, &params, &itemHit);
 
-	return (itemHit == 1);		
+	return (itemHit == 1);
 }
 
 /*
@@ -318,7 +318,7 @@ OSErr	FSSpecToPathName(const FSSpec * inFileSpec, char * outPathname)
 		paramRec.dirInfo.ioFDirIndex = -1;
 		paramRec.dirInfo.ioDrDirID = paramRec.dirInfo.ioDrParID;
 		
-		if (!(err = PBGetCatInfoSync(&paramRec))) 
+		if (!(err = PBGetCatInfoSync(&paramRec)))
 		{
 			/* For each directory we get info about, prepend a : and the directory name.
 			   But for the root directory, do NOT prepend the colon. */
@@ -328,7 +328,7 @@ OSErr	FSSpecToPathName(const FSSpec * inFileSpec, char * outPathname)
 			{
 				outPathname[0] = ':';
 				memcpy(outPathname+1, dirName+1, dirName[0]);
-			} else 
+			} else
 				memcpy(outPathname, dirName+1, dirName[0]);
 		}
 	} while ((err == noErr) && (paramRec.dirInfo.ioDrDirID != fsRtDirID));

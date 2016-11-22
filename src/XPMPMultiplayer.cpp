@@ -55,10 +55,10 @@
 
 	T H E   T C A S   H A C K
 	
- The 1.0 SDK provides no way to add TCAS blips to a panel - we simply don't know 
+ The 1.0 SDK provides no way to add TCAS blips to a panel - we simply don't know
  where on the panel to draw.  The only way to get said blips is to manipulate
  Austin's "9 planes" plane objects, which he refers to when drawing the moving
- map. 
+ map.
  
  But how do we integrate this with our system, which relies on us doing
  the drawing (either by calling Austin's low level drawing routine or just
@@ -69,7 +69,7 @@
  2-d drawing we pop this number back up to the number of planes that are
  visible on TCAS and set the datarefs to move them, so that they appear on TCAS.
 
- One note: since all TCAS blips are the same, we do no model matching for 
+ One note: since all TCAS blips are the same, we do no model matching for
  TCAS - we just place the first 9 planes at the right place.
  
  Our rendering loop records for us in gEnableCount how many TCAS planes should
@@ -82,21 +82,21 @@
 
 
 static	XPMPPlanePtr	XPMPPlaneIsValid(
-									XPMPPlaneID 		inID, 
-									XPMPPlaneVector::iterator * outIter);
+		XPMPPlaneID 		inID,
+		XPMPPlaneVector::iterator * outIter);
 
 // This drawing hook is called once per frame to do the real drawing.
 static	int				XPMPRenderMultiplayerPlanes(
-                                   XPLMDrawingPhase     inPhase,    
-                                   int                  inIsBefore,    
-                                   void *               inRefcon);
+		XPLMDrawingPhase     inPhase,
+		int                  inIsBefore,
+		void *               inRefcon);
 
 // This drawing hook is called twice per frame to control how many planes
 // should be visible.
 static	int				XPMPControlPlaneCount(
-                                   XPLMDrawingPhase     inPhase,    
-                                   int                  inIsBefore,    
-                                   void *               inRefcon);
+		XPLMDrawingPhase     inPhase,
+		int                  inIsBefore,
+		void *               inRefcon);
 
 
 
@@ -107,11 +107,11 @@ static	int				XPMPControlPlaneCount(
 
 
 const char * 	XPMPMultiplayerInitLegacyData(
-						const char * inCSLFolder, const char * inRelatedPath,
-						const char * inTexturePath, const char * inDoc8643,
-						const char * inDefaultPlane,
-						int (* inIntPrefsFunc)(const char *, const char *, int),
-						float (* inFloatPrefsFunc)(const char *, const char *, float))
+		const char * inCSLFolder, const char * inRelatedPath,
+		const char * inTexturePath, const char * inDoc8643,
+		const char * inDefaultPlane,
+		int (* inIntPrefsFunc)(const char *, const char *, int),
+		float (* inFloatPrefsFunc)(const char *, const char *, float))
 {
 	gDefaultPlane = inDefaultPlane;
 	gIntPrefsFunc = inIntPrefsFunc;
@@ -130,8 +130,8 @@ const char * 	XPMPMultiplayerInitLegacyData(
 }
 
 const char * 	XPMPMultiplayerInit(
-						int (* inIntPrefsFunc)(const char *, const char *, int),
-						float (* inFloatPrefsFunc)(const char *, const char *, float))
+		int (* inIntPrefsFunc)(const char *, const char *, int),
+		float (* inFloatPrefsFunc)(const char *, const char *, float))
 {
 	gIntPrefsFunc = inIntPrefsFunc;
 	gFloatPrefsFunc = inFloatPrefsFunc;
@@ -143,23 +143,23 @@ const char * 	XPMPMultiplayerInit(
 	
 	bool	problem = false;
 
-//	TODO - FORM GOOD DIAGNOSTIC MESSAGES HERE!
+	//	TODO - FORM GOOD DIAGNOSTIC MESSAGES HERE!
 	
 	// Initialize our OpenGL Utilities
 	OGL_UtilsInit();
 
-	XPMPInitDefaultPlaneRenderer();	
+	XPMPInitDefaultPlaneRenderer();
 
 	// Register the plane control calls.
 	XPLMRegisterDrawCallback(XPMPControlPlaneCount,
-		xplm_Phase_Gauges, 0, /* after*/ 0 /* hide planes*/);	
+							 xplm_Phase_Gauges, 0, /* after*/ 0 /* hide planes*/);
 
 	XPLMRegisterDrawCallback(XPMPControlPlaneCount,
-		xplm_Phase_Gauges, 1, /* before */ (void *) -1 /* show planes*/);	
+							 xplm_Phase_Gauges, 1, /* before */ (void *) -1 /* show planes*/);
 
 	// Register the actual drawing func.
 	XPLMRegisterDrawCallback(XPMPRenderMultiplayerPlanes,
-		xplm_Phase_Airplanes, 0, /* after*/ 0 /* refcon */);	
+							 xplm_Phase_Airplanes, 0, /* after*/ 0 /* refcon */);
 
 	if (problem)		return "There were problems initializing XSquawkBox.  Please examine X-Plane's error.out file for detailed information.";
 	else 				return "";
@@ -167,9 +167,9 @@ const char * 	XPMPMultiplayerInit(
 
 void XPMPMultiplayerCleanup(void)
 {
-    XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 0, 0);
-    XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 1, (void *) -1);
-    XPLMUnregisterDrawCallback(XPMPRenderMultiplayerPlanes, xplm_Phase_Airplanes, 0, 0);
+	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 0, 0);
+	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 1, (void *) -1);
+	XPLMUnregisterDrawCallback(XPMPRenderMultiplayerPlanes, xplm_Phase_Airplanes, 0, 0);
 }
 
 
@@ -193,9 +193,9 @@ const  char * XPMPMultiplayerEnable(void)
 				gPackages[p].planes[pp].austin_idx = static_cast<int>(gPlanePaths.size());
 				char	buf[1024];
 				strcpy(buf,gPackages[p].planes[pp].file_path.c_str());
-				#if APL
-					Posix2HFSPath(buf,buf,1024);
-				#endif
+#if APL
+				Posix2HFSPath(buf,buf,1024);
+#endif
 				gPlanePaths.push_back(buf);
 			}
 		}
@@ -210,7 +210,7 @@ const  char * XPMPMultiplayerEnable(void)
 		XPLMDebugString(strbuf);
 #endif	
 		ptrs.push_back((char *) gPlanePaths[n].c_str());
-	}	
+	}
 	ptrs.push_back(NULL);
 	
 	
@@ -221,25 +221,25 @@ const  char * XPMPMultiplayerEnable(void)
 	else
 		XPLMDebugString("WARNING: " XPMP_CLIENT_LONGNAME " did not acquire multiplayer planes!!\n");
 
-		int	total, 		active;
-		XPLMPluginID	who;
+	int	total, 		active;
+	XPLMPluginID	who;
 	
 	XPLMCountAircraft(&total, &active, &who);
 	if (result == 0)
 	{
 		return "XSquawkBox was not able to start up multiplayer visuals because another plugin is controlling aircraft.";
-	} else 
+	} else
 		return "";
 }
 
 void XPMPMultiplayerDisable(void)
 {
-    XPLMReleasePlanes();
+	XPLMReleasePlanes();
 }
 
 
 const char * 	XPMPLoadCSLPackage(
-						const char * inCSLFolder, const char * inRelatedPath, const char * inDoc8643)
+		const char * inCSLFolder, const char * inRelatedPath, const char * inDoc8643)
 {
 	bool	problem = false;
 
@@ -258,7 +258,7 @@ void	XPMPLoadPlanesIfNecessary(void)
 	XPLMCountAircraft(&models, &active, &owner);
 	if (owner != XPLMGetMyID())
 		return;
-		
+
 	if (models > static_cast<int>(gPlanePaths.size()))
 		models = static_cast<int>(gPlanePaths.size());
 	for (int n = 1; n < models; ++n)
@@ -285,33 +285,33 @@ void	XPMPLoadPlanesIfNecessary(void)
 
 int XPMPGetNumberOfInstalledModels(void)
 {
-    size_t number = 0;
-    for (const auto& package : gPackages)
-    {
-        number += package.planes.size();
-    }
-    return static_cast<int>(number);
+	size_t number = 0;
+	for (const auto& package : gPackages)
+	{
+		number += package.planes.size();
+	}
+	return static_cast<int>(number);
 }
 
 void XPMPGetModelInfo(int inIndex, const char** outModelName, const char** outIcao, const char** outAirline, const char** outLivery)
 {
-    int counter = 0;
-    for (const auto& package : gPackages)
-    {
+	int counter = 0;
+	for (const auto& package : gPackages)
+	{
 
-        if (counter + static_cast<int>(package.planes.size()) < inIndex + 1)
-        {
-            counter += static_cast<int>(package.planes.size());
-            continue;
-        }
+		if (counter + static_cast<int>(package.planes.size()) < inIndex + 1)
+		{
+			counter += static_cast<int>(package.planes.size());
+			continue;
+		}
 
-        int positionInPackage =  inIndex - counter;
-        *outModelName = package.planes[positionInPackage].getModelName().c_str();
-        *outIcao = package.planes[positionInPackage].icao.c_str();
-        *outAirline = package.planes[positionInPackage].airline.c_str();
-        *outLivery = package.planes[positionInPackage].livery.c_str();
-        break;
-    }
+		int positionInPackage =  inIndex - counter;
+		*outModelName = package.planes[positionInPackage].getModelName().c_str();
+		*outIcao = package.planes[positionInPackage].icao.c_str();
+		*outAirline = package.planes[positionInPackage].airline.c_str();
+		*outLivery = package.planes[positionInPackage].livery.c_str();
+		break;
+	}
 }
 
 /********************************************************************************
@@ -319,11 +319,11 @@ void XPMPGetModelInfo(int inIndex, const char** outModelName, const char** outIc
  ********************************************************************************/
 
 XPMPPlaneID		XPMPCreatePlane(
-							const char *			inICAOCode,
-							const char *			inAirline,
-							const char *			inLivery,
-							XPMPPlaneData_f			inDataFunc,
-							void *					inRefcon)
+		const char *			inICAOCode,
+		const char *			inAirline,
+		const char *			inLivery,
+		XPMPPlaneData_f			inDataFunc,
+		void *					inRefcon)
 {
 	XPMPPlanePtr	plane = new XPMPPlane_t;
 	plane->icao = inICAOCode;
@@ -341,51 +341,51 @@ XPMPPlaneID		XPMPCreatePlane(
 	gPlanes.push_back(plane);
 	
 	for (XPMPPlaneNotifierVector::iterator iter = gObservers.begin(); iter !=
-		gObservers.end(); ++iter)
+		 gObservers.end(); ++iter)
 	{
-			iter->first.first(plane, xpmp_PlaneNotification_Created, iter->first.second);
+		iter->first.first(plane, xpmp_PlaneNotification_Created, iter->first.second);
 	}
 	return plane;
 }
 
 bool CompareCaseInsensitive(const string &a, const string &b)
 {
-    return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char aa, char bb) { return toupper(aa) == toupper(bb); });
+	return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char aa, char bb) { return toupper(aa) == toupper(bb); });
 }
 
 XPMPPlaneID     XPMPCreatePlaneWithModelName(const char *inModelName, const char *inICAOCode, const char *inAirline, const char *inLivery, XPMPPlaneData_f inDataFunc, void *inRefcon)
 {
-    XPMPPlanePtr	plane = new XPMPPlane_t;
-    plane->icao = inICAOCode;
-    plane->livery = inLivery;
-    plane->airline = inAirline;
-    plane->dataFunc = inDataFunc;
-    plane->ref = inRefcon;
+	XPMPPlanePtr	plane = new XPMPPlane_t;
+	plane->icao = inICAOCode;
+	plane->livery = inLivery;
+	plane->airline = inAirline;
+	plane->dataFunc = inDataFunc;
+	plane->ref = inRefcon;
 
-    // Find the model
-    for (auto &package : gPackages)
-    {
-        auto cslPlane = std::find_if(package.planes.begin(), package.planes.end(), [inModelName](CSLPlane_t p) { return CompareCaseInsensitive(p.getModelName(), inModelName); });
-        if (cslPlane != package.planes.end())
-        {
-            plane->model = &(*cslPlane);
-        }
-    }
-    if (!plane->model) return nullptr;
+	// Find the model
+	for (auto &package : gPackages)
+	{
+		auto cslPlane = std::find_if(package.planes.begin(), package.planes.end(), [inModelName](CSLPlane_t p) { return CompareCaseInsensitive(p.getModelName(), inModelName); });
+		if (cslPlane != package.planes.end())
+		{
+			plane->model = &(*cslPlane);
+		}
+	}
+	if (!plane->model) return nullptr;
 
-    plane->pos.size = sizeof(plane->pos);
-    plane->surface.size = sizeof(plane->surface);
-    plane->radar.size = sizeof(plane->radar);
-    plane->posAge = plane->radarAge = plane->surfaceAge = -1;
+	plane->pos.size = sizeof(plane->pos);
+	plane->surface.size = sizeof(plane->surface);
+	plane->radar.size = sizeof(plane->radar);
+	plane->posAge = plane->radarAge = plane->surfaceAge = -1;
 
-    gPlanes.push_back(plane);
+	gPlanes.push_back(plane);
 
-    for (XPMPPlaneNotifierVector::iterator iter = gObservers.begin(); iter !=
-        gObservers.end(); ++iter)
-    {
-            iter->first.first(plane, xpmp_PlaneNotification_Created, iter->first.second);
-    }
-    return plane;
+	for (XPMPPlaneNotifierVector::iterator iter = gObservers.begin(); iter !=
+		 gObservers.end(); ++iter)
+	{
+		iter->first.first(plane, xpmp_PlaneNotification_Created, iter->first.second);
+	}
+	return plane;
 }
 
 void			XPMPDestroyPlane(XPMPPlaneID inID)
@@ -394,11 +394,11 @@ void			XPMPDestroyPlane(XPMPPlaneID inID)
 	XPMPPlanePtr plane = XPMPPlaneIsValid(inID, &iter);
 	if (plane == NULL)
 		return;
-		
+
 	for (XPMPPlaneNotifierVector::iterator iter2 = gObservers.begin(); iter2 !=
-		gObservers.end(); ++iter2)
+		 gObservers.end(); ++iter2)
 	{
-			iter2->first.first(plane, xpmp_PlaneNotification_Destroyed, iter2->first.second);
+		iter2->first.first(plane, xpmp_PlaneNotification_Destroyed, iter2->first.second);
 	}
 	gPlanes.erase(iter);
 	
@@ -406,10 +406,10 @@ void			XPMPDestroyPlane(XPMPPlaneID inID)
 }
 
 void	XPMPChangePlaneModel(
-							XPMPPlaneID				inPlaneID,
-							const char *			inICAOCode,
-							const char *			inAirline,
-							const char *			inLivery)
+		XPMPPlaneID				inPlaneID,
+		const char *			inICAOCode,
+		const char *			inAirline,
+		const char *			inLivery)
 {
 	XPMPPlanePtr plane = XPMPPlaneIsValid(inPlaneID, NULL);
 	if (plane)
@@ -422,15 +422,15 @@ void	XPMPChangePlaneModel(
 	}
 	
 	for (XPMPPlaneNotifierVector::iterator iter2 = gObservers.begin(); iter2 !=
-		gObservers.end(); ++iter2)
+		 gObservers.end(); ++iter2)
 	{
-			iter2->first.first(plane, xpmp_PlaneNotification_ModelChanged, iter2->first.second);
+		iter2->first.first(plane, xpmp_PlaneNotification_ModelChanged, iter2->first.second);
 	}
 	
 }	
 
 void	XPMPSetDefaultPlaneICAO(
-							const char *			inICAO)
+		const char *			inICAO)
 {
 	gDefaultPlane = inICAO;
 }						
@@ -441,24 +441,24 @@ long			XPMPCountPlanes(void)
 }
 
 XPMPPlaneID		XPMPGetNthPlane(
-							long 					index)
+		long 					index)
 {
 	if ((index < 0) || (index >= static_cast<long>(gPlanes.size())))
 		return NULL;
-		
+
 	return gPlanes[index];
 }							
 
 
 void XPMPGetPlaneICAOAndLivery(
-							XPMPPlaneID				inPlane,
-							char *					outICAOCode,	// Can be NULL
-							char *					outLivery)
+		XPMPPlaneID				inPlane,
+		char *					outICAOCode,	// Can be NULL
+		char *					outLivery)
 {
 	XPMPPlanePtr	plane = XPMPPlaneIsValid(inPlane, NULL);
 	if (plane == NULL)
 		return;
-		
+
 	if (outICAOCode)
 		strcpy(outICAOCode,plane->icao.c_str());
 	if (outLivery)
@@ -466,26 +466,26 @@ void XPMPGetPlaneICAOAndLivery(
 }	
 
 void			XPMPRegisterPlaneNotifierFunc(
-					XPMPPlaneNotifier_f		inFunc,
-					void *					inRefcon)
+		XPMPPlaneNotifier_f		inFunc,
+		void *					inRefcon)
 {
 	gObservers.push_back(XPMPPlaneNotifierTripple(XPMPPlaneNotifierPair(inFunc, inRefcon), XPLMGetMyID()));
 }					
 
 void			XPMPUnregisterPlaneNotifierFunc(
-					XPMPPlaneNotifier_f		inFunc,
-					void *					inRefcon)
+		XPMPPlaneNotifier_f		inFunc,
+		void *					inRefcon)
 {
 	XPMPPlaneNotifierVector::iterator iter = std::find(
-		gObservers.begin(), gObservers.end(), XPMPPlaneNotifierTripple(XPMPPlaneNotifierPair(inFunc, inRefcon), XPLMGetMyID()));
+				gObservers.begin(), gObservers.end(), XPMPPlaneNotifierTripple(XPMPPlaneNotifierPair(inFunc, inRefcon), XPLMGetMyID()));
 	if (iter != gObservers.end())
 		gObservers.erase(iter);
 }					
 
 XPMPPlaneCallbackResult			XPMPGetPlaneData(
-					XPMPPlaneID					inPlane,
-					XPMPPlaneDataType			inDataType,
-					void *						outData)
+		XPMPPlaneID					inPlane,
+		XPMPPlaneDataType			inDataType,
+		void *						outData)
 {
 	XPMPPlanePtr	plane = XPMPPlaneIsValid(inPlane, NULL);
 	
@@ -495,53 +495,53 @@ XPMPPlaneCallbackResult			XPMPGetPlaneData(
 		return result;
 	
 	int now = XPLMGetCycleNumber();
-		
+
 	switch(inDataType) {
 	case xpmpDataType_Position:
+	{
+		if (plane->posAge != now)
 		{
-			if (plane->posAge != now)
-			{
-				result = plane->dataFunc(plane, inDataType, &plane->pos, plane->ref);
-				if (result == xpmpData_NewData)
-					plane->posAge = now;
-			}
-			
-			XPMPPlanePosition_t *	posD = (XPMPPlanePosition_t *) outData;
-			memcpy(posD, &plane->pos, XPMP_TMIN(posD->size, plane->pos.size));
-			result = xpmpData_Unchanged;
-
-			break;
+			result = plane->dataFunc(plane, inDataType, &plane->pos, plane->ref);
+			if (result == xpmpData_NewData)
+				plane->posAge = now;
 		}
+
+		XPMPPlanePosition_t *	posD = (XPMPPlanePosition_t *) outData;
+		memcpy(posD, &plane->pos, XPMP_TMIN(posD->size, plane->pos.size));
+		result = xpmpData_Unchanged;
+
+		break;
+	}
 	case xpmpDataType_Surfaces:
+	{
+		if (plane->surfaceAge != now)
 		{
-			if (plane->surfaceAge != now)
-			{
-				result = plane->dataFunc(plane, inDataType, &plane->surface, plane->ref);
-				if (result == xpmpData_NewData)
-					plane->surfaceAge = now;
-			}
-			
-			XPMPPlaneSurfaces_t *	surfD = (XPMPPlaneSurfaces_t *) outData;
-			memcpy(surfD, &plane->surface, XPMP_TMIN(surfD->size, plane->surface.size));
-			result = xpmpData_Unchanged;
-
-			break;
+			result = plane->dataFunc(plane, inDataType, &plane->surface, plane->ref);
+			if (result == xpmpData_NewData)
+				plane->surfaceAge = now;
 		}
+
+		XPMPPlaneSurfaces_t *	surfD = (XPMPPlaneSurfaces_t *) outData;
+		memcpy(surfD, &plane->surface, XPMP_TMIN(surfD->size, plane->surface.size));
+		result = xpmpData_Unchanged;
+
+		break;
+	}
 	case xpmpDataType_Radar:
+	{
+		if (plane->radarAge != now)
 		{
-			if (plane->radarAge != now)
-			{
-				result = plane->dataFunc(plane, inDataType, &plane->radar, plane->ref);
-				if (result == xpmpData_NewData)
-					plane->radarAge = now;
-			}
-			
-			XPMPPlaneRadar_t *	radD = (XPMPPlaneRadar_t *) outData;
-			memcpy(radD, &plane->radar, XPMP_TMIN(radD->size, plane->radar.size));
-			result = xpmpData_Unchanged;
-
-			break;
+			result = plane->dataFunc(plane, inDataType, &plane->radar, plane->ref);
+			if (result == xpmpData_NewData)
+				plane->radarAge = now;
 		}
+
+		XPMPPlaneRadar_t *	radD = (XPMPPlaneRadar_t *) outData;
+		memcpy(radD, &plane->radar, XPMP_TMIN(radD->size, plane->radar.size));
+		result = xpmpData_Unchanged;
+
+		break;
+	}
 	}
 	return result;
 }
@@ -558,8 +558,8 @@ XPMPPlanePtr	XPMPPlaneIsValid(XPMPPlaneID inID, XPMPPlaneVector::iterator * outI
 }
 
 void		XPMPSetPlaneRenderer(
-					XPMPRenderPlanes_f  		inRenderer, 
-					void * 						inRef)
+		XPMPRenderPlanes_f  		inRenderer,
+		void * 						inRef)
 {
 	gRenderer = inRenderer;
 	gRendererRef = inRef;
@@ -572,9 +572,9 @@ void		XPMPSetPlaneRenderer(
 // This callback ping-pongs the multiplayer count up and back depending 
 // on whether we're drawing the TCAS gauges or not.
 int	XPMPControlPlaneCount(
-                                   XPLMDrawingPhase     /*inPhase*/,    
-                                   int                  /*inIsBefore*/,    
-                                   void *               inRefcon)
+		XPLMDrawingPhase     /*inPhase*/,
+		int                  /*inIsBefore*/,
+		void *               inRefcon)
 {
 	if (inRefcon == NULL)
 	{
@@ -582,15 +582,15 @@ int	XPMPControlPlaneCount(
 	} else {
 		XPLMSetActiveAircraftCount(gEnableCount);
 	}
-	return 1;	
+	return 1;
 }
 
 
 // This routine draws the actual planes.
 int	XPMPRenderMultiplayerPlanes(
-                                   XPLMDrawingPhase     /*inPhase*/,    
-                                   int                  /*inIsBefore*/,    
-                                   void *               /*inRefcon*/)
+		XPLMDrawingPhase     /*inPhase*/,
+		int                  /*inIsBefore*/,
+		void *               /*inRefcon*/)
 {
 	static int is_blend = 0;
 	
@@ -599,7 +599,7 @@ int	XPMPRenderMultiplayerPlanes(
 	
 	int is_shadow = wrt != NULL && XPLMGetDatai(wrt) != 0;
 	
-	if(prt) 
+	if(prt)
 		is_blend = XPLMGetDatai(prt) == 2;
 
 	if (gRenderer)
@@ -607,16 +607,16 @@ int	XPMPRenderMultiplayerPlanes(
 	else
 		XPMPDefaultPlaneRenderer(is_shadow ? 0 : is_blend);
 	if(!is_shadow)
-	is_blend = 1 - is_blend;	
+		is_blend = 1 - is_blend;
 	return 1;
 }
 
 bool			XPMPIsICAOValid(
-							const char *				inICAO)
- {
+		const char *				inICAO)
+{
 	return CSL_MatchPlane(inICAO, "", "", NULL, false) != NULL;
- }
- 
+}
+
 void		XPMPDumpOneCycle(void)
 {
 	CSL_Dump();

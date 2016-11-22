@@ -60,10 +60,10 @@ static	int sLightTexture = -1;
 
 static void MakePartialPathNativeObj(string& io_str)
 {
-//	char sep = *XPLMGetDirectorySeparator();
+	//	char sep = *XPLMGetDirectorySeparator();
 	for(size_t i = 0; i < io_str.size(); ++i)
-	if(io_str[i] == '/' || io_str[i] == ':' || io_str[i] == '\\')
-		io_str[i] = '/';
+		if(io_str[i] == '/' || io_str[i] == ':' || io_str[i] == '\\')
+			io_str[i] = '/';
 }
 
 static	XPLMDataRef sFOVRef = XPLMFindDataRef("sim/graphics/view/field_of_view_deg");
@@ -85,9 +85,9 @@ bool 	NormalizeVec(float vec[3])
 
 void	CrossVec(float a[3], float b[3], float dst[3])
 {
-  dst[0] = a[1] * b[2] - a[2] * b[1] ;
-  dst[1] = a[2] * b[0] - a[0] * b[2] ;
-  dst[2] = a[0] * b[1] - a[1] * b[0] ;
+	dst[0] = a[1] * b[2] - a[2] * b[1] ;
+	dst[1] = a[2] * b[0] - a[0] * b[2] ;
+	dst[2] = a[0] * b[1] - a[1] * b[0] ;
 }
 
 
@@ -97,21 +97,21 @@ void	CrossVec(float a[3], float b[3], float dst[3])
 
 class	OBJ_PointPool {
 public:
-		OBJ_PointPool(){};
-		~OBJ_PointPool(){};
+	OBJ_PointPool(){};
+	~OBJ_PointPool(){};
 
-	 int AddPoint(float xyz[3], float st[2]);
+	int AddPoint(float xyz[3], float st[2]);
 	void PreparePoolToDraw();
 	void CalcTriNormal(int idx1, int idx2, int idx3);
 	void NormalizeNormals(void);
 	void DebugDrawNormals();
 	void Purge() { mPointPool.clear(); }
-	 int Size() { return static_cast<int>(mPointPool.size()); }
+	int Size() { return static_cast<int>(mPointPool.size()); }
 private:
 	vector<float>	mPointPool;
 };
 
-		
+
 
 // Adds a point to our pool and returns it's index.
 // If one already exists in the same location, we
@@ -123,11 +123,11 @@ int	OBJ_PointPool::AddPoint(float xyz[3], float st[2])
 	for(size_t n = 0; n < mPointPool.size(); n += 8)
 	{
 		if((xyz[0] == mPointPool[n]) &&
-		   (xyz[1] == mPointPool[n+1]) &&
-		   (xyz[2] == mPointPool[n+2]) &&
-		   (st[0] == mPointPool[n+3]) &&
-		   (st[1] == mPointPool[n+4]))
-				return static_cast<int>(n/8);	// Clients care about point # not array index
+				(xyz[1] == mPointPool[n+1]) &&
+				(xyz[2] == mPointPool[n+2]) &&
+				(st[0] == mPointPool[n+3]) &&
+				(st[1] == mPointPool[n+4]))
+			return static_cast<int>(n/8);	// Clients care about point # not array index
 	}
 #endif	
 
@@ -161,14 +161,14 @@ void OBJ_PointPool::PreparePoolToDraw()
 void OBJ_PointPool::CalcTriNormal(int idx1, int idx2, int idx3)
 {
 	if (mPointPool[idx1*8  ]==mPointPool[idx2*8  ]&&
-		mPointPool[idx1*8+1]==mPointPool[idx2*8+1]&&
-		mPointPool[idx1*8+2]==mPointPool[idx2*8+2])		return;
+			mPointPool[idx1*8+1]==mPointPool[idx2*8+1]&&
+			mPointPool[idx1*8+2]==mPointPool[idx2*8+2])		return;
 	if (mPointPool[idx1*8  ]==mPointPool[idx3*8  ]&&
-		mPointPool[idx1*8+1]==mPointPool[idx3*8+1]&&
-		mPointPool[idx1*8+2]==mPointPool[idx3*8+2])		return;
+			mPointPool[idx1*8+1]==mPointPool[idx3*8+1]&&
+			mPointPool[idx1*8+2]==mPointPool[idx3*8+2])		return;
 	if (mPointPool[idx2*8  ]==mPointPool[idx3*8  ]&&
-		mPointPool[idx2*8+1]==mPointPool[idx3*8+1]&&
-		mPointPool[idx2*8+2]==mPointPool[idx3*8+2])		return;
+			mPointPool[idx2*8+1]==mPointPool[idx3*8+1]&&
+			mPointPool[idx2*8+2]==mPointPool[idx3*8+2])		return;
 
 	// idx2->idx1 cross idx1->idx3 = normal product
 	float	v1[3], v2[3], n[3];
@@ -217,15 +217,15 @@ void OBJ_PointPool::NormalizeNormals(void)
 	for (size_t n = 0; n < mPointPool.size(); n += 8)
 	{
 		for (size_t m = 0; m < mPointPool.size(); m += 8)
-		if (mPointPool[n  ]==mPointPool[m  ] &&
-			mPointPool[n+1]==mPointPool[m+1] &&
-			mPointPool[n+2]==mPointPool[m+2] &&
-			m != n)
-		{
-			swapped_add(mPointPool[n+5], mPointPool[m+5]);
-			swapped_add(mPointPool[n+6], mPointPool[m+6]);
-			swapped_add(mPointPool[n+7], mPointPool[m+7]);
-		}
+			if (mPointPool[n  ]==mPointPool[m  ] &&
+					mPointPool[n+1]==mPointPool[m+1] &&
+					mPointPool[n+2]==mPointPool[m+2] &&
+					m != n)
+			{
+				swapped_add(mPointPool[n+5], mPointPool[m+5]);
+				swapped_add(mPointPool[n+6], mPointPool[m+6]);
+				swapped_add(mPointPool[n+7], mPointPool[m+7]);
+			}
 	}
 #endif	
 	for (size_t n = 5; n < mPointPool.size(); n += 8)
@@ -240,12 +240,12 @@ void OBJ_PointPool::DebugDrawNormals()
 	XPLMSetGraphicsState(0, 0, 0, 0, 0, 1, 0);
 	glColor3f(1.0, 0.0, 1.0);
 	glBegin(GL_LINES);
-		for(size_t n = 0; n < mPointPool.size(); n+=8)
-		{
-			glVertex3f(mPointPool[n], mPointPool[n+1], mPointPool[n+2]);
-			glVertex3f(mPointPool[n] + mPointPool[n+5], mPointPool[n+1] + mPointPool[n+1+5],
-					   mPointPool[n+2] + mPointPool[n+2+5]);
-		}
+	for(size_t n = 0; n < mPointPool.size(); n+=8)
+	{
+		glVertex3f(mPointPool[n], mPointPool[n+1], mPointPool[n+2]);
+		glVertex3f(mPointPool[n] + mPointPool[n+5], mPointPool[n+1] + mPointPool[n+1+5],
+				mPointPool[n+2] + mPointPool[n+2+5]);
+	}
 	glEnd();
 }
 
@@ -297,7 +297,7 @@ int	   OBJ_LoadTexture(const char * inFilePath, bool inForceMaxTex)
 	XPLMGenerateTextureNumbers(&texNum, 1);
 	
 	int derez = 5 - gIntPrefsFunc("planes", "resolution", 3);
-	if (inForceMaxTex) 
+	if (inForceMaxTex)
 		derez = 0;
 	bool ok = LoadTextureFromFile(path.c_str(), texNum, true, false, true, NULL, NULL, derez);
 	if (!ok) return 0;
@@ -348,11 +348,11 @@ int		OBJ_LoadModel(const char * inFilePath)
 	tex_path += ".png";
 	sObjects.back().texnum = OBJ_LoadTexture(tex_path.c_str(), false);
 	if(sObjects.back().texnum == 0) {
-        XPLMDebugString("WARNING: ");
-        XPLMDebugString(tex_path.c_str());
-        XPLMDebugString(" failed to load for ");
-        XPLMDebugString(inFilePath);
-        XPLMDebugString("\n");
+		XPLMDebugString("WARNING: ");
+		XPLMDebugString(tex_path.c_str());
+		XPLMDebugString(" failed to load for ");
+		XPLMDebugString(inFilePath);
+		XPLMDebugString("\n");
 	}
 
 	tex_path = path;
@@ -367,7 +367,7 @@ int		OBJ_LoadModel(const char * inFilePath)
 	// naturally later.
 	bool foundLOD = false;
 	for (vector<XObjCmd>::iterator cmd = sObjects.back().obj.cmds.begin();
-		cmd != sObjects.back().obj.cmds.end(); ++cmd)
+		 cmd != sObjects.back().obj.cmds.end(); ++cmd)
 	{
 		if((cmd->cmdType == type_Attr) && (cmd->cmdID == attr_LOD))
 			foundLOD = true;
@@ -381,7 +381,7 @@ int		OBJ_LoadModel(const char * inFilePath)
 	// Go through all of the commands for this object and filter out the polys
 	// and the lights.
 	for (vector<XObjCmd>::iterator cmd = sObjects.back().obj.cmds.begin();
-		cmd != sObjects.back().obj.cmds.end(); ++cmd)
+		 cmd != sObjects.back().obj.cmds.end(); ++cmd)
 	{
 		switch(cmd->cmdType) {
 		case type_Attr:
@@ -414,69 +414,69 @@ int		OBJ_LoadModel(const char * inFilePath)
 			}
 			break;
 		case type_Poly:
+		{
+			vector<int> indexes;
+			// First get our point pool setup with all verticies
+			for(size_t n = 0; n < cmd->st.size(); n++)
 			{
-				vector<int> indexes;
-				// First get our point pool setup with all verticies
-				for(size_t n = 0; n < cmd->st.size(); n++)
+				float xyz[3], st[2];
+				int index;
+
+				xyz[0] = cmd->st[n].v[0];
+				xyz[1] = cmd->st[n].v[1];
+				xyz[2] = cmd->st[n].v[2];
+				st[0]  = cmd->st[n].st[0];
+				st[1]  = cmd->st[n].st[1];
+				index = sObjects.back().lods.back().pointPool.AddPoint(xyz, st);
+				indexes.push_back(index);
+			}
+
+			switch(cmd->cmdID) {
+			case obj_Tri:
+				for(size_t n = 0; n < indexes.size(); ++n)
 				{
-					float xyz[3], st[2];
-					int index;
-					
-					xyz[0] = cmd->st[n].v[0];
-					xyz[1] = cmd->st[n].v[1];
-					xyz[2] = cmd->st[n].v[2];
-					st[0]  = cmd->st[n].st[0];
-					st[1]  = cmd->st[n].st[1];
-					index = sObjects.back().lods.back().pointPool.AddPoint(xyz, st);
-					indexes.push_back(index);
+					sObjects.back().lods.back().triangleList.push_back(indexes[n]);
 				}
-				
-				switch(cmd->cmdID) {
-				case obj_Tri:
-					for(size_t n = 0; n < indexes.size(); ++n)
+				break;
+			case obj_Tri_Fan:
+				for(size_t n = 2; n < indexes.size(); n++)
+				{
+					sObjects.back().lods.back().triangleList.push_back(indexes[0  ]);
+					sObjects.back().lods.back().triangleList.push_back(indexes[n-1]);
+					sObjects.back().lods.back().triangleList.push_back(indexes[n  ]);
+				}
+				break;
+			case obj_Tri_Strip:
+			case obj_Quad_Strip:
+				for(size_t n = 2; n < indexes.size(); n++)
+				{
+					if((n % 2) == 1)
 					{
+						sObjects.back().lods.back().triangleList.push_back(indexes[n - 2]);
+						sObjects.back().lods.back().triangleList.push_back(indexes[n]);
+						sObjects.back().lods.back().triangleList.push_back(indexes[n - 1]);
+					}
+					else
+					{
+						sObjects.back().lods.back().triangleList.push_back(indexes[n - 2]);
+						sObjects.back().lods.back().triangleList.push_back(indexes[n - 1]);
 						sObjects.back().lods.back().triangleList.push_back(indexes[n]);
 					}
-					break;
-				case obj_Tri_Fan:
-					for(size_t n = 2; n < indexes.size(); n++)
-					{
-							sObjects.back().lods.back().triangleList.push_back(indexes[0  ]);
-							sObjects.back().lods.back().triangleList.push_back(indexes[n-1]);
-							sObjects.back().lods.back().triangleList.push_back(indexes[n  ]);						
-					}
-					break;
-				case obj_Tri_Strip:
-				case obj_Quad_Strip:
-					for(size_t n = 2; n < indexes.size(); n++)
-					{
-						if((n % 2) == 1)
-						{
-							sObjects.back().lods.back().triangleList.push_back(indexes[n - 2]);
-							sObjects.back().lods.back().triangleList.push_back(indexes[n]);
-							sObjects.back().lods.back().triangleList.push_back(indexes[n - 1]);
-						}
-						else
-						{
-							sObjects.back().lods.back().triangleList.push_back(indexes[n - 2]);
-							sObjects.back().lods.back().triangleList.push_back(indexes[n - 1]);
-							sObjects.back().lods.back().triangleList.push_back(indexes[n]);
-						}
-					}
-					break;
-				case obj_Quad:
-					for(size_t n = 3; n < indexes.size(); n += 4)
-					{
-						sObjects.back().lods.back().triangleList.push_back(indexes[n-3]);
-						sObjects.back().lods.back().triangleList.push_back(indexes[n-2]);
-						sObjects.back().lods.back().triangleList.push_back(indexes[n-1]);
-						sObjects.back().lods.back().triangleList.push_back(indexes[n-3]);
-						sObjects.back().lods.back().triangleList.push_back(indexes[n-1]);
-						sObjects.back().lods.back().triangleList.push_back(indexes[n  ]);
-					}					
-					break;
 				}
+				break;
+			case obj_Quad:
+				for(size_t n = 3; n < indexes.size(); n += 4)
+				{
+					sObjects.back().lods.back().triangleList.push_back(indexes[n-3]);
+					sObjects.back().lods.back().triangleList.push_back(indexes[n-2]);
+					sObjects.back().lods.back().triangleList.push_back(indexes[n-1]);
+					sObjects.back().lods.back().triangleList.push_back(indexes[n-3]);
+					sObjects.back().lods.back().triangleList.push_back(indexes[n-1]);
+					sObjects.back().lods.back().triangleList.push_back(indexes[n  ]);
+				}
+				break;
 			}
+		}
 			break;
 		}
 	}
@@ -487,9 +487,9 @@ int		OBJ_LoadModel(const char * inFilePath)
 		for (size_t n = 0; n < sObjects.back().lods[i].triangleList.size(); n += 3)
 		{
 			sObjects.back().lods[i].pointPool.CalcTriNormal(
-									sObjects.back().lods[i].triangleList[n],
-									sObjects.back().lods[i].triangleList[n+1],
-									sObjects.back().lods[i].triangleList[n+2]);
+						sObjects.back().lods[i].triangleList[n],
+						sObjects.back().lods[i].triangleList[n+1],
+					sObjects.back().lods[i].triangleList[n+2]);
 		}
 		sObjects.back().lods[i].pointPool.NormalizeNormals();
 		sObjects.back().lods[i].dl = 0;
@@ -500,7 +500,7 @@ int		OBJ_LoadModel(const char * inFilePath)
 
 std::string OBJ_DefaultModel(int model)
 {
-    return sObjects[model].obj.texture;
+	return sObjects[model].obj.texture;
 }
 
 /*****************************************************
@@ -518,10 +518,10 @@ void	OBJ_PlotModel(int model, int texID, int litTexID, float inDistance, double 
 	for(size_t n = 0; n < sObjects[model].lods.size(); n++)
 	{
 		if((inDistance >= sObjects[model].lods[n].nearDist) &&
-		   (inDistance <= sObjects[model].lods[n].farDist))
+				(inDistance <= sObjects[model].lods[n].farDist))
 		{
-		   lodIdx = static_cast<int>(n);
-		   break;
+			lodIdx = static_cast<int>(n);
+			break;
 		}
 	}
 	// If we didn't find a good LOD bin, we don't draw!
@@ -567,7 +567,7 @@ void	OBJ_PlotModel(int model, int texID, int litTexID, float inDistance, double 
 		if(glBindBufferARB)
 #endif
 		{
-			glGetIntegerv(GL_ARRAY_BUFFER_BINDING_ARB, &xpBuffer); 
+			glGetIntegerv(GL_ARRAY_BUFFER_BINDING_ARB, &xpBuffer);
 			glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 		}
 		// Save XPlanes OpenGL state
@@ -585,15 +585,15 @@ void	OBJ_PlotModel(int model, int texID, int litTexID, float inDistance, double 
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		// Disable colors - maybe x-plane left it around.
 		glDisableClientState(GL_COLOR_ARRAY);
-	
+
 		glNewList(sObjects[model].lods[lodIdx].dl, GL_COMPILE);
 		// Kick OpenGL and draw baby!
-		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(sObjects[model].lods[lodIdx].triangleList.size()), 
-						GL_UNSIGNED_INT, &(*sObjects[model].lods[lodIdx].triangleList.begin()));	
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(sObjects[model].lods[lodIdx].triangleList.size()),
+					   GL_UNSIGNED_INT, &(*sObjects[model].lods[lodIdx].triangleList.begin()));
 
 #if DEBUG_NORMALS
 		sObjects[model].lods[lodIdx].pointPool.DebugDrawNormals();
-		XPLMSetGraphicsState(1, (tex != 0) + (lit != 0), 1, 1, 1, 1, 1);		
+		XPLMSetGraphicsState(1, (tex != 0) + (lit != 0), 1, 1, 1, 1, 1);
 #endif
 
 		glEndList();
@@ -657,21 +657,21 @@ void	OBJ_DrawLights(int model, float inDistance, double inX, double inY,
 		bcnLights = false;
 		int x = (int)(XPLMGetElapsedTime() * 1000 + offset) % 1200;
 		switch(lights.flashPattern) {
-			case xpmp_Lights_Pattern_EADS: 
-				// EADS pattern: two flashes every 1.2 seconds
-				if(x < 120 || ((x > 240 && x < 360))) bcnLights = true;
-				break;
+		case xpmp_Lights_Pattern_EADS:
+			// EADS pattern: two flashes every 1.2 seconds
+			if(x < 120 || ((x > 240 && x < 360))) bcnLights = true;
+			break;
 
-			case xpmp_Lights_Pattern_GA:
-				// GA pattern: 900ms / 1200ms
-				if((((int)(XPLMGetElapsedTime() * 1000 + offset) % 2100) < 900)) bcnLights = true;
-				break;
+		case xpmp_Lights_Pattern_GA:
+			// GA pattern: 900ms / 1200ms
+			if((((int)(XPLMGetElapsedTime() * 1000 + offset) % 2100) < 900)) bcnLights = true;
+			break;
 
-			case xpmp_Lights_Pattern_Default: 
-			default:
-				// default pattern: one flash every 1.2 seconds
-				if(x < 120) bcnLights = true;
-				break;
+		case xpmp_Lights_Pattern_Default:
+		default:
+			// default pattern: one flash every 1.2 seconds
+			if(x < 120) bcnLights = true;
+			break;
 		}
 
 	}
@@ -679,20 +679,20 @@ void	OBJ_DrawLights(int model, float inDistance, double inX, double inY,
 		strbLights = false;
 		int x = (int)(XPLMGetElapsedTime() * 1000 + offset) % 1700;
 		switch(lights.flashPattern) {
-			case xpmp_Lights_Pattern_EADS: 
-				if(x < 80 || (x > 260 && x < 340)) strbLights = true;
-				break;
+		case xpmp_Lights_Pattern_EADS:
+			if(x < 80 || (x > 260 && x < 340)) strbLights = true;
+			break;
 
-			case xpmp_Lights_Pattern_GA: 
-				// similar to the others.. but a little different frequency :)
-				x = (int)(XPLMGetElapsedTime() * 1000 + offset) % 1900;
-				if(x < 100) strbLights = true;
-				break;
+		case xpmp_Lights_Pattern_GA:
+			// similar to the others.. but a little different frequency :)
+			x = (int)(XPLMGetElapsedTime() * 1000 + offset) % 1900;
+			if(x < 100) strbLights = true;
+			break;
 
-			case xpmp_Lights_Pattern_Default:
-			default:
-				if(x < 80) strbLights = true;
-				break;
+		case xpmp_Lights_Pattern_Default:
+		default:
+			if(x < 80) strbLights = true;
+			break;
 		}
 	}
 
@@ -701,10 +701,10 @@ void	OBJ_DrawLights(int model, float inDistance, double inX, double inY,
 	for(size_t n = 0; n < sObjects[model].lods.size(); n++)
 	{
 		if((inDistance >= sObjects[model].lods[n].nearDist) &&
-		   (inDistance <= sObjects[model].lods[n].farDist))
+				(inDistance <= sObjects[model].lods[n].farDist))
 		{
-		   lodIdx = static_cast<int>(n);
-		   break;
+			lodIdx = static_cast<int>(n);
+			break;
 		}
 	}
 	// If we didn't find a good LOD bin, we don't draw!
@@ -724,8 +724,8 @@ void	OBJ_DrawLights(int model, float inDistance, double inX, double inY,
 		// First we translate to our coordinate system and move the origin
 		// to the center of our lights.
 		glTranslatef(sObjects[model].lods[lodIdx].lights[n].xyz[0],
-					sObjects[model].lods[lodIdx].lights[n].xyz[1],
-					sObjects[model].lods[lodIdx].lights[n].xyz[2]);
+				sObjects[model].lods[lodIdx].lights[n].xyz[1],
+				sObjects[model].lods[lodIdx].lights[n].xyz[2]);
 
 		// Now we undo the rotation of the plane
 		glRotated(-inRoll, 0.0, 0.0, -1.0);
@@ -768,8 +768,8 @@ void	OBJ_DrawLights(int model, float inDistance, double inX, double inY,
 		// Red Nav
 		glBegin(GL_QUADS);
 		if((sObjects[model].lods[lodIdx].lights[n].rgb[0] == 11) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[1] == 11) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[2] == 11))
+				(sObjects[model].lods[lodIdx].lights[n].rgb[1] == 11) &&
+				(sObjects[model].lods[lodIdx].lights[n].rgb[2] == 11))
 		{
 			if(navLights) {
 				glColor4fv(kNavLightRed);
@@ -781,8 +781,8 @@ void	OBJ_DrawLights(int model, float inDistance, double inX, double inY,
 		}
 		// Green Nav
 		else if((sObjects[model].lods[lodIdx].lights[n].rgb[0] == 22) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[1] == 22) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[2] == 22))
+				(sObjects[model].lods[lodIdx].lights[n].rgb[1] == 22) &&
+				(sObjects[model].lods[lodIdx].lights[n].rgb[2] == 22))
 		{
 			if(navLights) {
 				glColor4fv(kNavLightGreen);
@@ -794,41 +794,41 @@ void	OBJ_DrawLights(int model, float inDistance, double inX, double inY,
 		}
 		// Beacon
 		else if((sObjects[model].lods[lodIdx].lights[n].rgb[0] == 33) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[1] == 33) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[2] == 33))
+				(sObjects[model].lods[lodIdx].lights[n].rgb[1] == 33) &&
+				(sObjects[model].lods[lodIdx].lights[n].rgb[2] == 33))
 		{
-				if(bcnLights)
-				{
-					glColor4fv(kNavLightRed);
-					glTexCoord2f(0.0f, 0.5f); glVertex2f(-(size/2.0f), -(size/2.0f));
-					glTexCoord2f(0.0f, 1.0f); glVertex2f(-(size/2.0f), (size/2.0f));
-					glTexCoord2f(0.25f, 1.0f); glVertex2f((size/2.0f), (size/2.0f));
-					glTexCoord2f(0.25f, 0.5f); glVertex2f((size/2.0f), -(size/2.0f));
-				}
+			if(bcnLights)
+			{
+				glColor4fv(kNavLightRed);
+				glTexCoord2f(0.0f, 0.5f); glVertex2f(-(size/2.0f), -(size/2.0f));
+				glTexCoord2f(0.0f, 1.0f); glVertex2f(-(size/2.0f), (size/2.0f));
+				glTexCoord2f(0.25f, 1.0f); glVertex2f((size/2.0f), (size/2.0f));
+				glTexCoord2f(0.25f, 0.5f); glVertex2f((size/2.0f), -(size/2.0f));
+			}
 		}
 		// Strobes
 		else if((sObjects[model].lods[lodIdx].lights[n].rgb[0] == 44) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[1] == 44) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[2] == 44))
+				(sObjects[model].lods[lodIdx].lights[n].rgb[1] == 44) &&
+				(sObjects[model].lods[lodIdx].lights[n].rgb[2] == 44))
 		{
-				if(strbLights)
-				{
-					glColor4fv(kStrobeLight);
-					glTexCoord2f(0.25f, 0.0f); glVertex2f(-(size/1.5f), -(size/1.5f));
-					glTexCoord2f(0.25f, 0.5f); glVertex2f(-(size/1.5f), (size/1.5f));
-					glTexCoord2f(0.50f, 0.5f); glVertex2f((size/1.5f), (size/1.5f));
-					glTexCoord2f(0.50f, 0.0f); glVertex2f((size/1.5f), -(size/1.5f));
-				}
+			if(strbLights)
+			{
+				glColor4fv(kStrobeLight);
+				glTexCoord2f(0.25f, 0.0f); glVertex2f(-(size/1.5f), -(size/1.5f));
+				glTexCoord2f(0.25f, 0.5f); glVertex2f(-(size/1.5f), (size/1.5f));
+				glTexCoord2f(0.50f, 0.5f); glVertex2f((size/1.5f), (size/1.5f));
+				glTexCoord2f(0.50f, 0.0f); glVertex2f((size/1.5f), -(size/1.5f));
+			}
 		}
 		// Landing Lights
 		else if((sObjects[model].lods[lodIdx].lights[n].rgb[0] == 55) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[1] == 55) &&
-		   (sObjects[model].lods[lodIdx].lights[n].rgb[2] == 55))
+				(sObjects[model].lods[lodIdx].lights[n].rgb[1] == 55) &&
+				(sObjects[model].lods[lodIdx].lights[n].rgb[2] == 55))
 		{
 			if(landLights) {
-			// BEN SEZ: modulate the _alpha to make this dark, not
-			// the light color.  Otherwise if the sky is fairly light the light
-			// will be darker than the sky, which looks f---ed during the day.
+				// BEN SEZ: modulate the _alpha to make this dark, not
+				// the light color.  Otherwise if the sky is fairly light the light
+				// will be darker than the sky, which looks f---ed during the day.
 				float color[4];
 				color[0] = kLandingLight[0];
 				if(color[0] < 0.0) color[0] = 0.0;
@@ -847,9 +847,9 @@ void	OBJ_DrawLights(int model, float inDistance, double inX, double inY,
 			// rear nav light and others? I guess...
 			if(navLights) {
 				glColor3f(
-					sObjects[model].lods[lodIdx].lights[n].rgb[0] * 0.1f,
-					sObjects[model].lods[lodIdx].lights[n].rgb[1] * 0.1f,
-					sObjects[model].lods[lodIdx].lights[n].rgb[2] * 0.1f);
+							sObjects[model].lods[lodIdx].lights[n].rgb[0] * 0.1f,
+						sObjects[model].lods[lodIdx].lights[n].rgb[1] * 0.1f,
+						sObjects[model].lods[lodIdx].lights[n].rgb[2] * 0.1f);
 				glTexCoord2f(0.0f, 0.5f); glVertex2f(-(size/2.0f), -(size/2.0f));
 				glTexCoord2f(0.0f, 1.0f); glVertex2f(-(size/2.0f), (size/2.0f));
 				glTexCoord2f(0.25f, 1.0f); glVertex2f((size/2.0f), (size/2.0f));

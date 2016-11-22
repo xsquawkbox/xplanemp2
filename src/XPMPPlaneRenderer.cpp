@@ -122,7 +122,7 @@ static int sphere_is_visible(const cull_info_t * i, float x, float y, float z, f
 	float yp = x * i->model_view[1] + y * i->model_view[5] + z * i->model_view[ 9] + i->model_view[13];
 	float zp = x * i->model_view[2] + y * i->model_view[6] + z * i->model_view[10] + i->model_view[14];
 
-	// Now - we apply the "plane equation" of each clip plane to see how far from the clip plane our point is.  
+	// Now - we apply the "plane equation" of each clip plane to see how far from the clip plane our point is.
 	// The clip planes are directed: positive number distances mean we are INSIDE our viewing area by some distance;
 	// negative means outside.  So ... if we are outside by less than -r, the ENTIRE sphere is out of bounds.
 	// We are not visible!  We do the near clip plane, then sides, then far, in an attempt to try the planes
@@ -134,7 +134,7 @@ static int sphere_is_visible(const cull_info_t * i, float x, float y, float z, f
 	if ((xp * i->lft_clip[0] + yp * i->lft_clip[1] + zp * i->lft_clip[2] + i->lft_clip[3] + r) < 0)	return false;
 	if ((xp * i->rgt_clip[0] + yp * i->rgt_clip[1] + zp * i->rgt_clip[2] + i->rgt_clip[3] + r) < 0)	return false;
 	if ((xp * i->far_clip[0] + yp * i->far_clip[1] + zp * i->far_clip[2] + i->far_clip[3] + r) < 0)	return false;
-	return true;	
+	return true;
 }
 
 static float sphere_distance_sqr(const cull_info_t * i, float x, float y, float z)
@@ -154,12 +154,12 @@ static void convert_to_2d(const cull_info_t * i, const float * vp, float x, floa
 
 	float xc = xe * i->proj[0] + ye * i->proj[4] + ze * i->proj[ 8] + we * i->proj[12];
 	float yc = xe * i->proj[1] + ye * i->proj[5] + ze * i->proj[ 9] + we * i->proj[13];
-//	float zc = xe * i->proj[2] + ye * i->proj[6] + ze * i->proj[10] + we * i->proj[14];
+	//	float zc = xe * i->proj[2] + ye * i->proj[6] + ze * i->proj[10] + we * i->proj[14];
 	float wc = xe * i->proj[3] + ye * i->proj[7] + ze * i->proj[11] + we * i->proj[15];
 	
 	xc /= wc;
-	yc /= wc;	
-//	zc /= wc;
+	yc /= wc;
+	//	zc /= wc;
 
 	*out_x = vp[0] + (1.0f + xc) * vp[2] / 2.0f;
 	*out_y = vp[1] + (1.0f + yc) * vp[3] / 2.0f;
@@ -196,18 +196,18 @@ void			XPMPInitDefaultPlaneRenderer(void)
 	if(gAltitudeRef == NULL) gAltitudeRef = XPLMFindDataRef("sim/flightmodel/position/elevation");
 
 #if RENDERER_STATS
-	XPLMRegisterDataAccessor("hack/renderer/planes", xplmType_Int, 0, GetRendererStat, NULL, 
-				NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-				&gTotPlanes, NULL);
-	XPLMRegisterDataAccessor("hack/renderer/navlites", xplmType_Int, 0, GetRendererStat, NULL, 
-				NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-				&gNavPlanes, NULL);
-	XPLMRegisterDataAccessor("hack/renderer/objects", xplmType_Int, 0, GetRendererStat, NULL, 
-				NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,	
-				&gOBJPlanes, NULL);
-	XPLMRegisterDataAccessor("hack/renderer/acfs", xplmType_Int, 0, GetRendererStat, NULL, 
-				NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,	
-				&gACFPlanes, NULL);
+	XPLMRegisterDataAccessor("hack/renderer/planes", xplmType_Int, 0, GetRendererStat, NULL,
+							 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+							 &gTotPlanes, NULL);
+	XPLMRegisterDataAccessor("hack/renderer/navlites", xplmType_Int, 0, GetRendererStat, NULL,
+							 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+							 &gNavPlanes, NULL);
+	XPLMRegisterDataAccessor("hack/renderer/objects", xplmType_Int, 0, GetRendererStat, NULL,
+							 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+							 &gOBJPlanes, NULL);
+	XPLMRegisterDataAccessor("hack/renderer/acfs", xplmType_Int, 0, GetRendererStat, NULL,
+							 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+							 &gACFPlanes, NULL);
 #endif		
 
 	// We don't know how many multiplayer planes there are - fetch as many as we can.
@@ -230,7 +230,7 @@ void			XPMPInitDefaultPlaneRenderer(void)
 		if (!d) break;
 		gMultiRef_Z.push_back(d);
 		++n;
-	}	
+	}
 }
 
 // PlaneToRender struct: we prioritize planes radially by distance, so...
@@ -277,33 +277,33 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 	
 	cull_info_t			gl_camera;
 	setup_cull_info(&gl_camera);
-	XPLMCameraPosition_t x_camera;	
-		
+	XPLMCameraPosition_t x_camera;
+
 	XPLMReadCameraPosition(&x_camera);	// only for zoom!
 
-	// Culling - read the camera pos«and figure out what's visible.
+	// Culling - read the camera posÂ«and figure out what's visible.
 
-	double	maxDist = XPLMGetDataf(gVisDataRef);	
+	double	maxDist = XPLMGetDataf(gVisDataRef);
 	double  labelDist = min(maxDist, MAX_LABEL_DIST) * x_camera.zoom;		// Labels get easier to see when users zooms.
 	double	fullPlaneDist = x_camera.zoom * (5280.0 / 3.2) * (gFloatPrefsFunc ? gFloatPrefsFunc("planes","full_distance", 3.0) : 3.0);	// Only draw planes fully within 3 miles.
-	int		maxFullPlanes = gIntPrefsFunc ? gIntPrefsFunc("planes","max_full_count", 100) : 100;						// Draw no more than 100 full planes!	
+	int		maxFullPlanes = gIntPrefsFunc ? gIntPrefsFunc("planes","max_full_count", 100) : 100;						// Draw no more than 100 full planes!
 
-	gTotPlanes = planeCount;	
+	gTotPlanes = planeCount;
 	gNavPlanes = gACFPlanes = gOBJPlanes = 0;
 
 	int modelCount, active, plugin, tcas;
 	XPLMCountAircraft(&modelCount, &active, &plugin);
 	tcas = modelCount - 1;	// This is how many tcas blips we can have!
-		
+
 	RenderMap						myPlanes;		// Planes - sorted by distance so we can do the closest N and bail
 	
 	/************************************************************************************
 	 * CULLING AND STATE CALCULATION LOOP
-	 ************************************************************************************/	
+	 ************************************************************************************/
 	
 	if (gDumpOneRenderCycle)
 	{
-		XPLMDebugString("Dumping one cycle map of planes.\n");	
+		XPLMDebugString("Dumping one cycle map of planes.\n");
 		char	fname[256], bigbuf[1024], foo[32];
 		for (int n = 1; n < modelCount; ++n)
 		{
@@ -334,14 +334,14 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 			XPLMWorldToLocal(pos.lat, pos.lon, pos.elevation * kFtToMeters, &x, &y, &z);
 			
 			float distMeters = sqrt(sphere_distance_sqr(&gl_camera,
-                                                        static_cast<float>(x),
-                                                        static_cast<float>(y),
-                                                        static_cast<float>(z)));
+														static_cast<float>(x),
+														static_cast<float>(y),
+														static_cast<float>(z)));
 			
 			// If the plane is farther than our TCAS range, it's just not visible.  Drop it!
 			if (distMeters > kMaxDistTCAS)
 				continue;
-				
+
 			// Only draw if it's in range.
 			bool cull = (distMeters > maxDist);
 			
@@ -363,8 +363,8 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 			// Cull if we exceed half the FOV.
 			
 			if(!cull && !sphere_is_visible(&gl_camera, static_cast<float>(x),
-                                                       static_cast<float>(y),
-                                                       static_cast<float>(z), 50.0))
+										   static_cast<float>(y),
+										   static_cast<float>(z), 50.0))
 			{
 				cull = true;
 			}
@@ -377,10 +377,10 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 			char	icao[128], livery[128];
 			char	debug[512];
 
-			XPMPGetPlaneICAOAndLivery(id, icao, livery);						
+			XPMPGetPlaneICAOAndLivery(id, icao, livery);
 			sprintf(debug,"Queueing plane %d (%s/%s) at lle %f, %f, %f (xyz=%f, %f, %f) pitch=%f,roll=%f,heading=%f,model=1.\n", index, icao, livery,
 					pos.lat, pos.lon, pos.elevation,
-				x, y, z, pos.pitch, pos.roll, pos.heading);
+					x, y, z, pos.pitch, pos.roll, pos.heading);
 			XPLMDebugString(debug);
 #endif
 
@@ -395,7 +395,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 				renderRecord.roll = pos.roll;
 				renderRecord.model = static_cast<XPMPPlanePtr>(id)->model;
 				renderRecord.cull = cull;						// NO other planes.  Doing so causes a lot of things to go nuts!
-				renderRecord.tcas = tcas;	
+				renderRecord.tcas = tcas;
 
 				XPMPPlaneSurfaces_t	surfaces;
 				surfaces.size = sizeof(surfaces);
@@ -414,7 +414,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 					renderRecord.state.yokeRoll 		= surfaces.yokeRoll 		;
 
 					renderRecord.lights.lightFlags		= surfaces.lights.lightFlags;
-				
+
 				} else {
 					renderRecord.state.structSize = sizeof(renderRecord.state);
 					renderRecord.state.gearPosition = (pos.elevation < 70) ?  1.0f : 0.0f;
@@ -423,7 +423,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 					renderRecord.state.thrust = (pos.pitch > 30) ? 1.0f : 0.6f;
 					renderRecord.state.yokePitch = pos.pitch / 90.0f;
 					renderRecord.state.yokeHeading = pos.heading / 180.0f;
-					renderRecord.state.yokeRoll = pos.roll / 90.0f;	
+					renderRecord.state.yokeRoll = pos.roll / 90.0f;
 
 					// use some smart defaults
 					renderRecord.lights.bcnLights = 1;
@@ -432,11 +432,11 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 				}
 				if (renderRecord.model && !renderRecord.model->moving_gear)
 					renderRecord.state.gearPosition = 1.0;
-				renderRecord.full = drawFullPlane;	
+				renderRecord.full = drawFullPlane;
 				renderRecord.dist = distMeters;
 				renderRecord.label = pos.label;
 				
-				myPlanes.insert(RenderMap::value_type(distMeters, renderRecord));				
+				myPlanes.insert(RenderMap::value_type(distMeters, renderRecord));
 
 			} // State calculation
 			
@@ -445,20 +445,20 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 	} // Per-plane loop
 
 	if (gDumpOneRenderCycle)
-		XPLMDebugString("End of cycle dump.\n");	
+		XPLMDebugString("End of cycle dump.\n");
 	
 	/************************************************************************************
 	 * ACTUAL RENDERING LOOP
 	 ************************************************************************************/
 	
 	// We're going to go in and render the first N planes in full, and the rest as lites.
-	// We're also going to put the x-plane multiplayer vars in place for the first N 
+	// We're also going to put the x-plane multiplayer vars in place for the first N
 	// TCAS-visible planes, so they show up on our moving map.
 	// We do this in two stages: building up what to do, then doing it in the optimal
 	// OGL order.
 	
-		size_t	renderedCounter = 0;
-		
+	size_t	renderedCounter = 0;
+
 	vector<PlaneToRender_t *>			planes_obj_lites;
 	multimap<int, PlaneToRender_t *>	planes_austin;
 	multimap<int, PlaneToRender_t *>	planes_obj;
@@ -471,11 +471,11 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 	// CSL model, and put CSL planes in the right 'bucket'.
 
 	for (RenderMap::iterator iter = myPlanes.begin(); iter != myPlanes.end(); ++iter)
-	{	
+	{
 		// This is the case where we draw a real plane.
 		if (!iter->second.cull)
-		{	
-			// Max plane enforcement - once we run out of the max number of full planes the 
+		{
+			// Max plane enforcement - once we run out of the max number of full planes the
 			// user allows, force only lites for framerate
 			if (gACFPlanes >= maxFullPlanes)
 				iter->second.full = false;
@@ -483,8 +483,8 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 #if DEBUG_RENDERER	
 			char	debug[512];
 			sprintf(debug,"Drawing plane: %s at %f,%f,%f (%fx%fx%f full=%d\n",
-				iter->second.model ? iter->second.model->file_path.c_str() : "<none>", iter->second.x, iter->second.y, iter->second.z,
-				iter->second.pitch, iter->second.roll, iter->second.heading, iter->second.full ? 1 : 0);
+					iter->second.model ? iter->second.model->file_path.c_str() : "<none>", iter->second.x, iter->second.y, iter->second.z,
+					iter->second.pitch, iter->second.roll, iter->second.heading, iter->second.full ? 1 : 0);
 			XPLMDebugString(debug);
 #endif
 
@@ -493,23 +493,23 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 				if (iter->second.model->plane_type == plane_Austin)
 				{
 					planes_austin.insert(multimap<int, PlaneToRender_t *>::value_type(CSL_GetOGLIndex(iter->second.model), &iter->second));
-				} 
+				}
 				else if (iter->second.model->plane_type == plane_Obj)
 				{
 					planes_obj.insert(multimap<int, PlaneToRender_t *>::value_type(CSL_GetOGLIndex(iter->second.model), &iter->second));
-					planes_obj_lites.push_back(&iter->second);					
+					planes_obj_lites.push_back(&iter->second);
 				}
 				else if(iter->second.model->plane_type == plane_Obj8)
 				{
 					planes_obj8.push_back(&iter->second);
 				}
-			
+
 			} else {
 				// If it's time to draw austin's planes but this one
 				// doesn't have a model, we draw anything.
 				glMatrixMode(GL_MODELVIEW);
 				glPushMatrix();
-				glTranslatef(iter->second.x, iter->second.y, iter->second.z);			
+				glTranslatef(iter->second.x, iter->second.y, iter->second.z);
 				glRotatef(iter->second.heading, 0.0, -1.0, 0.0);
 				glRotatef(iter->second.pitch, 01.0, 0.0, 0.0);
 				glRotatef(iter->second.roll, 0.0, 0.0, -1.0);
@@ -518,11 +518,11 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 				// Using the user's planes can cause the internal flight model to get f-cked up.
 				// Using a non-loaded plane can trigger internal asserts in x-plane.
 				if (modelCount > 1)
-				if(!is_blend)
-					XPLMDrawAircraft(1,
-					(float) iter->second.x, (float) iter->second.y, (float) iter->second.z, 
-					iter->second.pitch, iter->second.roll, iter->second.heading, 
-					iter->second.full ? 1 : 0, &iter->second.state);
+					if(!is_blend)
+						XPLMDrawAircraft(1,
+										 (float) iter->second.x, (float) iter->second.y, (float) iter->second.z,
+										 iter->second.pitch, iter->second.roll, iter->second.heading,
+										 iter->second.full ? 1 : 0, &iter->second.state);
 
 				glPopMatrix();
 			}
@@ -542,57 +542,57 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 	// PASS 1 - draw Austin's planes.
 
 	if(!is_blend)
-	for (planeMapIter = planes_austin.begin(); planeMapIter != planes_austin.end(); ++planeMapIter)	
-	{
-		CSL_DrawObject(	planeMapIter->second->model, 
-						planeMapIter->second->dist,
-						planeMapIter->second->x, 
-						planeMapIter->second->y, 
-						planeMapIter->second->z, 
-						planeMapIter->second->pitch, 
-						planeMapIter->second->roll, 
-						planeMapIter->second->heading, 
-						plane_Austin, 
-						planeMapIter->second->full ? 1 : 0, 
-						planeMapIter->second->lights, 
-						&planeMapIter->second->state);
+		for (planeMapIter = planes_austin.begin(); planeMapIter != planes_austin.end(); ++planeMapIter)
+		{
+			CSL_DrawObject(	planeMapIter->second->model,
+							planeMapIter->second->dist,
+							planeMapIter->second->x,
+							planeMapIter->second->y,
+							planeMapIter->second->z,
+							planeMapIter->second->pitch,
+							planeMapIter->second->roll,
+							planeMapIter->second->heading,
+							plane_Austin,
+							planeMapIter->second->full ? 1 : 0,
+							planeMapIter->second->lights,
+							&planeMapIter->second->state);
 
-		if (planeMapIter->second->full)
-			++gACFPlanes;
-		else
-			++gNavPlanes;
-	}
+			if (planeMapIter->second->full)
+				++gACFPlanes;
+			else
+				++gNavPlanes;
+		}
 	
 	// PASS 2 - draw OBJs
 	// Blend for solid OBJ7s?  YES!  First, in HDR mode, they DO NOT draw to the gbuffer properly -
 	// they splat their livery into the normal map, which is terrifying and stupid.  Then they are also
 	// pre-lit...the net result is surprisingly not much worse than regular rendering considering how many
 	// bad things have happened, but for all I know we're getting NaNs somewhere.
-	// 
+	//
 	// Blending isn't going to hurt things in NON-HDR because our rendering is so stupid for old objs - there's
 	// pretty much never translucency so we aren't going to get Z-order fails.  So f--- it...always draw blend.<
 	if(is_blend)
-	for (planeMapIter = planes_obj.begin(); planeMapIter != planes_obj.end(); ++planeMapIter)	
-	{	
-		CSL_DrawObject(
-					planeMapIter->second->model, 
-					planeMapIter->second->dist,
-					planeMapIter->second->x, 
-					planeMapIter->second->y, 
-					planeMapIter->second->z, 
-					planeMapIter->second->pitch, 
-					planeMapIter->second->roll, 
-					planeMapIter->second->heading, 
-					plane_Obj, 
-					planeMapIter->second->full ? 1 : 0, 
-					planeMapIter->second->lights, 
-				   &planeMapIter->second->state);	
+		for (planeMapIter = planes_obj.begin(); planeMapIter != planes_obj.end(); ++planeMapIter)
+		{
+			CSL_DrawObject(
+						planeMapIter->second->model,
+						planeMapIter->second->dist,
+						planeMapIter->second->x,
+						planeMapIter->second->y,
+						planeMapIter->second->z,
+						planeMapIter->second->pitch,
+						planeMapIter->second->roll,
+						planeMapIter->second->heading,
+						plane_Obj,
+						planeMapIter->second->full ? 1 : 0,
+						planeMapIter->second->lights,
+						&planeMapIter->second->state);
 			++gOBJPlanes;
-	}
+		}
 
 	for(planeIter = planes_obj8.begin(); planeIter != planes_obj8.end(); ++planeIter)
 	{
-		CSL_DrawObject( (*planeIter)->model, 
+		CSL_DrawObject( (*planeIter)->model,
 						(*planeIter)->dist,
 						(*planeIter)->x,
 						(*planeIter)->y,
@@ -603,7 +603,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 						plane_Obj8,
 						(*planeIter)->full ? 1 : 0,
 						(*planeIter)->lights,
-					   &(*planeIter)->state);
+						&(*planeIter)->state);
 	}
 
 	if(!is_blend)
@@ -612,74 +612,74 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 	// PASS 3 - draw OBJ lights.
 
 	if(is_blend)
-	if (!planes_obj_lites.empty())
-	{
-		OBJ_BeginLightDrawing();
-		for (planeIter = planes_obj_lites.begin(); planeIter != planes_obj_lites.end(); ++planeIter)
+		if (!planes_obj_lites.empty())
 		{
-			// this thing draws the lights of a model
-			CSL_DrawObject( (*planeIter)->model, 
-							(*planeIter)->dist,
-							(*planeIter)->x,
-							(*planeIter)->y,
-							(*planeIter)->z,
-							(*planeIter)->pitch,
-							(*planeIter)->roll,
-							(*planeIter)->heading,
-							plane_Lights,
-							(*planeIter)->full ? 1 : 0,
-							(*planeIter)->lights,
-						   &(*planeIter)->state);
+			OBJ_BeginLightDrawing();
+			for (planeIter = planes_obj_lites.begin(); planeIter != planes_obj_lites.end(); ++planeIter)
+			{
+				// this thing draws the lights of a model
+				CSL_DrawObject( (*planeIter)->model,
+								(*planeIter)->dist,
+								(*planeIter)->x,
+								(*planeIter)->y,
+								(*planeIter)->z,
+								(*planeIter)->pitch,
+								(*planeIter)->roll,
+								(*planeIter)->heading,
+								plane_Lights,
+								(*planeIter)->full ? 1 : 0,
+								(*planeIter)->lights,
+								&(*planeIter)->state);
+			}
 		}
-	}
 	
 	if(is_blend)
 		obj_draw_translucent();
-	obj_draw_done();	
+	obj_draw_done();
 	
 	// PASS 4 - Labels
 	if(is_blend)
-	if ( gDrawLabels )
-	{
-		GLfloat	vp[4];
-		glGetFloatv(GL_VIEWPORT,vp);
-		
-		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
-		glLoadIdentity();
-		glOrtho(0, vp[2], 0, vp[3], -1, 1);
-		
-		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
-		glLoadIdentity();
-		
-		float c[4] = { 1, 1, 0, 1 };
-		
-		
-		for (RenderMap::iterator iter = myPlanes.begin(); iter != myPlanes.end(); ++iter)
-			if(iter->first < labelDist)
-				if(!iter->second.cull)		// IMPORTANT - airplane BEHIND us still maps XY onto screen...so we get 180 degree reflections.  But behind us acf are culled, so that's good.
-				{
-					float x, y;
-					convert_to_2d(&gl_camera, vp, iter->second.x, iter->second.y, iter->second.z, 1.0, &x, &y);
-					
-					float rat = 1.0f - (iter->first / static_cast<float>(labelDist));
-					c[0] = c[1] = 0.5f + 0.5f * rat;
-					c[2] = 0.5f - 0.5f * rat;		// gray -> yellow - no alpha in the SDK - foo!
-					
-					XPLMDrawString(c, static_cast<int>(x), static_cast<int>(y)+10, (char *) iter->second.label.c_str(), NULL, xplmFont_Basic);
-				}
-		
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();	
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-		
-	}
+		if ( gDrawLabels )
+		{
+			GLfloat	vp[4];
+			glGetFloatv(GL_VIEWPORT,vp);
+
+			glMatrixMode(GL_PROJECTION);
+			glPushMatrix();
+			glLoadIdentity();
+			glOrtho(0, vp[2], 0, vp[3], -1, 1);
+
+			glMatrixMode(GL_MODELVIEW);
+			glPushMatrix();
+			glLoadIdentity();
+
+			float c[4] = { 1, 1, 0, 1 };
+
+
+			for (RenderMap::iterator iter = myPlanes.begin(); iter != myPlanes.end(); ++iter)
+				if(iter->first < labelDist)
+					if(!iter->second.cull)		// IMPORTANT - airplane BEHIND us still maps XY onto screen...so we get 180 degree reflections.  But behind us acf are culled, so that's good.
+					{
+						float x, y;
+						convert_to_2d(&gl_camera, vp, iter->second.x, iter->second.y, iter->second.z, 1.0, &x, &y);
+
+						float rat = 1.0f - (iter->first / static_cast<float>(labelDist));
+						c[0] = c[1] = 0.5f + 0.5f * rat;
+						c[2] = 0.5f - 0.5f * rat;		// gray -> yellow - no alpha in the SDK - foo!
+
+						XPLMDrawString(c, static_cast<int>(x), static_cast<int>(y)+10, (char *) iter->second.label.c_str(), NULL, xplmFont_Basic);
+					}
+
+			glMatrixMode(GL_PROJECTION);
+			glPopMatrix();
+			glMatrixMode(GL_MODELVIEW);
+			glPopMatrix();
+
+		}
 
 	
 	// Final hack - leave a note to ourselves for how many of Austin's planes we relocated to do TCAS.
-	if (tcas > static_cast<int>(renderedCounter))	
+	if (tcas > static_cast<int>(renderedCounter))
 		tcas = static_cast<int>(renderedCounter);
 	gEnableCount = (tcas+1);
 	

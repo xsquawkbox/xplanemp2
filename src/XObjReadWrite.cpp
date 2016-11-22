@@ -1,22 +1,22 @@
 /* 
  * Copyright (c) 2004, Laminar Research.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
  */
@@ -27,11 +27,11 @@
 #include <stdlib.h>
 
 #if APL
-	#define CRLF	"\r"
+#define CRLF	"\r"
 #elif WIN
-	#define CRLF	"\r\n"
+#define CRLF	"\r\n"
 #else
-	#define CRLF	"\n"
+#define CRLF	"\n"
 #endif
 
 /*
@@ -49,14 +49,14 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 	vec_rgb			vrgb;
 	
 	float scanned_st_rgb[4][3]={{0,0,0} , {0,0,0},// [corner][color or st]
-                                {0,0,0} , {0,0,0}};
+								{0,0,0} , {0,0,0}};
 	
 	outObj.cmds.clear();
 
 	/*********************************************************************
 	 * READ HEADER
 	 *********************************************************************/
-	 
+
 	StTextFileScanner	f(inFile, true);
 	if (f.done()) return false;
 
@@ -76,9 +76,9 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 	if (tokens.empty()) return false;
 	vers = tokens[0];
 	f.next();
-	if (f.done()) return false;	
+	if (f.done()) return false;
 
-		 if (vers == "700") version = 7;
+	if (vers == "700") version = 7;
 	else if (vers == "2"  ) version = 2;
 	else					version = 1;
 	
@@ -94,17 +94,17 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 		if (f.done()) return false;
 	}
 	
-	// The last line of the header is the texture file name.	
+	// The last line of the header is the texture file name.
 	if (version != 1)
 	{
-		line = f.get();	
+		line = f.get();
 		BreakString(line, tokens);
 		if (tokens.empty()) return false;
 		outObj.texture = tokens[0];
 		f.next();
 		if (f.done()) return false;
 	}
-		
+
 	/************************************************************
 	 * READ GEOMETRIC COMMANDS
 	 ************************************************************/
@@ -119,7 +119,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 		{
 			line = f.get();
 			f.next();
-		}		
+		}
 		first_loop = false;
 
 		BreakString(line, tokens);
@@ -127,7 +127,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 
 		/************************************************************
 		 * OBJ2 SCANNING
-		 ************************************************************/		
+		 ************************************************************/
 		if (version != 7)
 		{
 			obj2_op = atoi(tokens[0].c_str());
@@ -139,7 +139,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 				cmd.cmdID = (obj2_op == 1) ? obj_Light : obj_Line;
 				cmd.cmdType = type_PtLine;
 				count = obj2_op;
-				if (tokens.size() < 4) return false;			
+				if (tokens.size() < 4) return false;
 				scanned_st_rgb[0][0]=scanned_st_rgb[1][0]=static_cast<float>(atof(tokens[1].c_str()))*0.1f; // r
 				scanned_st_rgb[0][1]=scanned_st_rgb[1][1]=static_cast<float>(atof(tokens[2].c_str()))*0.1f; // g
 				scanned_st_rgb[0][2]=scanned_st_rgb[1][2]=static_cast<float>(atof(tokens[3].c_str()))*0.1f; // b
@@ -159,7 +159,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 					vrgb.rgb[2] = scanned_st_rgb[t][2];
 					cmd.rgb.push_back(vrgb);
 				}
-				outObj.cmds.push_back(cmd);					
+				outObj.cmds.push_back(cmd);
 				break;
 
 			case 3:
@@ -170,10 +170,10 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 				if (obj2_op == 3) cmd.cmdID = obj_Tri;
 				cmd.cmdType = type_Poly;
 				count = obj2_op;
-				if (count == 5) count = 4;				
+				if (count == 5) count = 4;
 				if (tokens.size() < 5 && version == 2) return false;
-				// Make sure to 'spread' the 4 S/T coords to 8 points.  This is 
-				// because 
+				// Make sure to 'spread' the 4 S/T coords to 8 points.  This is
+				// because
 				if (version == 2)
 				{
 					scanned_st_rgb[2][0]=scanned_st_rgb[3][0]=static_cast<float>(atof(tokens[1].c_str()));	// s1
@@ -202,7 +202,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 					cmd.st.push_back(vst);
 				}
 				outObj.cmds.push_back(cmd);
-				break;				
+				break;
 				
 			case 99:
 				// 99 is the end token for obj2 files.
@@ -237,7 +237,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 					vst.st[1] = static_cast<float>(atof(tokens[9].c_str()));
 					cmd.st.push_back(vst);
 				}
-				outObj.cmds.push_back(cmd);					
+				outObj.cmds.push_back(cmd);
 				break;
 			}
 			
@@ -245,8 +245,8 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 
 			/************************************************************
 			 * OBJ7 SCANNING
-			 ************************************************************/		
-		
+			 ************************************************************/
+
 			cmd_id = FindObjCmd(tokens[0].c_str());
 			
 			cmd.cmdType = gCmds[cmd_id].cmd_type;
@@ -260,7 +260,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 				else
 					return false;
 			case type_PtLine:
-			
+
 				if ((count == 0) && (tokens.size() > 1))
 					count = atoi(tokens[1].c_str());
 				while (count-- && !f.done())
@@ -314,7 +314,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 							
 							cmd.st.push_back(vst);
 						}
-					
+
 					} else
 						return false;
 				}
@@ -328,7 +328,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 						cmd.attributes.push_back(static_cast<float>(atof(tokens[n+1].c_str())));
 				} else
 					return false;
-					
+
 				outObj.cmds.push_back(cmd);
 				break;
 			}
@@ -358,51 +358,51 @@ bool	XObjWrite(const char * inFile, const XObj& inObj)
 		int 	index	= FindIndexForCmd(iter->cmdID);
 		switch(iter->cmdType) {
 		case type_PtLine:
-		
+
 			if (gCmds[index].elem_count == 0)
 				fprintf(fi,"%s %zd\t\t//" CRLF, gCmds[index].name, iter->rgb.size());
 			else
 				fprintf(fi,"%s\t\t//" CRLF, gCmds[index].name);
 			
 			for (vector<vec_rgb>::const_iterator riter = iter->rgb.begin();
-				riter != iter->rgb.end(); ++riter)
+				 riter != iter->rgb.end(); ++riter)
 			{
 				fprintf(fi,"%f %f %f    %f %f %f" CRLF,
-					riter->v[0], riter->v[1], riter->v[2],
-					riter->rgb[0], riter->rgb[1], riter->rgb[2]);
+						riter->v[0], riter->v[1], riter->v[2],
+						riter->rgb[0], riter->rgb[1], riter->rgb[2]);
 			}
 			fprintf(fi,CRLF);
 			break;
 			
 			
 		case type_Poly:
-		
+
 			if (gCmds[index].elem_count == 0)
 				fprintf(fi,"%s %zd\t\t//" CRLF, gCmds[index].name, iter->st.size());
 			else
 				fprintf(fi,"%s\t\t//" CRLF, gCmds[index].name);
 			
 			for (vector<vec_tex>::const_iterator siter = iter->st.begin();
-				siter != iter->st.end(); ++siter)
+				 siter != iter->st.end(); ++siter)
 			{
 				fprintf(fi,"%f %f %f    %f %f" CRLF,
-					siter->v[0], siter->v[1], siter->v[2],
-					siter->st[0], siter->st[1]);
+						siter->v[0], siter->v[1], siter->v[2],
+						siter->st[0], siter->st[1]);
 			}
 			fprintf(fi,CRLF);
 			break;
 
-		
+
 		case type_Attr:
 			fprintf(fi,"%s",gCmds[index].name);
 			for (vector<float>::const_iterator aiter = iter->attributes.begin();
-				aiter != iter->attributes.end(); ++aiter)
+				 aiter != iter->attributes.end(); ++aiter)
 			{
 				fprintf(fi," %f", *aiter);
 			}
 			fprintf(fi, "\t\t//" CRLF CRLF);
 			break;
-		}	
+		}
 	}
 
 	fprintf(fi,"end\t\t//" CRLF);

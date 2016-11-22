@@ -1,22 +1,22 @@
 /* 
  * Copyright (c) 2013, Laminar Research.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
  */
@@ -98,36 +98,36 @@ static float obj_get_float(void * inRefcon)
 	if(s_cur_plane == NULL) return 0.0f;
 	
 	intptr_t v = reinterpret_cast<intptr_t>(inRefcon);
-	switch(v) 
+	switch(v)
 	{
-		case gear_rat:			return s_cur_plane->state->gearPosition;		break;
-		case flap_rat:			return s_cur_plane->state->flapRatio;			break;
-		case spoi_rat:			return s_cur_plane->state->spoilerRatio;		break;
-		case sbrk_rat:			return s_cur_plane->state->speedBrakeRatio;		break;
-		case slat_rat:			return s_cur_plane->state->slatRatio;			break;
-		case swep_rat:			return s_cur_plane->state->wingSweep;			break;
-		case thrs_rat:			return s_cur_plane->state->thrust;				break;
-		case ptch_rat:			return s_cur_plane->state->yokePitch;			break;
-		case head_rat:			return s_cur_plane->state->yokeHeading;			break;
-		case roll_rat:			return s_cur_plane->state->yokeRoll;			break;
+	case gear_rat:			return s_cur_plane->state->gearPosition;		break;
+	case flap_rat:			return s_cur_plane->state->flapRatio;			break;
+	case spoi_rat:			return s_cur_plane->state->spoilerRatio;		break;
+	case sbrk_rat:			return s_cur_plane->state->speedBrakeRatio;		break;
+	case slat_rat:			return s_cur_plane->state->slatRatio;			break;
+	case swep_rat:			return s_cur_plane->state->wingSweep;			break;
+	case thrs_rat:			return s_cur_plane->state->thrust;				break;
+	case ptch_rat:			return s_cur_plane->state->yokePitch;			break;
+	case head_rat:			return s_cur_plane->state->yokeHeading;			break;
+	case roll_rat:			return s_cur_plane->state->yokeRoll;			break;
 
-		case lan_lite_on:		return static_cast<float>(s_cur_plane->lights.landLights);			break;
-		case bcn_lite_on:		return static_cast<float>(s_cur_plane->lights.bcnLights);			break;
-		case str_lite_on:		return static_cast<float>(s_cur_plane->lights.strbLights);			break;
-		case nav_lite_on:		return static_cast<float>(s_cur_plane->lights.navLights);			break;			
-			
-		default:
-			return 0.0f;
+	case lan_lite_on:		return static_cast<float>(s_cur_plane->lights.landLights);			break;
+	case bcn_lite_on:		return static_cast<float>(s_cur_plane->lights.bcnLights);			break;
+	case str_lite_on:		return static_cast<float>(s_cur_plane->lights.strbLights);			break;
+	case nav_lite_on:		return static_cast<float>(s_cur_plane->lights.navLights);			break;
+
+	default:
+		return 0.0f;
 	}
 }
 
 int obj_get_float_array(
-                                   void *               inRefcon,    
-                                   float *              inValues,    
-                                   int                  /*inOffset*/,    
-                                   int                  inCount)
+		void *               inRefcon,
+		float *              inValues,
+		int                  /*inOffset*/,
+		int                  inCount)
 {
-	if(inValues == NULL) 
+	if(inValues == NULL)
 		return 1;
 	float rv = obj_get_float(inRefcon);
 	for(int i = 0; i < inCount; ++i)
@@ -145,9 +145,9 @@ int obj_get_float_array(
 
 
 static void (*XPLMLoadObjectAsync_p)(
-                                   const char *         inPath,    
-                                   XPLMObjectLoaded_f   inCallback,    
-                                   void *               inRefcon)=NULL;
+		const char *         inPath,
+		XPLMObjectLoaded_f   inCallback,
+		void *               inRefcon)=NULL;
 
 void	obj_init()
 {
@@ -165,14 +165,14 @@ void	obj_init()
 	for(int i = 0; i < dref_dim; ++i)
 	{
 		XPLMRegisterDataAccessor(
-		dref_names[i], xplmType_Float|xplmType_FloatArray, 0,
-		NULL, NULL, 
-		obj_get_float, NULL, 
-		NULL, NULL, 
-		NULL, NULL, 
-		obj_get_float_array, NULL, 
-		NULL, NULL, reinterpret_cast<void *>(static_cast<intptr_t>(i)), NULL);
-	}	
+					dref_names[i], xplmType_Float|xplmType_FloatArray, 0,
+					NULL, NULL,
+					obj_get_float, NULL,
+					NULL, NULL,
+					NULL, NULL,
+					obj_get_float_array, NULL,
+					NULL, NULL, reinterpret_cast<void *>(static_cast<intptr_t>(i)), NULL);
+	}
 }
 
 
@@ -183,12 +183,12 @@ static void		draw_objects_for_mode(one_obj * who, int want_translucent)
 	{
 		obj_draw_type dt = who->model->draw_type;
 		if((want_translucent && dt == draw_glass) ||
-		   (!want_translucent && dt != draw_glass))
+				(!want_translucent && dt != draw_glass))
 		{
 			for(one_inst * i = who->head; i; i = i->next)
 			{
 				s_cur_plane = i;
-				// set dataref ptr to light + obj sate from "one_inst".			
+				// set dataref ptr to light + obj sate from "one_inst".
 				XPLMDrawObjects(who->model->handle, 1, &i->location, 1, 0);
 			}
 		}
@@ -205,34 +205,34 @@ void obj_loaded_cb(XPLMObjectRef obj, void * refcon)
 
 
 void	obj_schedule_one_aircraft(
-						CSLPlane_t *			model,
-						double 					x,
-						double 					y,
-						double 					z,
-						double 					pitch,
-						double 					roll,
-						double 					heading,
-						int	   					/*full*/,		// 
-						xpmp_LightStatus		lights,
-						XPLMPlaneDrawState_t *	state)
+		CSLPlane_t *			model,
+		double 					x,
+		double 					y,
+		double 					z,
+		double 					pitch,
+		double 					roll,
+		double 					heading,
+		int	   					/*full*/,		//
+		xpmp_LightStatus		lights,
+		XPLMPlaneDrawState_t *	state)
 {
 	one_obj * iter;
 	
 	for(vector<obj_for_acf>::iterator att = model->attachments.begin(); att != model->attachments.end(); ++att)
 	{
 		obj_for_acf * model = &*att;
-	
+
 		if(model->handle == NULL &&
-			!model->file.empty())
+				!model->file.empty())
 		{
 			if(XPLMLoadObjectAsync_p)
 				XPLMLoadObjectAsync_p(model->file.c_str(),obj_loaded_cb,(void *) &model->handle);
 			else
-				model->handle = XPLMLoadObject(model->file.c_str());			
+				model->handle = XPLMLoadObject(model->file.c_str());
 			model->file.clear();
 		}
-	
-	
+
+
 		for(iter = s_worklist; iter; iter = iter->next)
 		{
 			if(iter->model == model)
@@ -248,7 +248,7 @@ void	obj_schedule_one_aircraft(
 		}
 		
 		if(iter->model->handle)
-		{		
+		{
 			one_inst * i = new one_inst;
 			i->next = iter->head;
 			iter->head = i;
@@ -262,9 +262,9 @@ void	obj_schedule_one_aircraft(
 			i->location.roll = static_cast<float>(roll);
 			i->location.heading = static_cast<float>(heading);
 		}
-	}	
+	}
 }
-						
+
 void	obj_draw_solid()
 {
 	draw_objects_for_mode(s_worklist, false);
