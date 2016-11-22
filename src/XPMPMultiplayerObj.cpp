@@ -332,7 +332,7 @@ int		OBJ_LoadModel(const char * inFilePath)
 	}
 	
 	sObjects.push_back(ObjInfo_t());
-	bool ok = XObjRead(path.c_str(), sObjects.back().obj);
+	bool ok = XObjReadWrite::read(path.c_str(), sObjects.back().obj);
 	if (!ok)
 	{
 		sObjects.pop_back();

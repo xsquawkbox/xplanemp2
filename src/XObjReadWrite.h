@@ -23,9 +23,19 @@
 #ifndef XOBJREADWRITE_H
 #define XOBJREADWRITE_H
 
-struct	XObj;
+#include <string>
 
-bool	XObjRead(const char * inFile, XObj& outObj);
-bool	XObjWrite(const char * inFile, const XObj& inObj);
+struct	XObj;
+class StTextFileScanner;
+
+class XObjReadWrite
+{
+public:
+	static bool readHeader(const std::string &path, int &version, XObj& outObj);
+	static bool readHeader(StTextFileScanner &f, int &version, XObj& outObj);
+	static bool read(const std::string &inFile, XObj& outObj);
+	static bool write(const std::string &inFile, const XObj& inObj);
+
+};
 
 #endif

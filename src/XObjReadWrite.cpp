@@ -39,49 +39,39 @@
 	TODO: fix scientific notation support.
 */
 
-bool	XObjRead(const char * inFile, XObj& outObj)
+bool XObjReadWrite::readHeader(const std::string &path, int &version, XObj& outObj)
 {
-	vector<string>	tokens;
-	string			/*ascii,*/ vers, /*tag,*/ line;
-	int				cmd_id, count, obj2_op;
-	int				version = 1;
-	vec_tex			vst;
-	vec_rgb			vrgb;
-	
-	float scanned_st_rgb[4][3]={{0,0,0} , {0,0,0},// [corner][color or st]
-								{0,0,0} , {0,0,0}};
-	
-	outObj.cmds.clear();
+	StTextFileScanner fs(path.c_str(), true);
+	return XObjReadWrite::readHeader(fs, version, outObj);
+}
 
-	/*********************************************************************
-	 * READ HEADER
-	 *********************************************************************/
-
-	StTextFileScanner	f(inFile, true);
+bool XObjReadWrite::readHeader(StTextFileScanner &f, int &version, XObj& outObj)
+{
 	if (f.done()) return false;
 
 	// First we should have some kind of token telling us whether we're Mac or PC
 	// line endings.  But we don't care that much.
-	line = f.get();
+	string line = f.get();
+	vector<string> tokens;
 	BreakString(line, tokens);
 	if (tokens.empty()) return false;
 	//ascii = tokens[0];
 	f.next();
 	if (f.done()) return false;
-	
+
 	// Read the version string.  We expect either '2' or '700'.
 	line = f.get();
-	
+
 	BreakString(line, tokens);
 	if (tokens.empty()) return false;
-	vers = tokens[0];
+	string vers = tokens[0];
 	f.next();
 	if (f.done()) return false;
 
+	version = 1;
 	if (vers == "700") version = 7;
-	else if (vers == "2"  ) version = 2;
-	else					version = 1;
-	
+	else if (vers == "2") version = 2;
+
 	// If we're OBJ7, another token 'OBJ' follows...this is because
 	// all XP7 files start with the previous two lines.
 	if (version == 7)
@@ -93,7 +83,7 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 		f.next();
 		if (f.done()) return false;
 	}
-	
+
 	// The last line of the header is the texture file name.
 	if (version != 1)
 	{
@@ -104,6 +94,29 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 		f.next();
 		if (f.done()) return false;
 	}
+	return true;
+}
+
+bool XObjReadWrite::read(const std::string &inFile, XObj& outObj)
+{
+	vector<string>	tokens;
+	string			line;
+	int				cmd_id, count, obj2_op;
+	int				version = 1;
+	vec_tex			vst;
+	vec_rgb			vrgb;
+
+	float scanned_st_rgb[4][3]={{0,0,0} , {0,0,0},// [corner][color or st]
+								{0,0,0} , {0,0,0}};
+
+	outObj.cmds.clear();
+
+	/*********************************************************************
+	 * READ HEADER
+	 *********************************************************************/
+
+	StTextFileScanner	f(inFile.c_str(), true);
+	if (!XObjReadWrite::readHeader(f, version, outObj)) { return false; }
 
 	/************************************************************
 	 * READ GEOMETRIC COMMANDS
@@ -343,9 +356,9 @@ bool	XObjRead(const char * inFile, XObj& outObj)
 #define APL 0
 #endif
 
-bool	XObjWrite(const char * inFile, const XObj& inObj)
+bool XObjReadWrite::write(const std::string &inFile, const XObj& inObj)
 {
-	FILE * fi = fopen(inFile, "w");
+	FILE * fi = fopen(inFile.c_str(), "w");
 	if (!fi) return false;
 
 	fprintf(fi,"%c" CRLF, APL ? 'A' : 'I');
