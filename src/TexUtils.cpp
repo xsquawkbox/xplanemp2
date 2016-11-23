@@ -46,9 +46,9 @@ static void HalfBitmap(ImageInfo& ioImage)
 {
 	int row_b = (ioImage.width * ioImage.channels) + ioImage.pad;
 	
-	unsigned char * srcp1 = ioImage.data;
-	unsigned char * srcp2 = ioImage.data + row_b;
-	unsigned char * dstp = ioImage.data;
+	const unsigned char * srcp1 = ioImage.bitmap.data();
+	const unsigned char * srcp2 = ioImage.bitmap.data() + row_b;
+	unsigned char * dstp = ioImage.bitmap.data();
 	
 	ioImage.height /= 2;
 	ioImage.width /= 2;
@@ -169,8 +169,7 @@ bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inD
 			{
 				int increment = 3;
 				if (magentaAlpha) increment = 4;
-				unsigned char *p;
-				p = im.data;
+				unsigned char *p = im.bitmap.data();
 				int count = im.width * im.height;
 				while (count--)
 				{
@@ -199,21 +198,21 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 			if (magentaAlpha)
 			{
 				if (mipmap)
-					gluBuild2DMipmaps(GL_TEXTURE_2D, 4, im.width, im.height, GL_RGBA, GL_UNSIGNED_BYTE, im.data);
+					gluBuild2DMipmaps(GL_TEXTURE_2D, 4, im.width, im.height, GL_RGBA, GL_UNSIGNED_BYTE, im.bitmap.data());
 				else
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, im.width ,im.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, im.data);
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, im.width ,im.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, im.bitmap.data());
 			}
 			else
 			{
 				if (mipmap)
-					gluBuild2DMipmaps(GL_TEXTURE_2D, 3, im.width, im.height, GL_RGB, GL_UNSIGNED_BYTE, im.data);
+					gluBuild2DMipmaps(GL_TEXTURE_2D, 3, im.width, im.height, GL_RGB, GL_UNSIGNED_BYTE, im.bitmap.data());
 				else
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, im.width ,im.height, 0, GL_RGB, GL_UNSIGNED_BYTE, im.data);
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, im.width ,im.height, 0, GL_RGB, GL_UNSIGNED_BYTE, im.bitmap.data());
 			}
 		}
 	}
 
-	DestroyBitmap(&im);
+	DestroyBitmap(im);
 
 	// BAS note: for some reason on my WinXP system with GF-FX, if
 	// I do not set these explicitly to linear, I get no drawing at all.

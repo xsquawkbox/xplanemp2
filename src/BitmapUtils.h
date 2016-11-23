@@ -33,6 +33,8 @@
 	and are read right out of the file.
 */
 
+#include <vector>
+
 #if APL
 #pragma pack(push, 2)
 #endif
@@ -81,11 +83,11 @@ struct	BMPImageDesc {
 */
 
 struct	ImageInfo {
-	unsigned char *	data;
-	int				width;
-	int				height;
-	int				pad;
-	int				channels;
+	std::vector<unsigned char>	bitmap;
+	int							width;
+	int							height;
+	int							pad;
+	int							channels;
 };	
 
 /* Given a file path and an uninitialized imageInfo structure, this routine fills
@@ -114,19 +116,19 @@ int		CreateNewBitmap(int inWidth, int inHeight, int inChannels, struct ImageInfo
 
 /* Given a bitmap, this routine fills the whole bitmap in with a gray level of c, where
  * c = 0 means black and c = 255 means white. */
-void	FillBitmap(const struct ImageInfo * inImageInfo, char c);
+void	FillBitmap(ImageInfo *inImageInfo, char c);
 
 /* This routine deallocates a bitmap that was created with CreateBitmapFromFile or
  * CreateNewBitmap. */
-void	DestroyBitmap(const struct ImageInfo * inImageInfo);
+void	DestroyBitmap(ImageInfo &inImageInfo);
 
 /* Given two bitmaps, this routine copies a section from one bitmap to another.  
  * This routine will use bicubic and bilinear interpolation to copy the bitmap
  * as cleanly as possible.  However, if the bitmap contains alpha, the copy routine
  * will create a jagged edge to keep from smearing the alpha channel. */
 void	CopyBitmapSection(
-		const struct ImageInfo *	inSrc,
-		const struct ImageInfo *	inDst,
+		const struct ImageInfo *inSrc,
+		ImageInfo *		inDst,
 		int				inSrcLeft,
 		int				inSrcTop,
 		int				inSrcRight,
@@ -137,8 +139,8 @@ void	CopyBitmapSection(
 		int				inDstBottom);
 
 void	CopyBitmapSectionWarped(
-		const struct ImageInfo *	inSrc,
-		const struct ImageInfo *	inDst,
+		const struct ImageInfo *inSrc,
+		ImageInfo *		inDst,
 		int				inTopLeftX,
 		int				inTopLeftY,
 		int				inTopRightX,

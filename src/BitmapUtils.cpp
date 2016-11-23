@@ -86,8 +86,6 @@ int		CreateBitmapFromFile(const char * inFilePath, struct ImageInfo * outImageIn
 	int 					err = 0;
 	FILE *					fi = NULL;
 
-	outImageInfo->data = NULL;
-
 	fi = fopen(inFilePath, "rb");
 	if (fi == NULL)
 		goto bail;
@@ -127,14 +125,12 @@ int		CreateBitmapFromFile(const char * inFilePath, struct ImageInfo * outImageIn
 	/* Now we can allocate an image buffer. */
 	
 	outImageInfo->channels = 3;
-	outImageInfo->data = (unsigned char *) malloc(imageDesc.imageWidth * imageDesc.imageHeight * outImageInfo->channels + imageDesc.imageHeight * pad);
-	if (outImageInfo->data == NULL)
-		goto bail;
+	outImageInfo->bitmap.resize(imageDesc.imageWidth * imageDesc.imageHeight * outImageInfo->channels + imageDesc.imageHeight * pad);
 
 	/*  We can pretty much just read the bytes in; we know that we're 24 bit so there is no
 		color table, and 24 bit BMP files cannot be compressed. */
 
-	if (fread(outImageInfo->data, imageDesc.imageWidth * imageDesc.imageHeight * outImageInfo->channels + imageDesc.imageHeight * pad, 1, fi) != 1)
+	if (fread(outImageInfo->bitmap.data(), imageDesc.imageWidth * imageDesc.imageHeight * outImageInfo->channels + imageDesc.imageHeight * pad, 1, fi) != 1)
 		goto bail;
 	
 	fclose(fi);
@@ -144,8 +140,7 @@ bail:
 	err = errno;
 	if (fi != NULL)
 		fclose(fi);
-	if (outImageInfo->data != NULL)
-		free(outImageInfo->data);
+	outImageInfo->bitmap.clear();
 	if (err == 0)
 		err = -1;
 	return err;
@@ -203,7 +198,7 @@ int		WriteBitmapToFile(const struct ImageInfo * inImage, const char * inFilePath
 		goto bail;
 	if (fwrite(&imageDesc, sizeof(imageDesc), 1, fi) != 1)
 		goto bail;
-	if (fwrite(inImage->data, (inImage->width * 3 + inImage->pad) * inImage->height, 1, fi) != 1)
+	if (fwrite(inImage->bitmap.data(), (inImage->width * 3 + inImage->pad) * inImage->height, 1, fi) != 1)
 		goto bail;
 	
 	fclose(fi);
@@ -225,26 +220,24 @@ int		CreateNewBitmap(int inWidth, int inHeight, int inChannels, struct ImageInfo
 	/* This nasty voodoo calculates the padding necessary to make each scanline a multiple of four bytes. */
 	outImageInfo->pad = ((inWidth * inChannels + 3) & ~3) - (inWidth * inChannels);
 	outImageInfo->channels = inChannels;
-	outImageInfo->data = (unsigned char *) malloc(inHeight * ((inWidth * inChannels) + outImageInfo->pad));
-	if (outImageInfo->data == NULL)
-		return ENOMEM;
+	outImageInfo->bitmap.resize(inHeight * ((inWidth * inChannels) + outImageInfo->pad));
 	return 0;
 }
 
-void	FillBitmap(const struct ImageInfo * inImageInfo, char c)
+void	FillBitmap(struct ImageInfo * inImageInfo, char c)
 {
-	memset(inImageInfo->data, c, inImageInfo->width * inImageInfo->height * inImageInfo->channels);
+	memset(inImageInfo->bitmap.data(), c, inImageInfo->width * inImageInfo->height * inImageInfo->channels);
 }
 
-void	DestroyBitmap(const struct ImageInfo * inImageInfo)
+void	DestroyBitmap(struct ImageInfo &inImageInfo)
 {
-	free(inImageInfo->data);
+	inImageInfo.bitmap.clear();
 }
 
 
 void	CopyBitmapSection(
 		const struct ImageInfo *	inSrc,
-		const struct ImageInfo	*	inDst,
+		struct ImageInfo	*	inDst,
 		int				inSrcLeft,
 		int				inSrcTop,
 		int				inSrcRight,
@@ -281,8 +274,8 @@ void	CopyBitmapSection(
 	int	srcRowBytes = inSrc->width * inSrc->channels + inSrc->pad;
 	int	srcRowBytes2 = srcRowBytes * 2;
 	int	dstRowBytes = inDst->width * inSrc->channels + inDst->pad;
-	unsigned char *	srcBaseAddr = inSrc->data;
-	unsigned char *	dstBaseAddr = inDst->data;
+	const unsigned char *	srcBaseAddr = inSrc->bitmap.data();
+	unsigned char *	dstBaseAddr = inDst->bitmap.data();
 	
 	int		channels;
 	
@@ -297,7 +290,7 @@ void	CopyBitmapSection(
 			double	sy = ((dy - dstTop) / dstHeight * srcHeight) + srcTop;
 
 			unsigned char *	dstPixel = dstBaseAddr + ((int) dx * inDst->channels) + ((int) dy * dstRowBytes);
-			unsigned char *	srcPixel = srcBaseAddr + ((int) sx * inSrc->channels) + ((int) sy * srcRowBytes);
+			const unsigned char *	srcPixel = srcBaseAddr + ((int) sx * inSrc->channels) + ((int) sy * srcRowBytes);
 
 			/* 	If we would need pixels from off the edge of the image for bicubic interpolation,
 				just use bilinear. */
@@ -361,7 +354,7 @@ inline double	Interp2(double frac, double sml, double big)
 
 void	CopyBitmapSectionWarped(
 		const struct ImageInfo *	inSrc,
-		const struct ImageInfo *	inDst,
+		struct ImageInfo *	inDst,
 		int				inTopLeftX,
 		int				inTopLeftY,
 		int				inTopRightX,
@@ -401,8 +394,8 @@ void	CopyBitmapSectionWarped(
 	int	srcRowBytes = inSrc->width * inSrc->channels + inSrc->pad;
 	int	srcRowBytes2 = srcRowBytes * 2;
 	int	dstRowBytes = inDst->width * inSrc->channels + inDst->pad;
-	unsigned char *	srcBaseAddr = inSrc->data;
-	unsigned char *	dstBaseAddr = inDst->data;
+	const unsigned char *	srcBaseAddr = inSrc->bitmap.data();
+	unsigned char *	dstBaseAddr = inDst->bitmap.data();
 	
 	int		channels;
 	
@@ -420,7 +413,7 @@ void	CopyBitmapSectionWarped(
 			double	sy = Interp2(frac_x, Interp2(frac_y, topLeftY, botLeftY), Interp2(frac_y, topRightY, botRightY));
 
 			unsigned char *	dstPixel = dstBaseAddr + ((int) dx * inDst->channels) + ((int) dy * dstRowBytes);
-			unsigned char *	srcPixel = srcBaseAddr + ((int) sx * inSrc->channels) + ((int) sy * srcRowBytes);
+			const unsigned char *	srcPixel = srcBaseAddr + ((int) sx * inSrc->channels) + ((int) sy * srcRowBytes);
 
 			/* 	If we would need pixels from off the edge of the image for bicubic interpolation,
 				just use bilinear. */
@@ -486,9 +479,7 @@ void	RotateBitmapCCW(
 	int	newWidth = ioBitmap->height;
 	int	newHeight = ioBitmap->width;
 	int	newPad = ((newWidth * ioBitmap->channels + 3) & ~3) - (newWidth * ioBitmap->channels);
-	unsigned char * newData = (unsigned char *) malloc(((newWidth * ioBitmap->channels) + newPad) * newHeight);
-	if (newData == NULL)
-		return;
+	std::vector<unsigned char> newBitmap(((newWidth * ioBitmap->channels) + newPad) * newHeight);
 
 	for (int y = 0; y < ioBitmap->height; ++y)
 		for (int x = 0; x < ioBitmap->width; ++x)
@@ -496,8 +487,8 @@ void	RotateBitmapCCW(
 			int	nx = ioBitmap->height - y - 1;
 			int	ny = x;
 
-			unsigned char *	srcP = ioBitmap->data + (x * ioBitmap->channels) + (y * (ioBitmap->channels * ioBitmap->width + ioBitmap->pad));
-			unsigned char *	dstP = newData + (nx * ioBitmap->channels) + (ny * (ioBitmap->channels * newWidth + newPad));
+			unsigned char *	srcP = ioBitmap->bitmap.data() + (x * ioBitmap->channels) + (y * (ioBitmap->channels * ioBitmap->width + ioBitmap->pad));
+			unsigned char *	dstP = newBitmap.data() + (nx * ioBitmap->channels) + (ny * (ioBitmap->channels * newWidth + newPad));
 			int	chCount = ioBitmap->channels;
 			while (chCount--)
 			{
@@ -505,8 +496,7 @@ void	RotateBitmapCCW(
 			}
 		}
 
-	free(ioBitmap->data);
-	ioBitmap->data = newData;
+	ioBitmap->bitmap = newBitmap;
 	ioBitmap->width = newWidth;
 	ioBitmap->height = newHeight;
 	ioBitmap->pad = newPad;
@@ -516,7 +506,7 @@ void	RotateBitmapCCW(
 int	ConvertBitmapToAlpha(
 		struct ImageInfo *		ioImage)
 {
-	unsigned char * 	oldData, * newData, * srcPixel, * dstPixel;
+	unsigned char * srcPixel, * dstPixel;
 	//int 	count;
 	int	x,y;
 
@@ -525,13 +515,11 @@ int	ConvertBitmapToAlpha(
 
 	/* We have to allocate a new bitmap that is larger than the old to store the alpha channel. */
 
-	newData = (unsigned char *) malloc(ioImage->width * ioImage->height * 4);
-	if (newData == NULL)
-		return ENOMEM;
-	oldData = ioImage->data;
+	std::vector<unsigned char> newData (ioImage->width * ioImage->height * 4);
+	std::vector<unsigned char> oldData = ioImage->bitmap;
 	
-	srcPixel = oldData;
-	dstPixel = newData;
+	srcPixel = oldData.data();
+	dstPixel = newData.data();
 	//count = ioImage->width * ioImage->height;
 	for (y = 0; y < ioImage->height; ++y)
 		for (x = 0; x < ioImage->width; ++x)
@@ -562,9 +550,8 @@ int	ConvertBitmapToAlpha(
 				srcPixel += ioImage->pad;
 		}
 	
-	ioImage->data = newData;
+	ioImage->bitmap = newData;
 	ioImage->pad = 0;
-	free(oldData);
 	ioImage->channels = 4;
 	return 0;
 }			
@@ -573,7 +560,7 @@ int	ConvertBitmapToAlpha(
 int	ConvertAlphaToBitmap(
 		struct ImageInfo *		ioImage)
 {
-	unsigned char * 	oldData, * newData, * srcPixel, * dstPixel;
+	unsigned char * 	oldData, * srcPixel, * dstPixel;
 	//int 	count;
 	int 	x,y;
 
@@ -588,15 +575,13 @@ int	ConvertAlphaToBitmap(
 	 * a pad below.  If we are working with a non-multiple-of-four width image,
 	 * we will scribble over memory and cause chaos.
 	 */
-	newData = (unsigned char *) malloc(ioImage->width * ioImage->height * 3);
-	if (newData == NULL)
-		return ENOMEM;
-	oldData = ioImage->data;
+	std::vector<unsigned char> newData(ioImage->width * ioImage->height * 3);
+	oldData = ioImage->bitmap.data();
 	
 	ioImage->pad = ((ioImage->width * 3 + 3) & ~3) - (ioImage->width * 3);
 	
 	srcPixel = oldData;
-	dstPixel = newData;
+	dstPixel = newData.data();
 	//count = ioImage->width * ioImage->height;
 	
 	for (y = 0; y < ioImage->height; ++y)
@@ -634,7 +619,7 @@ int	ConvertAlphaToBitmap(
 				dstPixel += ioImage->pad;
 		}
 	
-	ioImage->data = newData;
+	ioImage->bitmap = newData;
 	free(oldData);
 	ioImage->channels = 3;
 	return 0;
@@ -876,7 +861,6 @@ int		CreateBitmapFromPNG(const char * inFilePath, struct ImageInfo * outImageInf
 	unsigned char *	volatile buffer = NULL;
 	FILE * volatile	file = NULL;
 	size_t			fileLength = 0;
-	outImageInfo->data = NULL;
 	char** volatile	rows = NULL;
 	double lcl_gamma;			// This will be the gamma of the file if it has one.
 #if APL							// Macs and PCs have different gamma responses.
@@ -952,15 +936,14 @@ int		CreateBitmapFromPNG(const char * inFilePath, struct ImageInfo * outImageInf
 	png_read_update_info(pngPtr,infoPtr);
 
 	outImageInfo->pad = 0;
-	outImageInfo->data = (unsigned char *) malloc(outImageInfo->width * outImageInfo->height * outImageInfo->channels);
-	if (!outImageInfo->data) goto bail;
+	outImageInfo->bitmap.resize(outImageInfo->width * outImageInfo->height * outImageInfo->channels);
 
 	rows=(char**)malloc(height*sizeof(char*));
 	if (!rows) goto bail;
 	
 	for(png_uint_32 i=0;i<height;i++)
 	{
-		rows[i]=(char*)outImageInfo->data     +((outImageInfo->height-1-i)*(outImageInfo->width)*(outImageInfo->channels));
+		rows[i]=(char*)outImageInfo->bitmap.data()     +((outImageInfo->height-1-i)*(outImageInfo->width)*(outImageInfo->channels));
 	}
 
 	png_read_image(pngPtr,(png_byte**)rows);										// Now we just tell pnglib to read in the data.  When done our row ptrs will be filled in.
@@ -979,7 +962,7 @@ bail:
 	else if (pngPtr)			png_destroy_read_struct(&pngPtr,(png_infopp)NULL,(png_infopp)NULL);
 	if (buffer)					delete [] buffer;
 	if (file)					fclose(file);
-	if (outImageInfo->data)		free(outImageInfo->data);
+	outImageInfo->bitmap.clear();
 	if (rows) 					free(rows);
 
 	return -1;
