@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <algorithm>
 
 #if IBM
 #include <GL/gl.h>
@@ -241,18 +242,12 @@ struct	PlaneToRender_t {
 	float					x;			// Positional info
 	float					y;
 	float					z;
-	float					pitch;
-	float					heading;
-	float					roll;
-	CSLPlane_t *			model;		// What model are we?
+	XPMPPlanePtr			plane;
 	bool					full;		// Do we need to draw the full plane or just lites?
 	bool					cull;		// Are we visible on screen?
 	bool					tcas;		// Are we visible on TCAS?
 	XPLMPlaneDrawState_t	state;		// Flaps, gear, etc.
 	float					dist;
-	xpmp_LightStatus		lights;		// lights status
-	string					label;
-	
 };
 typedef	std::map<float, PlaneToRender_t>	RenderMap;
 
@@ -390,10 +385,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 				renderRecord.x = static_cast<float>(x);
 				renderRecord.y = static_cast<float>(y);
 				renderRecord.z = static_cast<float>(z);
-				renderRecord.pitch = pos.pitch;
-				renderRecord.heading = pos.heading;
-				renderRecord.roll = pos.roll;
-				renderRecord.model = static_cast<XPMPPlanePtr>(id)->model;
+				renderRecord.plane = static_cast<XPMPPlanePtr>(id);
 				renderRecord.cull = cull;						// NO other planes.  Doing so causes a lot of things to go nuts!
 				renderRecord.tcas = tcas;
 
@@ -412,9 +404,6 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 					renderRecord.state.yokePitch 		= surfaces.yokePitch 		;
 					renderRecord.state.yokeHeading 		= surfaces.yokeHeading 		;
 					renderRecord.state.yokeRoll 		= surfaces.yokeRoll 		;
-
-					renderRecord.lights.lightFlags		= surfaces.lights.lightFlags;
-
 				} else {
 					renderRecord.state.structSize = sizeof(renderRecord.state);
 					renderRecord.state.gearPosition = (pos.elevation < 70) ?  1.0f : 0.0f;
@@ -426,16 +415,13 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 					renderRecord.state.yokeRoll = pos.roll / 90.0f;
 
 					// use some smart defaults
-					renderRecord.lights.bcnLights = 1;
-					renderRecord.lights.navLights = 1;
-
+					renderRecord.plane->surface.lights.bcnLights = 1;
+					renderRecord.plane->surface.lights.navLights = 1;
 				}
-				if (renderRecord.model && !renderRecord.model->moving_gear)
-					renderRecord.state.gearPosition = 1.0;
+				if (renderRecord.plane->model && !renderRecord.plane->model->moving_gear)
+					renderRecord.plane->surface.gearPosition = 1.0;
 				renderRecord.full = drawFullPlane;
 				renderRecord.dist = distMeters;
-				renderRecord.label = pos.label;
-				
 				myPlanes.insert(RenderMap::value_type(distMeters, renderRecord));
 
 			} // State calculation
@@ -480,26 +466,26 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 			if (gACFPlanes >= maxFullPlanes)
 				iter->second.full = false;
 
-#if DEBUG_RENDERER	
+#if DEBUG_RENDERER
 			char	debug[512];
 			sprintf(debug,"Drawing plane: %s at %f,%f,%f (%fx%fx%f full=%d\n",
-					iter->second.model ? iter->second.model->file_path.c_str() : "<none>", iter->second.x, iter->second.y, iter->second.z,
-					iter->second.pitch, iter->second.roll, iter->second.heading, iter->second.full ? 1 : 0);
+					iter->second.plane->model ? iter->second.plane->model->file_path.c_str() : "<none>", iter->second.x, iter->second.y, iter->second.z,
+					iter->second.plane->pos.pitch, iter->second.plane->pos.roll, iter->second.plane->pos.heading, iter->second.full ? 1 : 0);
 			XPLMDebugString(debug);
 #endif
 
-			if (iter->second.model)
+			if (iter->second.plane->model)
 			{
-				if (iter->second.model->plane_type == plane_Austin)
+				if (iter->second.plane->model->plane_type == plane_Austin)
 				{
-					planes_austin.insert(multimap<int, PlaneToRender_t *>::value_type(CSL_GetOGLIndex(iter->second.model), &iter->second));
+					planes_austin.insert(multimap<int, PlaneToRender_t *>::value_type(CSL_GetOGLIndex(iter->second.plane->model), &iter->second));
 				}
-				else if (iter->second.model->plane_type == plane_Obj)
+				else if (iter->second.plane->model->plane_type == plane_Obj)
 				{
-					planes_obj.insert(multimap<int, PlaneToRender_t *>::value_type(CSL_GetOGLIndex(iter->second.model), &iter->second));
+					planes_obj.insert(multimap<int, PlaneToRender_t *>::value_type(CSL_GetOGLIndex(iter->second.plane->model), &iter->second));
 					planes_obj_lites.push_back(&iter->second);
 				}
-				else if(iter->second.model->plane_type == plane_Obj8)
+				else if(iter->second.plane->model->plane_type == plane_Obj8)
 				{
 					planes_obj8.push_back(&iter->second);
 				}
@@ -510,9 +496,9 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 				glMatrixMode(GL_MODELVIEW);
 				glPushMatrix();
 				glTranslatef(iter->second.x, iter->second.y, iter->second.z);
-				glRotatef(iter->second.heading, 0.0, -1.0, 0.0);
-				glRotatef(iter->second.pitch, 01.0, 0.0, 0.0);
-				glRotatef(iter->second.roll, 0.0, 0.0, -1.0);
+				glRotatef(iter->second.plane->pos.heading, 0.0, -1.0, 0.0);
+				glRotatef(iter->second.plane->pos.pitch, 01.0, 0.0, 0.0);
+				glRotatef(iter->second.plane->pos.roll, 0.0, 0.0, -1.0);
 
 				// Safety check - if plane 1 isn't even loaded do NOT draw, do NOT draw plane 0.
 				// Using the user's planes can cause the internal flight model to get f-cked up.
@@ -521,7 +507,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 					if(!is_blend)
 						XPLMDrawAircraft(1,
 										 (float) iter->second.x, (float) iter->second.y, (float) iter->second.z,
-										 iter->second.pitch, iter->second.roll, iter->second.heading,
+										 iter->second.plane->pos.pitch, iter->second.plane->pos.roll, iter->second.plane->pos.heading,
 										 iter->second.full ? 1 : 0, &iter->second.state);
 
 				glPopMatrix();
@@ -544,17 +530,17 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 	if(!is_blend)
 		for (planeMapIter = planes_austin.begin(); planeMapIter != planes_austin.end(); ++planeMapIter)
 		{
-			CSL_DrawObject(	planeMapIter->second->model,
+			CSL_DrawObject(	planeMapIter->second->plane,
 							planeMapIter->second->dist,
 							planeMapIter->second->x,
 							planeMapIter->second->y,
 							planeMapIter->second->z,
-							planeMapIter->second->pitch,
-							planeMapIter->second->roll,
-							planeMapIter->second->heading,
+							planeMapIter->second->plane->pos.pitch,
+							planeMapIter->second->plane->pos.roll,
+							planeMapIter->second->plane->pos.heading,
 							plane_Austin,
 							planeMapIter->second->full ? 1 : 0,
-							planeMapIter->second->lights,
+							planeMapIter->second->plane->surface.lights,
 							&planeMapIter->second->state);
 
 			if (planeMapIter->second->full)
@@ -575,34 +561,34 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 		for (planeMapIter = planes_obj.begin(); planeMapIter != planes_obj.end(); ++planeMapIter)
 		{
 			CSL_DrawObject(
-						planeMapIter->second->model,
+						planeMapIter->second->plane,
 						planeMapIter->second->dist,
 						planeMapIter->second->x,
 						planeMapIter->second->y,
 						planeMapIter->second->z,
-						planeMapIter->second->pitch,
-						planeMapIter->second->roll,
-						planeMapIter->second->heading,
+						planeMapIter->second->plane->pos.pitch,
+						planeMapIter->second->plane->pos.roll,
+						planeMapIter->second->plane->pos.heading,
 						plane_Obj,
 						planeMapIter->second->full ? 1 : 0,
-						planeMapIter->second->lights,
+						planeMapIter->second->plane->surface.lights,
 						&planeMapIter->second->state);
 			++gOBJPlanes;
 		}
 
 	for(planeIter = planes_obj8.begin(); planeIter != planes_obj8.end(); ++planeIter)
 	{
-		CSL_DrawObject( (*planeIter)->model,
+		CSL_DrawObject( (*planeIter)->plane,
 						(*planeIter)->dist,
 						(*planeIter)->x,
 						(*planeIter)->y,
 						(*planeIter)->z,
-						(*planeIter)->pitch,
-						(*planeIter)->roll,
-						(*planeIter)->heading,
+						(*planeIter)->plane->pos.pitch,
+						(*planeIter)->plane->pos.roll,
+						(*planeIter)->plane->pos.heading,
 						plane_Obj8,
 						(*planeIter)->full ? 1 : 0,
-						(*planeIter)->lights,
+						(*planeIter)->plane->surface.lights,
 						&(*planeIter)->state);
 	}
 
@@ -618,17 +604,17 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 			for (planeIter = planes_obj_lites.begin(); planeIter != planes_obj_lites.end(); ++planeIter)
 			{
 				// this thing draws the lights of a model
-				CSL_DrawObject( (*planeIter)->model,
+				CSL_DrawObject( (*planeIter)->plane,
 								(*planeIter)->dist,
 								(*planeIter)->x,
 								(*planeIter)->y,
 								(*planeIter)->z,
-								(*planeIter)->pitch,
-								(*planeIter)->roll,
-								(*planeIter)->heading,
+								(*planeIter)->plane->pos.pitch,
+								(*planeIter)->plane->pos.roll,
+								(*planeIter)->plane->pos.heading,
 								plane_Lights,
 								(*planeIter)->full ? 1 : 0,
-								(*planeIter)->lights,
+								(*planeIter)->plane->surface.lights,
 								&(*planeIter)->state);
 			}
 		}
@@ -667,7 +653,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 						c[0] = c[1] = 0.5f + 0.5f * rat;
 						c[2] = 0.5f - 0.5f * rat;		// gray -> yellow - no alpha in the SDK - foo!
 
-						XPLMDrawString(c, static_cast<int>(x), static_cast<int>(y)+10, (char *) iter->second.label.c_str(), NULL, xplmFont_Basic);
+						XPLMDrawString(c, static_cast<int>(x), static_cast<int>(y)+10, (char *) iter->second.plane->pos.label, NULL, xplmFont_Basic);
 					}
 
 			glMatrixMode(GL_PROJECTION);

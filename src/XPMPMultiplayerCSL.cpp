@@ -1190,7 +1190,7 @@ int				CSL_GetOGLIndex(CSLPlane_t *		model)
 // Plane drawing couldn't be simpler - it's just a "switch" between all
 // of our drawing techniques.
 void			CSL_DrawObject(
-		CSLPlane_t *			model,
+		XPMPPlanePtr			plane,
 		float					distance,
 		double 					x,
 		double 					y,
@@ -1213,6 +1213,8 @@ void			CSL_DrawObject(
 		glRotatef(static_cast<GLfloat>(pitch), 01.0, 0.0, 0.0);
 		glRotatef(static_cast<GLfloat>(roll), 0.0, 0.0, -1.0);
 	}
+
+	CSLPlane_t *model = plane->model;
 
 	switch (type)
 	{

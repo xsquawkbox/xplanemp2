@@ -90,7 +90,7 @@ int				CSL_GetOGLIndex(CSLPlane_t *		model);
  *
  */
 void			CSL_DrawObject(
-		CSLPlane_t *			model,
+		XPMPPlanePtr			plane,
 		float					distance,
 		double 					x,
 		double 					y,
