@@ -26,6 +26,7 @@
 #include <math.h>
 #include <string.h>
 #include <stdlib.h>
+#include <mutex>
 #include "Interpolation.h"
 
 #if APL
@@ -863,6 +864,7 @@ void png_buffered_read_func(png_structp png_ptr, png_bytep data, png_size_t leng
 	png_current_pos+=length;
 }
 
+std::mutex instance_lock;
 
 int		CreateBitmapFromPNG(const char * inFilePath, struct ImageInfo * outImageInfo)
 {
@@ -883,6 +885,9 @@ int		CreateBitmapFromPNG(const char * inFilePath, struct ImageInfo * outImageInf
 #if IBM||LIN
 	double screen_gamma=2.2;
 #endif
+
+	// libpng is not thread safe. Serialize all calls into it.
+	std::lock_guard<std::mutex> lock( instance_lock ) ;
 
 	pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING,(png_voidp)NULL,my_error,my_warning);
 	if(!pngPtr) goto bail;
@@ -978,6 +983,5 @@ bail:
 	if (rows) 					free(rows);
 
 	return -1;
-
 }
 
