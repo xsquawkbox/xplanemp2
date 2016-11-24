@@ -247,7 +247,7 @@ int OBJ_LoadLightTexture(const string &inFilePath, bool inForceMaxTex)
 	if (sTexes.count(path) > 0)
 		return sTexes[path];
 
-	int derez = 5 - gIntPrefsFunc("planes", "resolution", 3);
+	int derez = 5 - gIntPrefsFunc("planes", "resolution", 5);
 	if (inForceMaxTex)
 		derez = 0;
 
