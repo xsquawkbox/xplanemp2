@@ -909,6 +909,7 @@ bool CSL_LoadCSL(const char * inFolderPath, const char * inRelatedFile, const ch
 		std::string packageFile(packagePath);
 		packageFile += "/"; //XPLMGetDirectorySeparator();
 		packageFile += "xsb_aircraft.txt";
+		XPLMDump() << XPMP_CLIENT_NAME ": Loading package: " << packageFile << "\n";
 		std::string packageContent = GetFileContent(packageFile);
 		auto package = ParsePackageHeader(packagePath, packageContent);
 		if (package.hasValidHeader()) gPackages.push_back(package);
