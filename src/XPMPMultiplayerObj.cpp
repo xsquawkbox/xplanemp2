@@ -27,7 +27,6 @@
 //#include "PlatformUtils.h"
 #include "XObjReadWrite.h"
 #include "TexUtils.h"
-#include "XOGLUtils.h"
 
 #include <map>
 #include <vector>
@@ -89,29 +88,6 @@ void	CrossVec(float a[3], float b[3], float dst[3])
 	dst[1] = a[2] * b[0] - a[0] * b[2] ;
 	dst[2] = a[0] * b[1] - a[1] * b[0] ;
 }
-
-
-/*****************************************************
-			Ben's Crazy Point Pool Class
-******************************************************/
-
-class	OBJ_PointPool {
-public:
-	OBJ_PointPool(){};
-	~OBJ_PointPool(){};
-
-	int AddPoint(float xyz[3], float st[2]);
-	void PreparePoolToDraw();
-	void CalcTriNormal(int idx1, int idx2, int idx3);
-	void NormalizeNormals(void);
-	void DebugDrawNormals();
-	void Purge() { mPointPool.clear(); }
-	int Size() { return static_cast<int>(mPointPool.size()); }
-private:
-	vector<float>	mPointPool;
-};
-
-
 
 // Adds a point to our pool and returns it's index.
 // If one already exists in the same location, we
@@ -249,37 +225,8 @@ void OBJ_PointPool::DebugDrawNormals()
 	glEnd();
 }
 
-/*****************************************************
-			Object and Struct Definitions
-******************************************************/
 static	map<string, int>	sTexes;
 
-struct	LightInfo_t {
-	float			xyz[3];
-	int				rgb[3];
-};
-
-// One of these structs per LOD read from the OBJ file
-struct	LODObjInfo_t {
-	
-	float					nearDist;	// The visible range
-	float					farDist;	// of this LOD
-	vector<int>				triangleList;
-	vector<LightInfo_t>		lights;
-	OBJ_PointPool			pointPool;
-	GLuint					dl;
-};
-
-// One of these structs per OBJ file
-struct	ObjInfo_t {
-
-	string					path;
-	string                  defaultTexture;
-	int						texnum;
-	int						texnum_lit;
-	XObj					obj;
-	vector<LODObjInfo_t>	lods;
-};
 
 static vector<ObjInfo_t>	sObjects;
 
