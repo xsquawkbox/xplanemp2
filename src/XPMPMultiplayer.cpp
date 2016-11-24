@@ -125,7 +125,7 @@ const char * 	XPMPMultiplayerInitLegacyData(
 	if (!CSL_Init(inTexturePath))
 		problem = true;
 
-	if (problem)		return "There were problems initializing XSquawkBox.  Please examine X-Plane's error.out file for detailed information.";
+	if (problem)		return "There were problems initializing " XPMP_CLIENT_LONGNAME ". Please examine X-Plane's error.out file for detailed information.";
 	else 				return "";
 }
 
@@ -161,7 +161,7 @@ const char * 	XPMPMultiplayerInit(
 	XPLMRegisterDrawCallback(XPMPRenderMultiplayerPlanes,
 							 xplm_Phase_Airplanes, 0, /* after*/ 0 /* refcon */);
 
-	if (problem)		return "There were problems initializing XSquawkBox.  Please examine X-Plane's error.out file for detailed information.";
+	if (problem)		return "There were problems initializing " XPMP_CLIENT_LONGNAME ".  Please examine X-Plane's error.out file for detailed information.";
 	else 				return "";
 }
 
@@ -227,7 +227,7 @@ const  char * XPMPMultiplayerEnable(void)
 	XPLMCountAircraft(&total, &active, &who);
 	if (result == 0)
 	{
-		return "XSquawkBox was not able to start up multiplayer visuals because another plugin is controlling aircraft.";
+		return XPMP_CLIENT_LONGNAME " was not able to start up multiplayer visuals because another plugin is controlling aircraft.";
 	} else
 		return "";
 }
@@ -246,7 +246,7 @@ const char * 	XPMPLoadCSLPackage(
 	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
 		problem = true;
 
-	if (problem)		return "There were problems initializing XSquawkBox.  Please examine X-Plane's error.out file for detailed information.";
+	if (problem)		return "There were problems initializing " XPMP_CLIENT_LONGNAME ".  Please examine X-Plane's error.out file for detailed information.";
 	else 				return "";
 }
 
