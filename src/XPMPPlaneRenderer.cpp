@@ -447,7 +447,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 
 	vector<PlaneToRender_t *>			planes_obj_lites;
 	multimap<int, PlaneToRender_t *>	planes_austin;
-	multimap<int, PlaneToRender_t *>	planes_obj;
+	vector<PlaneToRender_t *>			planes_obj;
 	vector<PlaneToRender_t *>			planes_obj8;
 
 	vector<PlaneToRender_t *>::iterator			planeIter;
@@ -482,7 +482,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 				}
 				else if (iter->second.plane->model->plane_type == plane_Obj)
 				{
-					planes_obj.insert(multimap<int, PlaneToRender_t *>::value_type(CSL_GetOGLIndex(iter->second.plane->model), &iter->second));
+					planes_obj.push_back(&iter->second);
 					planes_obj_lites.push_back(&iter->second);
 				}
 				else if(iter->second.plane->model->plane_type == plane_Obj8)
@@ -558,21 +558,21 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 	// Blending isn't going to hurt things in NON-HDR because our rendering is so stupid for old objs - there's
 	// pretty much never translucency so we aren't going to get Z-order fails.  So f--- it...always draw blend.<
 	if(is_blend)
-		for (planeMapIter = planes_obj.begin(); planeMapIter != planes_obj.end(); ++planeMapIter)
+		for (const auto &plane_obj : planes_obj)
 		{
 			CSL_DrawObject(
-						planeMapIter->second->plane,
-						planeMapIter->second->dist,
-						planeMapIter->second->x,
-						planeMapIter->second->y,
-						planeMapIter->second->z,
-						planeMapIter->second->plane->pos.pitch,
-						planeMapIter->second->plane->pos.roll,
-						planeMapIter->second->plane->pos.heading,
+						plane_obj->plane,
+						plane_obj->dist,
+						plane_obj->x,
+						plane_obj->y,
+						plane_obj->z,
+						plane_obj->plane->pos.pitch,
+						plane_obj->plane->pos.roll,
+						plane_obj->plane->pos.heading,
 						plane_Obj,
-						planeMapIter->second->full ? 1 : 0,
-						planeMapIter->second->plane->surface.lights,
-						&planeMapIter->second->state);
+						plane_obj->full ? 1 : 0,
+						plane_obj->plane->surface.lights,
+						&plane_obj->state);
 			++gOBJPlanes;
 		}
 
