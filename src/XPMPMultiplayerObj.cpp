@@ -969,5 +969,6 @@ void	OBJ_DrawLights(XPMPPlane_t *plane, float inDistance, double inX, double inY
 
 int		OBJ_GetModelTexID(int model)
 {
-	return sObjects[model].texnum;
+	if (model >= static_cast<int>(sObjects.size())) { return 0; }
+	else { return sObjects[model].texnum; }
 }
