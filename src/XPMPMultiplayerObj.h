@@ -28,6 +28,10 @@
 #include "XObjDefs.h"
 #include "XPLMCamera.h"
 #include "XOGLUtils.h"
+#include "ResourceManager.h"
+#include "TexUtils.h"
+
+#include <memory>
 
 struct XPMPPlane_t;
 
@@ -55,6 +59,8 @@ private:
 			Object and Struct Definitions
 ******************************************************/
 
+enum LoadStatus { Succeeded, Failed };
+
 struct	LightInfo_t {
 	float			xyz[3];
 	int				rgb[3];
@@ -76,35 +82,50 @@ struct	ObjInfo_t {
 
 	string					path;
 	string                  defaultTexture;
+	string					defaultLitTexture;
 	int						texnum;
 	int						texnum_lit;
 	XObj					obj;
 	vector<LODObjInfo_t>	lods;
+	LoadStatus loadStatus;
 };
+using ObjManager = ResourceManager<ObjInfo_t>;
+using OBJ7Handle = ObjManager::ResourceHandle;
+
+struct CSLTexture_t
+{
+	std::string		path;
+	ImageInfo		im;
+	int				id;
+	LoadStatus		loadStatus;
+};
+using TextureManager = ResourceManager<CSLTexture_t>;
+using TextureHandle = TextureManager::ResourceHandle;
 
 bool	OBJ_Init(const char * inTexturePath);
 
-// Load one model - return -1 if it can't be loaded.
-int		OBJ_LoadModel(const char * inFilePath);
+ObjManager::ResourceHandle OBJ_LoadModel(const std::string &inFilePath);
+ObjManager::Future OBJ_LoadModelAsync(const std::string &inFilePath);
 
 // Get name of objects default model
-std::string OBJ_DefaultModel(int model);
+std::string OBJ_DefaultModel(const std::string &path);
 
 // MODEL DRAWING
 // Note that texID and litTexID are OPTIONAL! They will only be filled
 // in if the user wants to override the default texture specified by the
 // obj file
-void	OBJ_PlotModel(int model, int texID, int litTexID, float inDistance, double inX, double inY, 
+void	OBJ_PlotModel(XPMPPlane_t *plane, float inDistance, double inX, double inY,
 					  double inZ, double inPitch, double inRoll, double inHeading);
 
 // TEXTURED LIGHTS DRAWING
 void	OBJ_BeginLightDrawing();
-void	OBJ_DrawLights(int model, float inDistance, double inX, double inY,
+void	OBJ_DrawLights(XPMPPlane_t *plane, float inDistance, double inX, double inY,
 					   double inZ, double inPitch, double inRoll, double inHeading,
 					   xpmp_LightStatus lights);
 
 // Texture loading
-int		OBJ_LoadTexture(const char * inFilePath, bool inForceMaxRes);
+int		OBJ_LoadLightTexture(const std::string &inFilePath, bool inForceMaxTex);
+TextureManager::Future OBJ_LoadTexture(const std::string &path);
 int		OBJ_GetModelTexID(int model);
 
 

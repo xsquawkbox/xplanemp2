@@ -381,23 +381,7 @@ bool ParseObjectCommand(const std::vector<std::string> &tokens, CSLPackage_t &pa
 	package.planes.back().plane_type = plane_Obj;
 	package.planes.back().file_path = fullPath;
 	package.planes.back().moving_gear = true;
-	package.planes.back().texID = 0;
-	package.planes.back().texLitID = 0;
-	package.planes.back().obj_idx = OBJ_LoadModel(fullPath.c_str());
-	if (package.planes.back().obj_idx == -1)
-	{
-		XPLMDebugString(XPMP_CLIENT_NAME " WARNING: Failed to load model in file ");
-		XPLMDebugString(path.c_str());
-		XPLMDebugString(" line ");
-		char buf[32];
-		sprintf(buf,"%d", lineNum);
-		XPLMDebugString(buf);
-		XPLMDebugString(".\n              ");
-		XPLMDebugString(line.c_str());
-		XPLMDebugString(".\n");
-		return false;
-	}
-	package.planes.back().textureName = OBJ_DefaultModel(package.planes.back().obj_idx);
+	package.planes.back().textureName = OBJ_DefaultModel(fullPath);
 #if DEBUG_CSL_LOADING
 	XPLMDebugString("      Got Object: ");
 	XPLMDebugString(fullPath.c_str());
@@ -433,19 +417,14 @@ bool ParseTextureCommand(const std::vector<std::string> &tokens, CSLPackage_t &p
 	textureFilename.erase(textureFilename.find_last_of('.'));
 
 	package.planes.back().textureName = textureFilename;
-	package.planes.back().texID = OBJ_LoadTexture(absoluteTexPath.c_str(), false);
-	if (package.planes.back().texID == -1)
-	{
-		XPLMDump(path, lineNum, line) << "Texture " << absoluteTexPath << " failed to load.\n";
-		return false;
-	}
-	// Load the lit texture
+	package.planes.back().texturePath = absoluteTexPath;
+
 	string texLitPath = absoluteTexPath;
 	string::size_type pos2 = texLitPath.find_last_of('.');
 	if(pos2 != string::npos)
 	{
 		texLitPath.insert(pos2, "LIT");
-		package.planes.back().texLitID = OBJ_LoadTexture(texLitPath.c_str(), false);
+		package.planes.back().textureLitPath = texLitPath;
 	}
 
 #if DEBUG_CSL_LOADING
@@ -1231,14 +1210,12 @@ void			CSL_DrawObject(
 	}
 		break;
 	case plane_Obj:
-		if (model->obj_idx != -1)
-			OBJ_PlotModel(model->obj_idx, model->texID, model->texLitID, full ? distance : max(distance, 10000.0f),
-						  x, y ,z, pitch, roll, heading);
+		OBJ_PlotModel(plane, full ? distance : max(distance, 10000.0f),
+					  x, y ,z, pitch, roll, heading);
 		break;
 	case plane_Lights:
-		if (model->obj_idx != -1)
-			OBJ_DrawLights(model->obj_idx, distance,
-						   x, y ,z, pitch, roll, heading, lights);
+		OBJ_DrawLights(plane, distance,
+					   x, y ,z, pitch, roll, heading, lights);
 
 		break;
 	case plane_Obj8:

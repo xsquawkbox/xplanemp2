@@ -40,6 +40,7 @@
 using namespace std;
 
 #include "XPMPMultiplayer.h"
+#include "XPMPMultiplayerObj.h"
 #include "XPMPMultiplayerObj8.h"	// for obj8 attachment info
 
 template <class T>
@@ -101,6 +102,8 @@ struct	CSLPlane_t {
 
 	int							plane_type;		// What kind are we?
 	string						file_path;		// Where do we load from (oz and obj, debug-use-only for OBJ8)
+	string						texturePath;	// Full path to the planes texture
+	string						textureLitPath; // Full path to the planes lit texture
 	bool						moving_gear;	// Does gear retract?
 
 	// plane_Austin
@@ -113,7 +116,6 @@ struct	CSLPlane_t {
 
 	// plane_Obj8
 	vector<obj_for_acf>			attachments;
-	
 };
 
 // These enums define the six levels of matching we might possibly
@@ -180,11 +182,15 @@ struct	XPMPPlane_t {
 	// This is last known data we got for the plane, with timestamps.
 	int						posAge;
 	XPMPPlanePosition_t		pos;
+
 	int						surfaceAge;
 	XPMPPlaneSurfaces_t		surface;
 	int						radarAge;
 	XPMPPlaneRadar_t		radar;
-	
+
+	OBJ7Handle                  objHandle;
+	TextureHandle               texHandle;
+	TextureHandle               texLitHandle;
 };
 
 typedef	XPMPPlane_t *								XPMPPlanePtr;
