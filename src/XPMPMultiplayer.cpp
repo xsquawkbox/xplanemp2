@@ -325,7 +325,7 @@ XPMPPlaneID		XPMPCreatePlane(
 		XPMPPlaneData_f			inDataFunc,
 		void *					inRefcon)
 {
-	XPMPPlanePtr	plane = new XPMPPlane_t;
+	auto plane = std::make_unique<XPMPPlane_t>();
 	plane->icao = inICAOCode;
 	plane->livery = inLivery;
 	plane->airline = inAirline;
@@ -337,15 +337,15 @@ XPMPPlaneID		XPMPCreatePlane(
 	plane->surface.size = sizeof(plane->surface);
 	plane->radar.size = sizeof(plane->radar);
 	plane->posAge = plane->radarAge = plane->surfaceAge = -1;
+	gPlanes.push_back(std::move(plane));
 	
-	gPlanes.push_back(plane);
-	
+	XPMPPlanePtr planePtr = gPlanes.back().get();
 	for (XPMPPlaneNotifierVector::iterator iter = gObservers.begin(); iter !=
 		 gObservers.end(); ++iter)
 	{
-		iter->first.first(plane, xpmp_PlaneNotification_Created, iter->first.second);
+		iter->first.first(planePtr, xpmp_PlaneNotification_Created, iter->first.second);
 	}
-	return plane;
+	return planePtr;
 }
 
 bool CompareCaseInsensitive(const string &a, const string &b)
@@ -355,7 +355,7 @@ bool CompareCaseInsensitive(const string &a, const string &b)
 
 XPMPPlaneID     XPMPCreatePlaneWithModelName(const char *inModelName, const char *inICAOCode, const char *inAirline, const char *inLivery, XPMPPlaneData_f inDataFunc, void *inRefcon)
 {
-	XPMPPlanePtr	plane = new XPMPPlane_t;
+	auto plane = std::make_unique<XPMPPlane_t>();
 	plane->icao = inICAOCode;
 	plane->livery = inLivery;
 	plane->airline = inAirline;
@@ -377,15 +377,15 @@ XPMPPlaneID     XPMPCreatePlaneWithModelName(const char *inModelName, const char
 	plane->surface.size = sizeof(plane->surface);
 	plane->radar.size = sizeof(plane->radar);
 	plane->posAge = plane->radarAge = plane->surfaceAge = -1;
+	gPlanes.push_back(std::move(plane));
 
-	gPlanes.push_back(plane);
-
+	XPMPPlanePtr planePtr = gPlanes.back().get();
 	for (XPMPPlaneNotifierVector::iterator iter = gObservers.begin(); iter !=
 		 gObservers.end(); ++iter)
 	{
-		iter->first.first(plane, xpmp_PlaneNotification_Created, iter->first.second);
+		iter->first.first(planePtr, xpmp_PlaneNotification_Created, iter->first.second);
 	}
-	return plane;
+	return planePtr;
 }
 
 void			XPMPDestroyPlane(XPMPPlaneID inID)
@@ -401,8 +401,6 @@ void			XPMPDestroyPlane(XPMPPlaneID inID)
 		iter2->first.first(plane, xpmp_PlaneNotification_Destroyed, iter2->first.second);
 	}
 	gPlanes.erase(iter);
-	
-	delete plane;
 }
 
 void	XPMPChangePlaneModel(
@@ -446,7 +444,7 @@ XPMPPlaneID		XPMPGetNthPlane(
 	if ((index < 0) || (index >= static_cast<long>(gPlanes.size())))
 		return NULL;
 
-	return gPlanes[index];
+	return gPlanes[index].get();
 }							
 
 
@@ -549,7 +547,10 @@ XPMPPlaneCallbackResult			XPMPGetPlaneData(
 XPMPPlanePtr	XPMPPlaneIsValid(XPMPPlaneID inID, XPMPPlaneVector::iterator * outIter)
 {
 	XPMPPlanePtr 	ptr = static_cast<XPMPPlanePtr>(inID);
-	XPMPPlaneVector::iterator iter = std::find(gPlanes.begin(), gPlanes.end(), ptr);
+	XPMPPlaneVector::iterator iter = std::find_if(gPlanes.begin(), gPlanes.end(), [ptr] (const auto &p)
+	{
+		return p.get() == ptr;
+	});
 	if (iter == gPlanes.end())
 		return NULL;
 	if (outIter)

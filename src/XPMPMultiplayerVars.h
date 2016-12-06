@@ -34,6 +34,7 @@
 #include <set>
 #include <string>
 #include <map>
+#include <memory>
 
 #include "XObjDefs.h"
 
@@ -194,7 +195,7 @@ struct	XPMPPlane_t {
 };
 
 typedef	XPMPPlane_t *								XPMPPlanePtr;
-typedef	vector<XPMPPlanePtr>						XPMPPlaneVector;
+typedef	vector<std::unique_ptr<XPMPPlane_t>>		XPMPPlaneVector;
 
 // Notifiers - clients can install callbacks and be told when a plane's
 // data changes.

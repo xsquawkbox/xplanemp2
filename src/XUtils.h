@@ -28,6 +28,8 @@ struct	XObj;
 
 #include <string>
 #include <vector>
+#include <memory>
+
 using namespace std;
 
 class	StTextFileScanner {
@@ -120,7 +122,7 @@ private:
 	
 	struct	XPointPoolImp;
 
-	XPointPoolImp * mImp;
+	std::unique_ptr<XPointPoolImp> mImp;
 
 };
 

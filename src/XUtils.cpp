@@ -447,13 +447,12 @@ struct	XPointPool::XPointPoolImp {
 };
 
 XPointPool::XPointPool()
+	: mImp(std::make_unique<XPointPoolImp>())
 {
-	mImp = new XPointPoolImp;
 }
 
 XPointPool::~XPointPool()
 {
-	delete mImp;
 }
 
 void	XPointPool::clear()
