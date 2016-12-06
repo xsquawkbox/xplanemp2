@@ -25,6 +25,7 @@
 #include "XPMPMultiplayerVars.h"
 #include "XPMPPlaneRenderer.h"
 #include "XPMPMultiplayerCSL.h"
+#include "XPLMUtilities.h"
 
 #include <algorithm>
 #include <cctype>
@@ -371,7 +372,15 @@ XPMPPlaneID     XPMPCreatePlaneWithModelName(const char *inModelName, const char
 			plane->model = &(*cslPlane);
 		}
 	}
-	if (!plane->model) return nullptr;
+
+	if (!plane->model)
+	{
+		XPLMDebugString("Requested model ");
+		XPLMDebugString(inModelName);
+		XPLMDebugString(" is unknown! Falling back to own model matching.");
+		XPLMDebugString("\n");
+		return XPMPCreatePlane(inICAOCode, inAirline, inLivery, inDataFunc, inRefcon);
+	}
 
 	plane->pos.size = sizeof(plane->pos);
 	plane->surface.size = sizeof(plane->surface);
