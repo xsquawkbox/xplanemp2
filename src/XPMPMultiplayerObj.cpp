@@ -33,6 +33,7 @@
 #include <cmath>
 #include <cstdio>
 #include <queue>
+#include <fstream>
 
 #include "XPLMGraphics.h"
 #include "XPLMUtilities.h"
@@ -369,13 +370,7 @@ ObjManager::ResourceHandle OBJ_LoadModel(const string &inFilePath)
 	// fixme: needed?
 	objInfo.texnum = -1;
 	objInfo.texnum_lit = -1;
-
-	tex_path = path;
-	p = tex_path.find_last_of("\\:/");//XPLMGetDirectorySeparator());
-	tex_path.erase(p+1);
-	tex_path += objInfo.obj.texture;
-	tex_path += "_LIT.png";
-	objInfo.defaultLitTexture = tex_path;
+	objInfo.defaultLitTexture = OBJ_GetLitTextureByTexture(objInfo.defaultTexture);
 
 	// We prescan all of the commands to see if there's ANY LOD. If there's
 	// not then we need to add one ourselves. If there is, we will find it
@@ -971,4 +966,32 @@ int		OBJ_GetModelTexID(int model)
 {
 	if (model >= static_cast<int>(sObjects.size())) { return 0; }
 	else { return sObjects[model].texnum; }
+}
+
+string OBJ_GetLitTextureByTexture(const std::string &texturePath)
+{
+	static const vector<string> extensions =
+	{
+		"LIT"
+	};
+	static const string defaultExtension("_LIT");
+
+	auto position = texturePath.find_last_of('.');
+	if(position == std::string::npos) { return {}; }
+
+	for (const auto &extension : extensions)
+	{
+		string textureLitPath = texturePath;
+		textureLitPath.insert(position, extension);
+
+		// Does the file exist?
+		ifstream f(textureLitPath);
+		if (f.good()) { return textureLitPath;  }
+	}
+
+	// If none of them exist, we return the default "_LIT" without testing.
+	// If loading fails later, the user will be properly informed.
+	string textureLitPath = texturePath;
+	textureLitPath.insert(position, defaultExtension);
+	return textureLitPath;
 }

@@ -418,14 +418,7 @@ bool ParseTextureCommand(const std::vector<std::string> &tokens, CSLPackage_t &p
 
 	package.planes.back().textureName = textureFilename;
 	package.planes.back().texturePath = absoluteTexPath;
-
-	string texLitPath = absoluteTexPath;
-	string::size_type pos2 = texLitPath.find_last_of('.');
-	if(pos2 != string::npos)
-	{
-		texLitPath.insert(pos2, "LIT");
-		package.planes.back().textureLitPath = texLitPath;
-	}
+	package.planes.back().textureLitPath = OBJ_GetLitTextureByTexture(absoluteTexPath);
 
 #if DEBUG_CSL_LOADING
 	XPLMDebugString("      Got texture: ");

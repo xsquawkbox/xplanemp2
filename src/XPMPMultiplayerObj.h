@@ -128,5 +128,6 @@ int		OBJ_LoadLightTexture(const std::string &inFilePath, bool inForceMaxTex);
 TextureManager::Future OBJ_LoadTexture(const std::string &path);
 int		OBJ_GetModelTexID(int model);
 
+std::string OBJ_GetLitTextureByTexture(const std::string &texturePath);
 
 #endif
