@@ -756,6 +756,7 @@ void ParseFullPackage(const std::string &content, CSLPackage_t &package)
 	{
 		++lineNum;
 		trim(line);
+		if (line.empty() || line[0] == '#') continue;
 		auto tokens = tokenize(line, " \t\r\n");
 		if (!tokens.empty())
 		{
