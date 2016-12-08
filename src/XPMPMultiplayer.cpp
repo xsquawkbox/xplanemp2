@@ -82,9 +82,9 @@
 
 
 
-static	XPMPPlanePtr	XPMPPlaneIsValid(
+static	XPMPPlanePtr	XPMPPlaneFromID(
 		XPMPPlaneID 		inID,
-		XPMPPlaneVector::iterator * outIter);
+		XPMPPlaneVector::iterator * outIter = nullptr);
 
 // This drawing hook is called once per frame to do the real drawing.
 static	int				XPMPRenderMultiplayerPlanes(
@@ -400,9 +400,7 @@ XPMPPlaneID     XPMPCreatePlaneWithModelName(const char *inModelName, const char
 void			XPMPDestroyPlane(XPMPPlaneID inID)
 {
 	XPMPPlaneVector::iterator iter;
-	XPMPPlanePtr plane = XPMPPlaneIsValid(inID, &iter);
-	if (plane == NULL)
-		return;
+	XPMPPlanePtr plane = XPMPPlaneFromID(inID, &iter);
 
 	for (XPMPPlaneNotifierVector::iterator iter2 = gObservers.begin(); iter2 !=
 		 gObservers.end(); ++iter2)
@@ -418,22 +416,17 @@ void	XPMPChangePlaneModel(
 		const char *			inAirline,
 		const char *			inLivery)
 {
-	XPMPPlanePtr plane = XPMPPlaneIsValid(inPlaneID, NULL);
-	if (plane)
-	{
-		plane->icao = inICAOCode;
-		plane->airline = inAirline;
-		plane->livery = inLivery;
-		plane->model = CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->good_livery, true);
-		
-	}
+	XPMPPlanePtr plane = XPMPPlaneFromID(inPlaneID);
+	plane->icao = inICAOCode;
+	plane->airline = inAirline;
+	plane->livery = inLivery;
+	plane->model = CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->good_livery, true);
 	
 	for (XPMPPlaneNotifierVector::iterator iter2 = gObservers.begin(); iter2 !=
 		 gObservers.end(); ++iter2)
 	{
 		iter2->first.first(plane, xpmp_PlaneNotification_ModelChanged, iter2->first.second);
 	}
-	
 }	
 
 void	XPMPSetDefaultPlaneICAO(
@@ -462,9 +455,7 @@ void XPMPGetPlaneICAOAndLivery(
 		char *					outICAOCode,	// Can be NULL
 		char *					outLivery)
 {
-	XPMPPlanePtr	plane = XPMPPlaneIsValid(inPlane, NULL);
-	if (plane == NULL)
-		return;
+	XPMPPlanePtr	plane = XPMPPlaneFromID(inPlane);
 
 	if (outICAOCode)
 		strcpy(outICAOCode,plane->icao.c_str());
@@ -494,12 +485,9 @@ XPMPPlaneCallbackResult			XPMPGetPlaneData(
 		XPMPPlaneDataType			inDataType,
 		void *						outData)
 {
-	XPMPPlanePtr	plane = XPMPPlaneIsValid(inPlane, NULL);
+	XPMPPlanePtr	plane = XPMPPlaneFromID(inPlane);
 	
 	XPMPPlaneCallbackResult result = xpmpData_Unavailable;
-	
-	if (plane == NULL)
-		return result;
 	
 	int now = XPLMGetCycleNumber();
 
@@ -553,18 +541,18 @@ XPMPPlaneCallbackResult			XPMPGetPlaneData(
 	return result;
 }
 
-XPMPPlanePtr	XPMPPlaneIsValid(XPMPPlaneID inID, XPMPPlaneVector::iterator * outIter)
+XPMPPlanePtr	XPMPPlaneFromID(XPMPPlaneID inID, XPMPPlaneVector::iterator * outIter)
 {
-	XPMPPlanePtr 	ptr = static_cast<XPMPPlanePtr>(inID);
-	XPMPPlaneVector::iterator iter = std::find_if(gPlanes.begin(), gPlanes.end(), [ptr] (const auto &p)
-	{
-		return p.get() == ptr;
-	});
-	if (iter == gPlanes.end())
-		return NULL;
+	assert(inID);
 	if (outIter)
-		*outIter = iter;
-	return ptr;
+	{
+		*outIter = std::find_if(gPlanes.begin(), gPlanes.end(), [inID] (const auto &p)
+		{
+			return p.get() == inID;
+		});
+		assert(*outIter != gPlanes.end());
+	}
+	return static_cast<XPMPPlanePtr>(inID);
 }
 
 void		XPMPSetPlaneRenderer(
