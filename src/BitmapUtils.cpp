@@ -140,7 +140,7 @@ bail:
 	err = errno;
 	if (fi != NULL)
 		fclose(fi);
-	outImageInfo->bitmap.clear();
+	DestroyBitmap(*outImageInfo);
 	if (err == 0)
 		err = -1;
 	return err;
@@ -231,7 +231,7 @@ void	FillBitmap(struct ImageInfo * inImageInfo, char c)
 
 void	DestroyBitmap(struct ImageInfo &inImageInfo)
 {
-	inImageInfo.bitmap.clear();
+	inImageInfo.bitmap = std::vector<unsigned char>();
 }
 
 
@@ -962,7 +962,7 @@ bail:
 	else if (pngPtr)			png_destroy_read_struct(&pngPtr,(png_infopp)NULL,(png_infopp)NULL);
 	if (buffer)					delete [] buffer;
 	if (file)					fclose(file);
-	outImageInfo->bitmap.clear();
+	DestroyBitmap(*outImageInfo);
 	if (rows) 					free(rows);
 
 	return -1;

@@ -273,7 +273,6 @@ void DeleteTexture(CSLTexture_t* texture)
 #endif
 
 	sFreedTextures.push(texture->id);
-	DestroyBitmap(texture->im);
 	delete texture;
 }
 
