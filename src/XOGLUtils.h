@@ -71,6 +71,7 @@ extern PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB;
 extern PFNGLMULTITEXCOORD2FVARBPROC		glMultiTexCoord2fvARB;
 extern PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB;
 extern PFNGLCLIENTACTIVETEXTUREARBPROC	glClientActiveTextureARB;
+extern PFNGLGENERATEMIPMAPPROC          glGenerateMipmap;
 #endif
 
 bool	OGL_UtilsInit();

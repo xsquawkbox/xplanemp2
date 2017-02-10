@@ -33,6 +33,7 @@ PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB		 = NULL;
 PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTextureARB = NULL;
 PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	 = NULL;
 PFNGLMULTITEXCOORD2FVARBPROC	glMultiTexCoord2fvARB	 = NULL;
+PFNGLGENERATEMIPMAPPROC			glGenerateMipmap		 = NULL;
 #endif
 
 /**************************************************
@@ -147,6 +148,7 @@ bool	OGL_UtilsInit()
 		glClientActiveTextureARB = (PFNGLCLIENTACTIVETEXTUREARBPROC) wglGetProcAddress("glClientActiveTextureARB");
 		glMultiTexCoord2fARB	 = (PFNGLMULTITEXCOORD2FARBPROC )	 wglGetProcAddress("glMultiTexCoord2fARB"    );
 		glMultiTexCoord2fvARB	 = (PFNGLMULTITEXCOORD2FVARBPROC )	 wglGetProcAddress("glMultiTexCoord2fvARB"   );
+		glGenerateMipmap		 = (PFNGLGENERATEMIPMAPPROC)		 wglGetProcAddress("glGenerateMipmap"		 );
 #endif		
 		firstTime = false;
 	}
@@ -157,7 +159,8 @@ bool	OGL_UtilsInit()
 			glActiveTextureARB &&
 			glClientActiveTextureARB &&
 			glMultiTexCoord2fARB &&
-			glMultiTexCoord2fvARB)
+			glMultiTexCoord2fvARB &&
+			glGenerateMipmap)
 	{
 		return true;
 	}

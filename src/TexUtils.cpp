@@ -23,6 +23,7 @@
 #include "XPLMGraphics.h"
 #include "TexUtils.h"
 #include "XPLMUtilities.h"
+#include "XOGLUtils.h"
 #include <utility>
 #include <algorithm>
 #include <stdio.h>
@@ -195,19 +196,23 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		if (im.pad == 0)
 		{
 			XPLMBindTexture2d(texNum, 0);
+
 			if (magentaAlpha)
 			{
-				if (mipmap)
-					gluBuild2DMipmaps(GL_TEXTURE_2D, 4, im.width, im.height, GL_RGBA, GL_UNSIGNED_BYTE, im.bitmap.data());
-				else
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, im.width ,im.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, im.bitmap.data());
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, im.width ,im.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, im.bitmap.data());
 			}
 			else
 			{
-				if (mipmap)
-					gluBuild2DMipmaps(GL_TEXTURE_2D, 3, im.width, im.height, GL_RGB, GL_UNSIGNED_BYTE, im.bitmap.data());
-				else
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, im.width ,im.height, 0, GL_RGB, GL_UNSIGNED_BYTE, im.bitmap.data());
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, im.width ,im.height, 0, GL_RGB, GL_UNSIGNED_BYTE, im.bitmap.data());
+			}
+
+			if (mipmap)
+			{
+				// https://www.khronos.org/opengl/wiki/Common_Mistakes#Automatic_mipmap_generation:
+				// It has been reported that on some ATI drivers, glGenerateMipmap(GL_TEXTURE_2D)
+				// has no effect unless you precede it with a call to glEnable(GL_TEXTURE_2D) in this particular case.
+				glEnable(GL_TEXTURE_2D);
+				glGenerateMipmap(GL_TEXTURE_2D);
 			}
 		}
 	}

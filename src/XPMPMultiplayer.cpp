@@ -118,6 +118,9 @@ const char * 	XPMPMultiplayerInitLegacyData(
 	gIntPrefsFunc = inIntPrefsFunc;
 	gFloatPrefsFunc = inFloatPrefsFunc;
 
+	// Initialize our OpenGL Utilities
+	OGL_UtilsInit();
+
 	bool	problem = false;
 
 	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
@@ -145,9 +148,6 @@ const char * 	XPMPMultiplayerInit(
 	bool	problem = false;
 
 	//	TODO - FORM GOOD DIAGNOSTIC MESSAGES HERE!
-	
-	// Initialize our OpenGL Utilities
-	OGL_UtilsInit();
 
 	XPMPInitDefaultPlaneRenderer();
 
