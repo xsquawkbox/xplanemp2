@@ -62,9 +62,6 @@ typedef void (APIENTRY * PFNGLCLIENTACTIVETEXTUREARBPROC )	(GLenum);
 typedef void (APIENTRY * PFNGLMULTITEXCOORD2FARBPROC )		(GLenum, GLfloat, GLfloat);
 typedef void (APIENTRY * PFNGLMULTITEXCOORD2FVARBPROC)		(GLenum, const GLfloat *);
 
-#if APL
-//extern PFNGLBINDBUFFERARBPROC			glBindBufferARB;
-#endif
 #if IBM
 extern PFNGLBINDBUFFERARBPROC			glBindBufferARB;
 extern PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB;
