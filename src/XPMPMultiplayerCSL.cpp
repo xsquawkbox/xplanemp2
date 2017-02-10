@@ -68,6 +68,11 @@ struct CFSmartPtr {
 	T p_;
 };
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 int Posix2HFSPath(const char *path, char *result, int resultLen)
 {
 	CFSmartPtr<CFStringRef>		inStr(CFStringCreateWithCString(kCFAllocatorDefault, path ,kCFStringEncodingMacRoman));
@@ -105,6 +110,10 @@ int HFS2PosixPath(const char *path, char *result, int resultLen)
 
 	return 0;
 }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 #endif
 
