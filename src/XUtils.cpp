@@ -30,6 +30,7 @@
 #include <map>
 #include <math.h>
 #include <string.h>
+#include <fstream>
 
 #if !defined(XUTILS_EXCLUDE_MAC_CRAP) && defined(__MACH__)
 #define XUTILS_EXCLUDE_MAC_CRAP 1
@@ -610,4 +611,10 @@ void	DecomposeObj(const XObj& inObj, XObj& outObj, int maxValence)
 		DecomposeObjCmd(*cmd, newCmds, maxValence);
 		outObj.cmds.insert(outObj.cmds.end(), newCmds.begin(), newCmds.end());
 	}
+}
+
+bool DoesFileExist(const std::string &filePath)
+{
+	std::ifstream infile(filePath);
+	return infile.good();
 }

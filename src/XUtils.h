@@ -129,4 +129,6 @@ private:
 void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmd, int maxValence);
 void	DecomposeObj(const XObj& inObj, XObj& outObj, int maxValence);
 
+bool DoesFileExist(const std::string &filePath);
+
 #endif
