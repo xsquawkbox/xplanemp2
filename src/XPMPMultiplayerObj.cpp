@@ -27,6 +27,7 @@
 //#include "PlatformUtils.h"
 #include "XObjReadWrite.h"
 #include "TexUtils.h"
+#include "XUtils.h"
 
 #include <map>
 #include <vector>
@@ -984,8 +985,7 @@ string OBJ_GetLitTextureByTexture(const std::string &texturePath)
 		textureLitPath.insert(position, extension);
 
 		// Does the file exist?
-		ifstream f(textureLitPath);
-		if (f.good()) { return textureLitPath;  }
+		if(DoesFileExist(textureLitPath)) { return textureLitPath; }
 	}
 
 	// If none of them exist, we return the default "_LIT" without testing.
