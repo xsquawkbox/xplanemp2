@@ -26,6 +26,7 @@
 #include "XPMPMultiplayerObj.h"
 #include "XStringUtils.h"
 #include "XOGLUtils.h"
+#include "XUtils.h"
 #include <stdio.h>
 #include <algorithm>
 //#include "PlatformUtils.h"
@@ -782,6 +783,20 @@ void ParseFullPackage(const std::string &content, CSLPackage_t &package)
 	}
 }
 
+bool isPackageAlreadyLoaded(const std::string &packagePath)
+{
+	bool alreadyLoaded = false;
+	for (const auto &package : gPackages)
+	{
+		if(package.path == packagePath)
+		{
+			alreadyLoaded = true;
+			break;
+		}
+	}
+	return alreadyLoaded;
+}
+
 // This routine loads the related.txt file and also all packages.
 bool CSL_LoadCSL(const char * inFolderPath, const char * inRelatedFile, const char * inDoc8643)
 {
@@ -906,26 +921,39 @@ bool CSL_LoadCSL(const char * inFolderPath, const char * inRelatedFile, const ch
 	free(name_buf);
 	free(index_buf);
 
+	vector<CSLPackage_t> packages;
+
 	// First read all headers. This is required to resolve the DEPENDENCIES
 	for (const auto &packagePath : pckgs)
 	{
 		std::string packageFile(packagePath);
 		packageFile += "/"; //XPLMGetDirectorySeparator();
 		packageFile += "xsb_aircraft.txt";
+
+		// Continue if file does not exist or package was already loaded
+		if(!DoesFileExist(packageFile) || isPackageAlreadyLoaded(packagePath)) { continue; }
+
 		XPLMDump() << XPMP_CLIENT_NAME ": Loading package: " << packageFile << "\n";
 		std::string packageContent = GetFileContent(packageFile);
 		auto package = ParsePackageHeader(packagePath, packageContent);
-		if (package.hasValidHeader()) gPackages.push_back(package);
+		if (package.hasValidHeader()) packages.push_back(package);
 	}
 
-	// Now we do a full run
-	for (auto &package : gPackages)
+	if (! packages.empty())
 	{
-		std::string packageFile(package.path);
-		packageFile += "/"; //XPLMGetDirectorySeparator();
-		packageFile += "xsb_aircraft.txt";
-		std::string packageContent = GetFileContent(packageFile);
-		ParseFullPackage(packageContent, package);
+		// iterator points to the first inserted package
+		auto iterator = gPackages.insert(gPackages.end(), packages.begin(), packages.end());
+
+		// Now we do a full run
+		for (; iterator != gPackages.end(); ++iterator)
+		{
+			auto &package = *iterator;
+			std::string packageFile(package.path);
+			packageFile += "/"; //XPLMGetDirectorySeparator();
+			packageFile += "xsb_aircraft.txt";
+			std::string packageContent = GetFileContent(packageFile);
+			ParseFullPackage(packageContent, package);
+		}
 	}
 
 #if 0
