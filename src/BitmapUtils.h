@@ -33,12 +33,8 @@
 	and are read right out of the file.
 */
 
-#if APL
-#pragma pack(push, 2)
-#endif
-#if IBM
-#pragma pack(push, 2)
-#endif
+/* the structs below are literally what is in the file, packed. */
+#pragma pack(push, 1)
 
 struct	BMPHeader {
 	char			signature1;
@@ -62,12 +58,7 @@ struct	BMPImageDesc {
 	int			colorsImportant;
 };
 
-#if APL
 #pragma pack(pop)
-#endif
-#if IBM
-#pragma pack(pop)
-#endif
 
 
 /*
