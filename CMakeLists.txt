@@ -1,18 +1,19 @@
 cmake_minimum_required(VERSION 3.0)
+
+project(xpsdk LANGUAGES C CXX)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
 find_package(XPSDK REQUIRED)
 
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_definitions(-DLIN=1)
-	find_package(PNG)
 	#set(XPMP_PLATFORM_SOURCES
 	#	src/PlatformUtils.lin.cpp)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	add_definitions(-DIBM=1)
 	#set(XPMP_PLATFORM_SOURCES
 	#	src/PlatformUtils.win.cpp)
-	set(XPMP_PLATFORM_LIBRARIES opengl32)
+	set(XPMP_PLATFORM_LIBRARIES opengl32 glu32)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	add_definitions(-DAPL=1)
 	#set(XPMP_PLATFORM_SOURCES
@@ -20,9 +21,9 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	find_library(OPENGL OpenGL)
 	set(XPMP_PLATFORM_LIBRARIES ${OPENGL})
 endif()
-if(PNG_FOUND)
+#if(PNG_FOUND)
 	add_definitions(-DBITMAP_USE_PNG=1)
-endif()
+#endif()
 
 add_definitions(-DXPLM200=1 -DXPLM210=1)
 
@@ -45,11 +46,10 @@ target_include_directories(xplanemp
 	PUBLIC 
 		${XPSDK_INCLUDE_DIRS}
 		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${CMAKE_CURRENT_SOURCE_DIR}/src
-		${PNG_INCLUDE_DIRS})
+		${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(xplanemp
 	PRIVATE ${XPSDK_XPLM_LIBRARIES}
-	${PNG_LIBRARIES}
+	png_static
 	${XPMP_PLATFORM_LIBRARIES})
 target_compile_definitions(xplanemp PUBLIC XUTILS_EXCLUDE_MAC_CRAP=1)
 
