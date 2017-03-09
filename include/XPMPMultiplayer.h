@@ -42,30 +42,30 @@ extern "C" {
 /************************************************************************************
  * X-PLANE MULTIPLAYER
  ************************************************************************************/
- 
+
 /*
-	Multiplayer - THEORY OF OPERATION 
+	Multiplayer - THEORY OF OPERATION
 	
 	The multiplayer API allows plug-ins to control aircraft visible to other plug-ins and
-	the user via x-plane.  It effectively provides glue between a series of observers 
+	the user via x-plane.  It effectively provides glue between a series of observers
 	that wish to render or in other ways act upon those planes.
 	
-	A plug-in can control zero or more planes, and zero or more plug-ins can control planes.  
-	However, each plane is controlled by exactly one plug-in.  A plug-in thus dynamically 
-	allocates planes to control.  A plug-in registers a callback which is used to pull 
-	information.  The plug-in may decide to not return information or state that that 
+	A plug-in can control zero or more planes, and zero or more plug-ins can control planes.
+	However, each plane is controlled by exactly one plug-in.  A plug-in thus dynamically
+	allocates planes to control.  A plug-in registers a callback which is used to pull
+	information.  The plug-in may decide to not return information or state that that
 	information is unchanged.
 	
-	A plug-in can also read the current aircrafts or any of their data.  Aircraft data is 
+	A plug-in can also read the current aircrafts or any of their data.  Aircraft data is
 	cached to guarantee minimum computing of data.
 	
 	Each 'kind' of data has an enumeration and corresponding structure.*/
-	
-	
+
+
 /************************************************************************************
  * PLANE DATA TYPES
  ************************************************************************************/
-	 
+
 /*
  * XPMPPosition_t
  *
@@ -75,7 +75,7 @@ extern "C" {
  * Elevation is in feet above mean sea level.
  *
  * Pitch, roll, and heading define the aircraft's orientation.  Heading is in degrees, positive
- * is clockwise from north.  Pitch is the number of degrees, positive is nose up, and roll 
+ * is clockwise from north.  Pitch is the number of degrees, positive is nose up, and roll
  * is positive equals roll right.
  *
  * Note that there is no notion of aircraft velocity or acceleration; you will be queried for
@@ -86,7 +86,7 @@ typedef	struct {
 	long	size;
 	double	lat;
 	double	lon;
-	double	elevation;	
+	double	elevation;
 	float	pitch;
 	float	roll;
 	float	heading;
@@ -136,20 +136,20 @@ enum {
  *
  * Lights is a 32 bit field with flags as defined in XPMPLightStatus
  *
- */ 
+ */
 typedef	struct {
 	long					size;
-     float                 gearPosition;
-     float                 flapRatio;
-     float                 spoilerRatio;
-     float                 speedBrakeRatio;
-     float                 slatRatio;
-     float                 wingSweep;
-     float                 thrust;
-     float                 yokePitch;
-     float                 yokeHeading;
-     float                 yokeRoll;
-     xpmp_LightStatus      lights;
+	float                 gearPosition;
+	float                 flapRatio;
+	float                 spoilerRatio;
+	float                 speedBrakeRatio;
+	float                 slatRatio;
+	float                 wingSweep;
+	float                 thrust;
+	float                 yokePitch;
+	float                 yokeHeading;
+	float                 yokeRoll;
+	xpmp_LightStatus      lights;
 } XPMPPlaneSurfaces_t;
 
 
@@ -176,7 +176,7 @@ typedef	int	XPMPTransponderMode;
  *
  */
 typedef	struct {
-	long					size;		
+	long					size;
 	long					code;
 	XPMPTransponderMode		mode;
 } XPMPPlaneRadar_t;
@@ -197,7 +197,7 @@ typedef	int			XPMPPlaneDataType;
 /*
  * XPMPPlaneCallbackResult
  *
- * This definfes the different responses to asking for information.  
+ * This definfes the different responses to asking for information.
  *
  */
 enum {
@@ -229,10 +229,10 @@ typedef	void *		XPMPPlaneID;
  *
  */
 typedef	XPMPPlaneCallbackResult (* XPMPPlaneData_f)(
-										XPMPPlaneID			inPlane,
-										XPMPPlaneDataType	inDataType,
-										void *				ioData,
-										void *				inRefcon);
+		XPMPPlaneID			inPlane,
+		XPMPPlaneDataType	inDataType,
+		void *				ioData,
+		void *				inRefcon);
 
 /*
  * XPMPMultiplayerInitLegacyData
@@ -240,7 +240,7 @@ typedef	XPMPPlaneCallbackResult (* XPMPPlaneData_f)(
  * This routine initializes legacy portions of the multiplayer library.
  *
  * inPlaneList is a ptr to a fully qualified file name that is a text file of ICAO -> model
- * mappings.  The xsb_aircraft.txt file can be used as a template.  (Please note: other 
+ * mappings.  The xsb_aircraft.txt file can be used as a template.  (Please note: other
  * XSB files are NOT necessary and are not necessarily available under open source license.)
  *
  * inDoc8643 is the path to the ICAO document 8643, available at
@@ -252,8 +252,8 @@ typedef	XPMPPlaneCallbackResult (* XPMPPlaneData_f)(
  * needed:
  *
  * section	key					type	default	description
- * planes	full_distance		float	3.0		
- * planes	max_full_count		int		50		
+ * planes	full_distance		float	3.0
+ * planes	max_full_count		int		50
  *
  * The return value is a string indicating any problem that may have gone wrong in a human-readable
  * form, or an empty string if initalizatoin was okay.
@@ -267,13 +267,13 @@ typedef	XPMPPlaneCallbackResult (* XPMPPlaneData_f)(
  *
  */
 const char *	XPMPMultiplayerInitLegacyData(
-						const char * inCSLFolder,
-						const char * inRelatedPath,
-						const char * inTexturePath,
-						const char * inDoc8643,
-						const char * inDefaltICAO,
-						int (* inIntPrefsFunc)(const char *, const char *, int),
-						float (* inFloatPrefsFunc)(const char *, const char *, float));
+		const char * inCSLFolder,
+		const char * inRelatedPath,
+		const char * inTexturePath,
+		const char * inDoc8643,
+		const char * inDefaltICAO,
+		int (* inIntPrefsFunc)(const char *, const char *, int),
+		float (* inFloatPrefsFunc)(const char *, const char *, float));
 
 /*
  * XPMPMultiplayerInit
@@ -283,18 +283,18 @@ const char *	XPMPMultiplayerInitLegacyData(
  * needed:
  *
  * section	key					type	default	description
- * planes	full_distance		float	3.0		
- * planes	max_full_count		int		50		
+ * planes	full_distance		float	3.0
+ * planes	max_full_count		int		50
  *
  * The return value is a string indicating any problem that may have gone wrong in a human-readable
  * form, or an empty string if initalizatoin was okay.
  *
  * Call this once, typically from your XPluginStart routine.
- * 
+ *
  */
 const char *    XPMPMultiplayerInit(
-                        int (* inIntPrefsFunc)(const char *, const char *, int),
-						float (* inFloatPrefsFunc)(const char *, const char *, float));
+		int (* inIntPrefsFunc)(const char *, const char *, int),
+		float (* inFloatPrefsFunc)(const char *, const char *, float));
 
 /*
  * XPMPMultiplayerEnable
@@ -328,7 +328,7 @@ void XPMPMultiplayerCleanup(void);
  * Loads a collection of planes
  *
  * inPlaneList is a ptr to a fully qualified file name that is a text file of ICAO -> model
- * mappings.  The xsb_aircraft.txt file can be used as a template.  (Please note: other 
+ * mappings.  The xsb_aircraft.txt file can be used as a template.  (Please note: other
  * XSB files are NOT necessary and are not necessarily available under open source license.)
  *
  * inDoc8643 is the path to the ICAO document 8643, available at
@@ -341,9 +341,9 @@ void XPMPMultiplayerCleanup(void);
  *
  */
 const char *	XPMPLoadCSLPackage(
-						const char * inCSLFolder,
-						const char * inRelatedPath,
-						const char * inDoc8643);
+		const char * inCSLFolder,
+		const char * inRelatedPath,
+		const char * inDoc8643);
 
 /*
  * XPMPLoadPlanesIfNecessary
@@ -355,18 +355,45 @@ const char *	XPMPLoadCSLPackage(
 void			XPMPLoadPlanesIfNecessary(void);
 
 /*
+ * XPMPGetNumberOfInstalledModels
+ *
+ * This routine returns the number of found models.
+ *
+ */
+int XPMPGetNumberOfInstalledModels(void);
+
+/*
+ * XPMPGetModelInfo
+ *
+ * Call this routine with an index to get all available info for this model. Valid
+ * index is between 0 and XPMPGetNumberOfInstalledModels(). If you pass an index
+ * out of this range, the out parameters are unchanged.
+ * Make sure the size of all char arrays is big enough.
+ *
+ */
+void XPMPGetModelInfo(int inIndex, const char **outModelName, const char **outIcao, const char **outAirline, const char **outLivery);
+
+/*
  * XPMPCreatePlane
  *
  * This function creates a new plane for a plug-in and returns it.  Pass in an ICAO aircraft ID code,
  * a livery string and a data function for fetching dynamic information.
  *
- */									
- XPMPPlaneID	XPMPCreatePlane(
-							const char *			inICAOCode,
-							const char *			inAirline,
-							const char *			inLivery,
-							XPMPPlaneData_f			inDataFunc,
-							void *					inRefcon);
+ */
+XPMPPlaneID	XPMPCreatePlane(
+		const char *			inICAOCode,
+		const char *			inAirline,
+		const char *			inLivery,
+		XPMPPlaneData_f			inDataFunc,
+		void *					inRefcon);
+
+XPMPPlaneID	XPMPCreatePlaneWithModelName(
+		const char *			inModelName,
+		const char *			inICAOCode,
+		const char *			inAirline,
+		const char *			inLivery,
+		XPMPPlaneData_f			inDataFunc,
+		void *                  inRefcon);
 
 /*
  * XPMPDestroyPlane
@@ -374,7 +401,7 @@ void			XPMPLoadPlanesIfNecessary(void);
  * This function deallocates a created aircraft.
  *
  */
- void			XPMPDestroyPlane(XPMPPlaneID);
+void			XPMPDestroyPlane(XPMPPlaneID);
 
 /*
  * XPMPChangePlaneModel
@@ -383,20 +410,20 @@ void			XPMPLoadPlanesIfNecessary(void);
  * player changes planes or new information comes over the network asynchronously.
  *
  */
- void	XPMPChangePlaneModel(
-							XPMPPlaneID				inPlaneID,
-							const char *			inICAOCode,
-							const char *			inAirline,
-							const char *			inLivery);
+void	XPMPChangePlaneModel(
+		XPMPPlaneID				inPlaneID,
+		const char *			inICAOCode,
+		const char *			inAirline,
+		const char *			inLivery);
 
 /*
  * XPMPSetDefaultPlaneICAO
  *
  * This routine controls what ICAO is used as a backup search criteria for a not-found plane.
  *
- */							
+ */
 void	XPMPSetDefaultPlaneICAO(
-							const char *			inICAO);
+		const char *			inICAO);
 
 /************************************************************************************
  * PLANE OBSERVATION API
@@ -405,7 +432,7 @@ void	XPMPSetDefaultPlaneICAO(
 /*
  * XPMPPlaneNotification
  *
- * These are the various notifications you receive when you register a notifier 
+ * These are the various notifications you receive when you register a notifier
  * function.
  *
  */
@@ -415,7 +442,7 @@ enum {
 	xpmp_PlaneNotification_Destroyed	 	= 3
 };
 typedef int XPMPPlaneNotification;
- 
+
 /*
  * XPMPPlaneNotifier_f
  *
@@ -424,17 +451,17 @@ typedef int XPMPPlaneNotification;
  *
  */
 typedef	void (* XPMPPlaneNotifier_f)(
-									XPMPPlaneID				inPlaneID,
-									XPMPPlaneNotification	inNotification,
-									void *					inRefcon);
-										
+		XPMPPlaneID				inPlaneID,
+		XPMPPlaneNotification	inNotification,
+		void *					inRefcon);
+
 /*
  * XPMPCountPlanes
  *
  * This function returns the number of planes in existence.
  *
  */
- long			XPMPCountPlanes(void);
+long			XPMPCountPlanes(void);
 
 /*
  * XPMPGetNthPlane
@@ -442,8 +469,8 @@ typedef	void (* XPMPPlaneNotifier_f)(
  * This function returns the plane ID of the Nth plane.
  *
  */
- XPMPPlaneID	XPMPGetNthPlane(
-							long 					index);
+XPMPPlaneID	XPMPGetNthPlane(
+		long 					index);
 
 
 /*
@@ -453,10 +480,10 @@ typedef	void (* XPMPPlaneNotifier_f)(
  * or NULL if you do not want the information.
  *
  */
- void			XPMPGetPlaneICAOAndLivery(							
-							XPMPPlaneID				inPlane,
-							char *					outICAOCode,	// Can be NULL
-							char *					outLivery);		// Can be NULL
+void			XPMPGetPlaneICAOAndLivery(
+		XPMPPlaneID				inPlane,
+		char *					outICAOCode,	// Can be NULL
+		char *					outLivery);		// Can be NULL
 
 /*
  * XPMPRegisterPlaneCreateDestroyFunc
@@ -464,19 +491,19 @@ typedef	void (* XPMPPlaneNotifier_f)(
  * This function registers a notifier functionfor obeserving planes being created and destroyed.
  *
  */
- void			XPMPRegisterPlaneNotifierFunc(
-							XPMPPlaneNotifier_f		inFunc,
-							void *					inRefcon);
+void			XPMPRegisterPlaneNotifierFunc(
+		XPMPPlaneNotifier_f		inFunc,
+		void *					inRefcon);
 
 /*
  * XPMPUnregisterPlaneCreateDestroyFunc
  *
- * This function canceles a registration for a notifier functionfor obeserving 
- * planes being created and destroyed. 
+ * This function canceles a registration for a notifier functionfor obeserving
+ * planes being created and destroyed.
  */
- void			XPMPUnregisterPlaneNotifierFunc(
-							XPMPPlaneNotifier_f		inFunc,
-							void *					inRefcon);
+void			XPMPUnregisterPlaneNotifierFunc(
+		XPMPPlaneNotifier_f		inFunc,
+		void *					inRefcon);
 
 /*
  * XPMPGetPlaneData
@@ -487,10 +514,10 @@ typedef	void (* XPMPPlaneNotifier_f)(
  * data, old data, or we have no data at all.
  *
  */
- XPMPPlaneCallbackResult XPMPGetPlaneData(
-							XPMPPlaneID					inPlane,
-							XPMPPlaneDataType			inDataType,
-							void *						outData);
+XPMPPlaneCallbackResult XPMPGetPlaneData(
+		XPMPPlaneID					inPlane,
+		XPMPPlaneDataType			inDataType,
+		void *						outData);
 
 /*
  * XPMPIsICAOValid
@@ -499,8 +526,8 @@ typedef	void (* XPMPPlaneNotifier_f)(
  * was a match and false if there wasn't.
  *
  */
- bool			XPMPIsICAOValid(
-							const char *				inICAO);
+bool			XPMPIsICAOValid(
+		const char *				inICAO);
 
 /************************************************************************************
  * PLANE RENDERING API
@@ -509,25 +536,25 @@ typedef	void (* XPMPPlaneNotifier_f)(
 /*
  * XPMPRenderPlanes_f
  *
- * You can register a callback to draw planes yourself.  If you do this, the XPMP will not 
+ * You can register a callback to draw planes yourself.  If you do this, the XPMP will not
  * draw multiplayer planes out the cockpit window; do it yourself!  Use the data access API
  * to get plane info and then draw them.  You are responsible for all planes.
  *
  */
 typedef	void (* XPMPRenderPlanes_f)(
-					int							inIsBlend,
-					void * 						inRef);
+		int							inIsBlend,
+		void * 						inRef);
 
 /*
  * XPMPSetPlaneRenderer
- * 
- * This function setse the plane renderer.  You can pass NULL for the function to restore 
+ *
+ * This function setse the plane renderer.  You can pass NULL for the function to restore
  * the default renderer.
  *
  */
- void		XPMPSetPlaneRenderer(
-						XPMPRenderPlanes_f  		inRenderer, 
-						void * 						inRef);
+void		XPMPSetPlaneRenderer(
+		XPMPRenderPlanes_f  		inRenderer,
+		void * 						inRef);
 
 /*
  * XPMPDumpOneCycle
@@ -541,10 +568,10 @@ void		XPMPDumpOneCycle(void);
 /*
  * XPMPEnableAircraftLabels
  * XPMPDisableAircraftLabels
- * 
- * These functions enable and disable the drawing of aircraft labels above the aircraft 
  *
- */	
+ * These functions enable and disable the drawing of aircraft labels above the aircraft
+ *
+ */
 void				  XPMPEnableAircraftLabels(void);
 
 void				  XPMPDisableAircraftLabels(void);

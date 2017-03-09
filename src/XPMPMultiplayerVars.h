@@ -26,7 +26,7 @@
 
 /*
  * This file contains the various internal definitions
- * and globals for the model rendering code. 
+ * and globals for the model rendering code.
  *
  */
 
@@ -34,12 +34,14 @@
 #include <set>
 #include <string>
 #include <map>
+#include <memory>
 
 #include "XObjDefs.h"
 
 using namespace std;
 
 #include "XPMPMultiplayer.h"
+#include "XPMPMultiplayerObj.h"
 #include "XPMPMultiplayerObj8.h"	// for obj8 attachment info
 
 template <class T>
@@ -77,8 +79,32 @@ enum {
 // It has a type, a single file path for whatever we have to load,
 // and then implementation-specifc stuff.
 struct	CSLPlane_t {
+
+	string getModelName() const
+	{
+		string modelName;
+		for (const auto &dir : dirNames)
+		{
+			modelName += dir;
+			modelName += ' ';
+		}
+		modelName += objectName;
+		modelName += ' ';
+		modelName += textureName;
+		return modelName;
+	}
+
+	vector<string>              dirNames;       // Relative directories from xsb_aircrafts.txt down to object file
+	string                      objectName;     // Basename of the object file
+	string                      textureName;    // Basename of the texture file
+	string                      icao;           // Icao type of this model
+	string                      airline;        // Airline identifier. Can be empty.
+	string                      livery;         // Livery identifier. Can be empty.
+
 	int							plane_type;		// What kind are we?
 	string						file_path;		// Where do we load from (oz and obj, debug-use-only for OBJ8)
+	string						texturePath;	// Full path to the planes texture
+	string						textureLitPath; // Full path to the planes lit texture
 	bool						moving_gear;	// Does gear retract?
 
 	// plane_Austin
@@ -91,7 +117,6 @@ struct	CSLPlane_t {
 
 	// plane_Obj8
 	vector<obj_for_acf>			attachments;
-	
 };
 
 // These enums define the six levels of matching we might possibly
@@ -111,7 +136,13 @@ enum {
 // keys to the internal index of the plane.
 struct	CSLPackage_t {
 
+	bool hasValidHeader() const
+	{
+		return !name.empty() && !path.empty();
+	}
+
 	string						name;
+	string                      path;
 	vector<CSLPlane_t>			planes;
 	map<string, int>			matches[match_count];
 
@@ -120,9 +151,6 @@ struct	CSLPackage_t {
 extern vector<CSLPackage_t>		gPackages;
 
 extern map<string, string>		gGroupings;
-
-extern map<string, string>		gPackageNames;
-
 
 /**************** Model matching using ICAO doc 8643
 		(http://www.icao.int/anb/ais/TxtFiles/Doc8643.txt) ***********/
@@ -145,25 +173,29 @@ struct	XPMPPlane_t {
 	string					icao;
 	string					airline;
 	string					livery;
-	CSLPlane_t *			model;			// May be null if no good match
+	CSLPlane_t *			model = nullptr; // May be null if no good match
 	bool					good_livery;	// is our paint correctly matched?
 	
 	// This callback is used to pull data from the client for posiitons, etc.
 	XPMPPlaneData_f			dataFunc;
-	void *					ref;
+	void *					ref = nullptr;
 	
 	// This is last known data we got for the plane, with timestamps.
 	int						posAge;
 	XPMPPlanePosition_t		pos;
+
 	int						surfaceAge;
 	XPMPPlaneSurfaces_t		surface;
 	int						radarAge;
 	XPMPPlaneRadar_t		radar;
-	
+
+	OBJ7Handle                  objHandle;
+	TextureHandle               texHandle;
+	TextureHandle               texLitHandle;
 };
 
 typedef	XPMPPlane_t *								XPMPPlanePtr;
-typedef	vector<XPMPPlanePtr>						XPMPPlaneVector;
+typedef	vector<std::unique_ptr<XPMPPlane_t>>		XPMPPlaneVector;
 
 // Notifiers - clients can install callbacks and be told when a plane's
 // data changes.

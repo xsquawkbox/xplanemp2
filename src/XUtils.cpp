@@ -1,22 +1,22 @@
 /* 
  * Copyright (c) 2004, Laminar Research.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
  */
@@ -30,6 +30,7 @@
 #include <map>
 #include <math.h>
 #include <string.h>
+#include <fstream>
 
 #if !defined(XUTILS_EXCLUDE_MAC_CRAP) && defined(__MACH__)
 #define XUTILS_EXCLUDE_MAC_CRAP 1
@@ -124,7 +125,7 @@ void	StTextFileScanner::read_next(void)
 			mBuf = buf+1;
 		else
 			mBuf = buf;
-			
+
 		if (!mBuf.empty() || !mSkipBlanks)
 		{
 			mDone = false;
@@ -146,7 +147,7 @@ void	BreakString(const string& line, vector<string>& words)
 		string::const_iterator e = s;
 		while (e < line.end() && !isspace(*e))
 			++e;
-			
+
 		if (s < e)
 			words.push_back(string(s,e));
 		
@@ -177,7 +178,7 @@ void	ChangePolyCmdCW(XObjCmd& ioCmd)
 {
 	vector<vec_tex>	v;
 	for (vector<vec_tex>::reverse_iterator riter = ioCmd.st.rbegin();
-		riter != ioCmd.st.rend(); ++riter)
+		 riter != ioCmd.st.rend(); ++riter)
 	{
 		v.push_back(*riter);
 	}
@@ -191,7 +192,7 @@ bool	GetNextNoComments(StTextFileScanner& f, string& s)
 		s = f.get();
 		f.next();
 		if (s.empty() || s[0] != '#')
-			return true;		
+			return true;
 	}
 	return false;
 }
@@ -200,23 +201,23 @@ double	GetObjRadius(const XObj& inObj)
 {
 	double	dist = 0, d;
 	for (vector<XObjCmd>::const_iterator c = inObj.cmds.begin();
-		c != inObj.cmds.end(); ++c)	
+		 c != inObj.cmds.end(); ++c)
 	{
 		for (vector<vec_tex>::const_iterator v = c->st.begin();
-			v != c->st.end(); ++v)
+			 v != c->st.end(); ++v)
 		{
 			d = sqrt(v->v[0] * v->v[0] +
-					 v->v[1] * v->v[1] +
-					 v->v[2] * v->v[2]);
+					v->v[1] * v->v[1] +
+					v->v[2] * v->v[2]);
 			if (d > dist) dist = d;
 		}
 		
 		for (vector<vec_rgb>::const_iterator p = c->rgb.begin();
-			p != c->rgb.end(); ++p)
+			 p != c->rgb.end(); ++p)
 		{
 			d = sqrt(p->v[0] * p->v[0] +
-					 p->v[1] * p->v[1] +
-					 p->v[2] * p->v[2]);
+					p->v[1] * p->v[1] +
+					p->v[2] * p->v[2]);
 			if (d > dist) dist = d;
 		}
 	}
@@ -294,9 +295,9 @@ void		ExtractPath(string& ioPath)
 
 OSErr	FindSuperFolder(const FSSpec& inItem, FSSpec& outFolder)
 {
-		CInfoPBRec	paramBlock;
-		OSErr		err;
-		
+	CInfoPBRec	paramBlock;
+	OSErr		err;
+
 	paramBlock.dirInfo.ioCompletion = 	NULL;
 	paramBlock.dirInfo.ioNamePtr =		(StringPtr) (&(outFolder.name));
 	paramBlock.dirInfo.ioVRefNum = 		inItem.vRefNum;
@@ -306,7 +307,7 @@ OSErr	FindSuperFolder(const FSSpec& inItem, FSSpec& outFolder)
 	err = ::PBGetCatInfoSync(&paramBlock);
 	if (err != noErr)
 		return err;
-		
+
 	outFolder.vRefNum = paramBlock.dirInfo.ioVRefNum;
 	outFolder.parID= paramBlock.dirInfo.ioDrParID;
 	return noErr;
@@ -348,10 +349,10 @@ void	FSSpec_2_String(const FSSpec& inSpec, string& outString)
 #endif
 
 void	ExtractFixedRecordString(	
-				const string&		inLine,
-				int					inBegin,
-				int					inEnd,
-				string&				outString)
+		const string&		inLine,
+		int					inBegin,
+		int					inEnd,
+		string&				outString)
 {
 	int	sp = inBegin-1;
 	int ep = inEnd;
@@ -363,15 +364,15 @@ void	ExtractFixedRecordString(
 	
 	while ((ep > sp) && (inLine[ep-1] == ' '))
 		--ep;
-		
+
 	outString = inLine.substr(sp, ep - sp);
 }				
-				
+
 bool	ExtractFixedRecordLong(
-				const string&		inLine,
-				int					inBegin,
-				int					inEnd,
-				long&				outLong)
+		const string&		inLine,
+		int					inBegin,
+		int					inEnd,
+		long&				outLong)
 {
 	string	foo;
 	ExtractFixedRecordString(inLine, inBegin, inEnd, foo);
@@ -379,12 +380,12 @@ bool	ExtractFixedRecordLong(
 	outLong = strtol(foo.c_str(), NULL, 10);
 	return true;
 }				
-				
+
 bool	ExtractFixedRecordUnsignedLong(
-				const string&		inLine,
-				int					inBegin,
-				int					inEnd,
-				unsigned long&		outUnsignedLong)
+		const string&		inLine,
+		int					inBegin,
+		int					inEnd,
+		unsigned long&		outUnsignedLong)
 {
 	string	foo;
 	ExtractFixedRecordString(inLine, inBegin, inEnd, foo);
@@ -404,7 +405,7 @@ struct	XPointPool::XPointPoolImp {
 	vector<p_info>			pts;
 	map<string, int>		index;
 
-	void	clear() 
+	void	clear()
 	{
 		pts.clear();
 		index.clear();
@@ -420,14 +421,14 @@ struct	XPointPool::XPointPoolImp {
 	{
 		static	char	buf[256];
 		sprintf(buf,"%08X%08X%08X|%08x%08x",
-			*(reinterpret_cast<const int*>(xyz+0)),
-			*(reinterpret_cast<const int*>(xyz+1)),
-			*(reinterpret_cast<const int*>(xyz+2)),
-			*(reinterpret_cast<const int*>(st +0)),
-			*(reinterpret_cast<const int*>(st +1)));
+				*(reinterpret_cast<const int*>(xyz+0)),
+				*(reinterpret_cast<const int*>(xyz+1)),
+				*(reinterpret_cast<const int*>(xyz+2)),
+				*(reinterpret_cast<const int*>(st +0)),
+				*(reinterpret_cast<const int*>(st +1)));
 		string	key(buf);
 		map<string, int>::iterator i = index.find(key);
-		if (i != index.end()) return i->second;			
+		if (i != index.end()) return i->second;
 		p_info	p;
 		memcpy(p.xyz, xyz, sizeof(p.xyz));
 		memcpy(p.st, st, sizeof(p.st));
@@ -447,15 +448,14 @@ struct	XPointPool::XPointPoolImp {
 };
 
 XPointPool::XPointPool()
+	: mImp(std::make_unique<XPointPoolImp>())
 {
-	mImp = new XPointPoolImp;
 }
 
 XPointPool::~XPointPool()
 {
-	delete mImp;
 }
-		
+
 void	XPointPool::clear()
 {
 	mImp->clear();
@@ -501,7 +501,7 @@ void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmds, int maxVale
 			outCmds.push_back(inCmd);
 			outCmds.back().cmdID = obj_Tri;
 			outCmds.back().st.erase(outCmds.back().st.begin()+3);
-			outCmds.push_back(inCmd);			
+			outCmds.push_back(inCmd);
 			outCmds.back().cmdID = obj_Tri;
 			outCmds.back().st.erase(outCmds.back().st.begin()+1);
 		}
@@ -520,7 +520,7 @@ void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmds, int maxVale
 				c.st[2] = inCmd.st[n  ];
 				outCmds.push_back(c);
 			}
-		} else 
+		} else
 			outCmds.push_back(inCmd);
 		break;
 	case obj_Tri_Strip:
@@ -604,11 +604,17 @@ void	DecomposeObj(const XObj& inObj, XObj& outObj, int maxValence)
 {
 	outObj.cmds.clear();
 	outObj.texture = inObj.texture;
-	for (vector<XObjCmd>::const_iterator cmd = inObj.cmds.begin(); 
-		cmd != inObj.cmds.end(); ++cmd)
+	for (vector<XObjCmd>::const_iterator cmd = inObj.cmds.begin();
+		 cmd != inObj.cmds.end(); ++cmd)
 	{
 		vector<XObjCmd>		newCmds;
 		DecomposeObjCmd(*cmd, newCmds, maxValence);
 		outObj.cmds.insert(outObj.cmds.end(), newCmds.begin(), newCmds.end());
 	}
+}
+
+bool DoesFileExist(const std::string &filePath)
+{
+	std::ifstream infile(filePath);
+	return infile.good();
 }

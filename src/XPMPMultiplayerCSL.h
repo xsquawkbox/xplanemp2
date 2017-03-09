@@ -42,7 +42,7 @@
  *
  */
 bool			CSL_Init(
-						const char* inTexturePath);
+		const char* inTexturePath);
 /*
  * CSL_LoadCSL
  *
@@ -50,14 +50,14 @@ bool			CSL_Init(
  *
  */
 bool			CSL_LoadCSL(
-						const char * inFolderPath, 		// Path to CSL folder
-						const char * inRelated,			// Path to related.txt - used by renderer for model matching
-						const char * inIcao8643);		// Path to ICAO document 8643 (list of aircraft)
-						
+		const char * inFolderPath, 		// Path to CSL folder
+		const char * inRelated,			// Path to related.txt - used by renderer for model matching
+		const char * inIcao8643);		// Path to ICAO document 8643 (list of aircraft)
+
 /*
  * CSL_MatchPlane
  *
- * Given an ICAO and optionally a livery and airline, this routine returns the best plane match, or 
+ * Given an ICAO and optionally a livery and airline, this routine returns the best plane match, or
  * NULL if there is no good plane match.  If got_livery is not null, it is filled in with whether
  * the match has a valid paint job or not.
  *
@@ -90,19 +90,19 @@ int				CSL_GetOGLIndex(CSLPlane_t *		model);
  *
  */
 void			CSL_DrawObject(
-							CSLPlane_t *			model,
-							float					distance,
-							double 					x,
-							double 					y,
-							double 					z,
-							double 					pitch,
-							double 					roll,
-							double 					heading,
-							int						type,
-							int	   					full,
-							xpmp_LightStatus		lights,
-							XPLMPlaneDrawState_t *	state);
-							
+		XPMPPlanePtr			plane,
+		float					distance,
+		double 					x,
+		double 					y,
+		double 					z,
+		double 					pitch,
+		double 					roll,
+		double 					heading,
+		int						type,
+		int	   					full,
+		xpmp_LightStatus		lights,
+		XPLMPlaneDrawState_t *	state);
+
 
 #if APL
 int Posix2HFSPath(const char *path, char *result, int resultLen);

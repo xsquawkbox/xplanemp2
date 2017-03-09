@@ -1,24 +1,24 @@
 #include "XPCAircraft.h"
-	
+
 XPCAircraft::XPCAircraft(
-					const char *			inICAOCode,
-					const char *			inAirline,
-					const char *			inLivery)
+		const char *			inICAOCode,
+		const char *			inAirline,
+		const char *			inLivery)
 {
 	mPlane = XPMPCreatePlane(inICAOCode, inAirline, inLivery, AircraftCB,
-					static_cast<void *>(this));
+							 static_cast<void *>(this));
 }
-					
+
 XPCAircraft::~XPCAircraft()
 {
 	XPMPDestroyPlane(mPlane);
 }
 
 XPMPPlaneCallbackResult	XPCAircraft::AircraftCB(
-										XPMPPlaneID			/*inPlane*/,
-										XPMPPlaneDataType	inDataType,
-										void *				ioData,
-										void *				inRefcon)
+		XPMPPlaneID			/*inPlane*/,
+		XPMPPlaneDataType	inDataType,
+		void *				ioData,
+		void *				inRefcon)
 {
 	XPCAircraft * me = static_cast<XPCAircraft *>(inRefcon);
 	switch(inDataType) {

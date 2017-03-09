@@ -1,22 +1,22 @@
 /* 
  * Copyright (c) 2004, Laminar Research.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
- * copy of this software and associated documentation files (the "Software"), 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the 
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
  * Software is furnished to do so, subject to the following conditions:
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  *
  */
@@ -28,6 +28,8 @@ struct	XObj;
 
 #include <string>
 #include <vector>
+#include <memory>
+
 using namespace std;
 
 class	StTextFileScanner {
@@ -35,7 +37,7 @@ public:
 
 	StTextFileScanner(const char * inFileName, bool skip_blanks);
 	~StTextFileScanner();
-		
+
 	void	skip_blanks(bool skip_blanks);
 	bool	done();
 	void	next();
@@ -86,28 +88,28 @@ void	FSSpec_2_String(const FSSpec& inSpec, string& outString);
 #endif
 
 void	ExtractFixedRecordString(	
-				const string&		inLine,
-				int					inBegin,
-				int					inEnd,
-				string&				outString);
-				
+		const string&		inLine,
+		int					inBegin,
+		int					inEnd,
+		string&				outString);
+
 bool	ExtractFixedRecordLong(
-				const string&		inLine,
-				int					inBegin,
-				int					inEnd,
-				long&				outLong);
-				
+		const string&		inLine,
+		int					inBegin,
+		int					inEnd,
+		long&				outLong);
+
 bool	ExtractFixedRecordUnsignedLong(
-				const string&		inLine,
-				int					inBegin,
-				int					inEnd,
-				unsigned long&		outUnsignedLong);
+		const string&		inLine,
+		int					inBegin,
+		int					inEnd,
+		unsigned long&		outUnsignedLong);
 
 class	XPointPool {
 public:
 
-			XPointPool();
-			~XPointPool();
+	XPointPool();
+	~XPointPool();
 	void	clear();
 	//int	accumulate(const float xyz[3], const float st[2]);
 	int		count(void);
@@ -118,13 +120,15 @@ private:
 	XPointPool(const XPointPool&);
 	XPointPool& operator=(const XPointPool&);
 	
-	struct	XPointPoolImp;				
+	struct	XPointPoolImp;
 
-	XPointPoolImp * mImp;
+	std::unique_ptr<XPointPoolImp> mImp;
 
 };
 
 void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmd, int maxValence);
 void	DecomposeObj(const XObj& inObj, XObj& outObj, int maxValence);
+
+bool DoesFileExist(const std::string &filePath);
 
 #endif
