@@ -49,7 +49,8 @@ target_include_directories(xplanemp
 		${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(xplanemp
 	PRIVATE ${XPSDK_XPLM_LIBRARIES}
-	png_static
+	${PNG_LIBRARY}
 	${XPMP_PLATFORM_LIBRARIES})
 target_compile_definitions(xplanemp PUBLIC XUTILS_EXCLUDE_MAC_CRAP=1)
-
+set_property(TARGET xplanemp PROPERTY CXX_STANDARD_REQUIRED 11)
+set_property(TARGET xplanemp PROPERTY CXX_STANDARD 14)
