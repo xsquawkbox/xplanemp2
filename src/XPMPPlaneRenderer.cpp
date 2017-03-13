@@ -58,7 +58,7 @@
 #define		RENDERER_STATS 0
 
 // Maximum altitude difference in feet for TCAS blips
-#define		MAX_TCAS_ALTDIFF		5000
+#define		MAX_TCAS_ALTDIFF		10000
 
 // Even in good weather we don't want labels on things
 // that we can barely see.  Cut labels at 5 km.
@@ -347,7 +347,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 				if (radar.mode == xpmpTransponderMode_Standby)
 					tcas = false;
 
-			// check for altitude - if difference exceeds 3000ft, don't show
+			// check for altitude - if difference exceeds a preconfigured limit, don't show
 			double acft_alt = XPLMGetDatad(gAltitudeRef) / kFtToMeters;
 			double alt_diff = pos.elevation - acft_alt;
 			if(alt_diff < 0) alt_diff *= -1;
