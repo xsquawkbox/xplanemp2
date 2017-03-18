@@ -58,7 +58,7 @@
 #define		RENDERER_STATS 0
 
 // Maximum altitude difference in feet for TCAS blips
-#define		MAX_TCAS_ALTDIFF		5000
+#define		MAX_TCAS_ALTDIFF		10000
 
 // Even in good weather we don't want labels on things
 // that we can barely see.  Cut labels at 5 km.
