@@ -621,6 +621,25 @@ bool			XPMPIsICAOValid(
 	return CSL_MatchPlane(inICAO, "", "", NULL, false) != NULL;
 }
 
+int 		XPMPGetPlaneModelQuality(
+		XPMPPlaneID 				inPlane)
+{
+	XPMPPlanePtr thisPlane = XPMPPlaneFromID(inPlane);
+
+	return thisPlane->match_quality;
+}
+
+int			XPMPModelMatchQuality(
+		const char *				inICAO,
+		const char *				inAirline,
+		const char *				inLivery)
+{
+	int 	matchQuality = -1;
+	CSL_MatchPlane(inICAO, inAirline, inLivery, &matchQuality, false);
+
+	return matchQuality;
+}
+
 void		XPMPDumpOneCycle(void)
 {
 	CSL_Dump();

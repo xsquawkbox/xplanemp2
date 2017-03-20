@@ -534,6 +534,29 @@ XPMPPlaneCallbackResult XPMPGetPlaneData(
 bool			XPMPIsICAOValid(
 		const char *				inICAO);
 
+/*
+ * XPMPGetPlaneModelQuality
+ *
+ * This function returns the quality level for the nominated plane's
+ * current model.
+ */
+int 		XPMPGetPlaneModelQuality(
+		XPMPPlaneID 				inPlane);
+
+/*
+ * XPMPModelMatchQuality
+ *
+ * This functions searches through our model list and returns the pass
+ * upon which a match was found, and -1 if one was not.
+ *
+ * This can be used for assessing if it's worth using a partial update
+ * to update the model vs previous efforts.
+ */
+int			XPMPModelMatchQuality(
+		const char *				inICAO,
+		const char *				inAirline,
+		const char *				inLivery);
+
 /************************************************************************************
  * PLANE RENDERING API
  ************************************************************************************/
