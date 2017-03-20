@@ -58,11 +58,17 @@ bool			CSL_LoadCSL(
  * CSL_MatchPlane
  *
  * Given an ICAO and optionally a livery and airline, this routine returns the best plane match, or
- * NULL if there is no good plane match.  If got_livery is not null, it is filled in with whether
- * the match has a valid paint job or not.
+ * NULL if there is no good plane match.
  *
+ * if match_quality is set, it is set with the pass upon which a match was determined.  
+ *   (see XPMPMultiplayerCSL.h)
  */
-CSLPlane_t *	CSL_MatchPlane(const char * inICAO, const char * inAirline, const char * inLivery, bool * got_livery, bool use_default);
+CSLPlane_t *	CSL_MatchPlane(
+		const char * inICAO, 
+		const char * inAirline, 
+		const char * inLivery, 
+		int *  match_quality,
+		bool use_default);
 
 /*
  * CSL_Dump

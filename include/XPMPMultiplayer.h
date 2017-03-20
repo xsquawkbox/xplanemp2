@@ -409,8 +409,13 @@ void			XPMPDestroyPlane(XPMPPlaneID);
  * This routine lets you change an aircraft's model.  This can be useful if a remote
  * player changes planes or new information comes over the network asynchronously.
  *
+ * this function returns an integer which, abstractly, represents the match quality.
+ *
+ * lower numbers are better, 2 or lower indicates an exact match on model.
+ * negative values indicate failure to match at all.
+ *
  */
-void	XPMPChangePlaneModel(
+int 	XPMPChangePlaneModel(
 		XPMPPlaneID				inPlaneID,
 		const char *			inICAOCode,
 		const char *			inAirline,

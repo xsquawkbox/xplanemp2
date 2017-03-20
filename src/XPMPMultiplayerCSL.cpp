@@ -982,7 +982,7 @@ static	int kUseICAO[] = { 1, 1, 0, 0, 1, 0 };
 static	int kUseLivery[] = { 1, 0, 1, 0, 0, 0 };
 static	int kUseAirline[] = { 0, 1, 0, 1, 0, 0 };
 
-CSLPlane_t *	CSL_MatchPlane(const char * inICAO, const char * inAirline, const char * inLivery, bool * got_livery, bool use_default)
+CSLPlane_t *	CSL_MatchPlane(const char * inICAO, const char * inAirline, const char * inLivery, int * match_quality, bool use_default)
 {
 	XPLMPluginID	who;
 	int		total, active;
@@ -1041,11 +1041,15 @@ CSLPlane_t *	CSL_MatchPlane(const char * inICAO, const char * inAirline, const c
 					if (gPackages[p].planes[iter->second].plane_type != plane_Obj ||
 							gPackages[p].planes[iter->second].obj_idx != -1)
 					{
-						if (got_livery) *got_livery = (kUseLivery[n] || kUseAirline[n]);
+						if (NULL != match_quality) *match_quality = n;
 
-						if (gIntPrefsFunc("debug", "model_matching", 0))
-						{
-							sprintf(buf, XPMP_CLIENT_NAME " MATCH - Found: %s\n", gPackages[p].planes[iter->second].file_path.c_str());
+						if (gIntPrefsFunc("debug", "model_matching", 0)) {
+							sprintf(buf, XPMP_CLIENT_NAME " MATCH - Found: %s/%s/%s : %s - %s\n", 
+								gPackages[p].planes[iter->second].icao.c_str(),
+								gPackages[p].planes[iter->second].airline.c_str(),
+								gPackages[p].planes[iter->second].livery.c_str(),
+								gPackages[p].planes[iter->second].file_path.c_str(),
+								gPackages[p].planes[iter->second].texturePath.c_str());
 							XPLMDebugString(buf);
 						}
 
@@ -1058,6 +1062,7 @@ CSLPlane_t *	CSL_MatchPlane(const char * inICAO, const char * inAirline, const c
 	{
 		XPLMDebugString(XPMP_CLIENT_NAME " MATCH - No match.\n");
 	}
+	if (NULL != match_quality) *match_quality = -1;
 
 
 
@@ -1151,12 +1156,12 @@ CSLPlane_t *	CSL_MatchPlane(const char * inICAO, const char * inAirline, const c
 	}
 
 	if (gIntPrefsFunc("debug", "model_matching", 0)) {
-		XPLMDebugString(string("gAircraftCodes.find(" + icao + ") returned no match.").c_str());
+		XPLMDebugString(string("gAircraftCodes.find(" + icao + ") returned no match.\n").c_str());
 	}
 
 	if (!strcmp(inICAO, gDefaultPlane.c_str())) return NULL;
 	if (!use_default) return NULL;
-	return CSL_MatchPlane(gDefaultPlane.c_str(), "", "", got_livery, false);
+	return CSL_MatchPlane(gDefaultPlane.c_str(), "", "", NULL, false);
 }
 
 void	CSL_Dump(void)

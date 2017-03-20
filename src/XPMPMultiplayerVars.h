@@ -174,7 +174,7 @@ struct	XPMPPlane_t {
 	string					airline;
 	string					livery;
 	CSLPlane_t *			model = nullptr; // May be null if no good match
-	bool					good_livery;	// is our paint correctly matched?
+	int 					match_quality;
 	
 	// This callback is used to pull data from the client for posiitons, etc.
 	XPMPPlaneData_f			dataFunc;

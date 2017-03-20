@@ -332,7 +332,7 @@ XPMPPlaneID		XPMPCreatePlane(
 	plane->airline = inAirline;
 	plane->dataFunc = inDataFunc;
 	plane->ref = inRefcon;
-	plane->model = CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->good_livery, true);
+	plane->model = CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->match_quality, true);
 	
 	plane->pos.size = sizeof(plane->pos);
 	plane->surface.size = sizeof(plane->surface);
@@ -410,7 +410,7 @@ void			XPMPDestroyPlane(XPMPPlaneID inID)
 	gPlanes.erase(iter);
 }
 
-void	XPMPChangePlaneModel(
+int	XPMPChangePlaneModel(
 		XPMPPlaneID				inPlaneID,
 		const char *			inICAOCode,
 		const char *			inAirline,
@@ -420,7 +420,7 @@ void	XPMPChangePlaneModel(
 	plane->icao = inICAOCode;
 	plane->airline = inAirline;
 	plane->livery = inLivery;
-	plane->model = CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->good_livery, true);
+	plane->model = CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->match_quality, true);
 	// we're changing model, we must flush the resource handles so they get reloaded.
 	plane->objHandle = NULL;
 	plane->texHandle = NULL;
@@ -431,6 +431,8 @@ void	XPMPChangePlaneModel(
 	{
 		iter2->first.first(plane, xpmp_PlaneNotification_ModelChanged, iter2->first.second);
 	}
+
+	return plane->match_quality;
 }	
 
 void	XPMPSetDefaultPlaneICAO(
