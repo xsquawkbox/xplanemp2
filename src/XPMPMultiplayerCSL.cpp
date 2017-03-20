@@ -977,10 +977,11 @@ bool CSL_LoadCSL(const char * inFolderPath, const char * inRelatedFile, const ch
 // So we will make six passes from best to worst, trying to match.  For
 // each pass we try each package in turn from highest to lowest priority.
 
+
 // These structs tell us how to build the matching keys for a given pass.
-static	int kUseICAO[] = { 1, 1, 0, 0, 1, 0 };
-static	int kUseLivery[] = { 1, 0, 1, 0, 0, 0 };
-static	int kUseAirline[] = { 0, 1, 0, 1, 0, 0 };
+static	const int kUseICAO[] =		{ 1, 1, 0, 0, 1, 1, 0, 0};
+static	const int kUseAirline[] =	{ 1, 1, 1, 1, 0, 0, 0, 0};
+static	const int kUseLivery[] =	{ 1, 0, 1, 0, 1, 0, 1, 0};
 
 CSLPlane_t *	CSL_MatchPlane(const char * inICAO, const char * inAirline, const char * inLivery, int * match_quality, bool use_default)
 {
@@ -1012,15 +1013,35 @@ CSLPlane_t *	CSL_MatchPlane(const char * inICAO, const char * inAirline, const c
 	{
 		// Build up the right key for this pass.
 		key = kUseICAO[n] ? icao : group;
-		if (kUseLivery[n])
-		{
+		if (!kUseICAO[n] && group == "") {
+			if (gIntPrefsFunc("debug", "model_matching", 0)) {
+				sprintf(buf, XPMP_CLIENT_NAME " MATCH -    Skipping %d Due nil Group\n", n);
+				XPLMDebugString(buf);
+			}			
+		}
+
+
+		if (kUseLivery[n]) {
+			if (livery == "") {
+				if (gIntPrefsFunc("debug", "model_matching", 0)) {
+					sprintf(buf, XPMP_CLIENT_NAME " MATCH -    Skipping %d Due Absent Livery\n", n);
+					XPLMDebugString(buf);
+				}
+				continue;
+			}
 			key += " ";
 			key += airline;
 			key += " ";
 			key += livery;
 		}
-		if (kUseAirline[n])
-		{
+		if (kUseAirline[n]) {
+			if (airline == "") {
+				if (gIntPrefsFunc("debug", "model_matching", 0)) {
+					sprintf(buf, XPMP_CLIENT_NAME " MATCH -    Skipping %d Due Absent Airline\n", n);
+					XPLMDebugString(buf);
+				}
+				continue;
+			}
 			key += " ";
 			key += airline;
 		}

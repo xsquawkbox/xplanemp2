@@ -119,7 +119,7 @@ struct	CSLPlane_t {
 	vector<obj_for_acf>			attachments;
 };
 
-// These enums define the six levels of matching we might possibly
+// These enums define the eight levels of matching we might possibly
 // make.  For each level of matching, we use a single string as a key.
 // (The string's contents vary with model - examples are shown.)
 enum {
@@ -127,8 +127,10 @@ enum {
 	match_icao_airline,					//	B738 SWA
 	match_group_airline_livery,			//	B731 B732 B733 B734 B735 B736 B737 B738 B739 SWA SHAMU
 	match_group_airline,				//	B731 B732 B733 B734 B735 B736 B737 B738 B739 SWA
+	match_icao_livery,					//  B738 SHAMU
 	match_icao,							//	B738
-	match_group,						//	B731 B732 B733 B734 B735 B736 B737 B738 B739
+	match_group_livery,					//  B731 B732 B733 B734 B735 B736 B737 B738 B739 SHAMU
+	match_group, 						//	B731 B732 B733 B734 B735 B736 B737 B738 B739
 	match_count
 };
 
