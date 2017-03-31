@@ -31,7 +31,8 @@
 #include <cctype>
 #include <vector>
 #include <string>
-#include <string.h>
+#include <cstring>
+#include <sstream>
 
 #include "XPLMProcessing.h"
 #include "XPLMPlanes.h"
@@ -100,7 +101,63 @@ static	int				XPMPControlPlaneCount(
 		void *               inRefcon);
 
 
+#ifdef DEBUG
+static void xpmpKhrDebugProc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *param)
+{
+	std::stringstream	msgOut;
+	msgOut << XPMP_CLIENT_NAME << ": GL Debug: ";
+	switch (type)
+	{
+	case GL_DEBUG_TYPE_ERROR:
+		msgOut << "[ERR] ";
+		break;
+	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+		msgOut << "[DEP] ";
+		break;
+	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+		msgOut << "[UND] ";
+		break;
+	case GL_DEBUG_TYPE_PORTABILITY:
+		msgOut << "[PORT] ";
+		break;
+	case GL_DEBUG_TYPE_PERFORMANCE:
+		msgOut << "[PERF] ";
+		break;
+	case GL_DEBUG_TYPE_MARKER:
+		msgOut << "*** ";
+		break;
+	case GL_DEBUG_TYPE_PUSH_GROUP:
+		msgOut << " -> ";
+		break;
+	case GL_DEBUG_TYPE_POP_GROUP:
+		msgOut << " <- ";
+		break;
+	default:
+		break;
+	}
+	msgOut << std::string(message, length) << std::endl;
+	XPLMDebugString(msgOut.str().c_str());
+}
 
+void XPMPSetupGLDebug()
+{
+	glDebugMessageCallback(xpmpKhrDebugProc, NULL);
+	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
+
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, GL_DONT_CARE, 0, NULL, GL_TRUE);
+
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+	// eat errors.
+	while (GL_NO_ERROR != glGetError())
+		;
+}
+#endif
 
 /********************************************************************************
  * SETUP
@@ -121,8 +178,12 @@ const char * 	XPMPMultiplayerInitLegacyData(
 	// Initialize our OpenGL Utilities
 	OGL_UtilsInit();
 
-	bool	problem = false;
+	OGLDEBUG(XPLMDebugString(XPMP_CLIENT_NAME " - GL supports debugging\n"));
+	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT));
+	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS));
+	OGLDEBUG(XPMPSetupGLDebug());
 
+	bool	problem = false;
 	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
 		problem = true;
 
@@ -171,6 +232,7 @@ void XPMPMultiplayerCleanup(void)
 	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 0, 0);
 	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 1, (void *) -1);
 	XPLMUnregisterDrawCallback(XPMPRenderMultiplayerPlanes, xplm_Phase_Airplanes, 0, 0);
+	OGLDEBUG(glDebugMessageCallback(NULL, NULL));
 }
 
 

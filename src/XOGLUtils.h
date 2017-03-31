@@ -71,6 +71,47 @@ extern PFNGLCLIENTACTIVETEXTUREARBPROC	glClientActiveTextureARB;
 extern PFNGLGENERATEMIPMAPPROC          glGenerateMipmap;
 #endif
 
+#ifdef DEBUG
+#ifdef IBM
+extern PFNGLDEBUGMESSAGECONTROLPROC		glDebugMessageControl;
+extern PFNGLDEBUGMESSAGEINSERTPROC		glDebugMessageInsert;
+extern PFNGLDEBUGMESSAGECALLBACKPROC	glDebugMessageCallback;
+extern PFNGLGETDEBUGMESSAGELOGPROC		glGetDebugMessageLog;
+extern PFNGLPUSHDEBUGGROUPPROC			glPushDebugGroup;
+extern PFNGLPOPDEBUGGROUPPROC			glPopDebugGroup;
+extern PFNGLOBJECTLABELPROC				glObjectLabel;
+extern PFNGLGETOBJECTLABELPROC			glGetObjectLabel;
+extern PFNGLOBJECTPTRLABELPROC			glObjectPtrLabel;
+extern PFNGLGETOBJECTPTRLABELPROC		glGetObjectPtrLabel;
+#endif
+
+extern bool								xpmp_ogl_can_debug;
+#define OGLDEBUG(x)						if(xpmp_ogl_can_debug) x
+
+enum GLDebug_Group {
+	XPMP_DBG_TexLoad = 1,
+	XPMP_DBG_TexLoad_CreateTex,
+	XPMP_DBG_TexLoad_GenMips,
+	XPMP_DBG_TexLoad_ConfigFiltering,
+	XPMP_DBG_TexLoad_ConfigWrap,
+	XPMP_DBG_TexLoad_Done,
+	XPMP_DBG_OBJRender
+};
+
+#else
+
+#define OGLDEBUG(X)
+
+#endif
+
+
 bool	OGL_UtilsInit();
+
+#ifdef __cplusplus
+
+#include <string>
+bool	OGL_HasExtension(const std::string &inExtensionName);
+
+#endif
 
 #endif

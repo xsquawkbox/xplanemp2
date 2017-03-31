@@ -21,6 +21,8 @@
  *
  */
 #include "XOGLUtils.h"
+#include <set>
+#include <string>
 
 // This had to be renamed because on Linux, namespaces appear to be shared between ourselves and XPlane
 // so i would end up overwritting XPlanes function pointer!
@@ -33,6 +35,25 @@ PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	 = NULL;
 PFNGLMULTITEXCOORD2FVARBPROC	glMultiTexCoord2fvARB	 = NULL;
 PFNGLGENERATEMIPMAPPROC			glGenerateMipmap		 = NULL;
 #endif
+
+#ifdef DEBUG
+#if IBM
+PFNGLDEBUGMESSAGECONTROLPROC	glDebugMessageControl = NULL;
+PFNGLDEBUGMESSAGEINSERTPROC		glDebugMessageInsert = NULL;
+PFNGLDEBUGMESSAGECALLBACKPROC	glDebugMessageCallback = NULL;
+PFNGLGETDEBUGMESSAGELOGPROC		glGetDebugMessageLog = NULL;
+PFNGLPUSHDEBUGGROUPPROC			glPushDebugGroup = NULL;
+PFNGLPOPDEBUGGROUPPROC			glPopDebugGroup = NULL;
+PFNGLOBJECTLABELPROC			glObjectLabel = NULL;
+PFNGLGETOBJECTLABELPROC			glGetObjectLabel = NULL;
+PFNGLOBJECTPTRLABELPROC			glObjectPtrLabel = NULL;
+PFNGLGETOBJECTPTRLABELPROC		glGetObjectPtrLabel = NULL;
+#endif
+
+bool							xpmp_ogl_can_debug = false;
+
+#endif
+
 
 #if LIN
 
@@ -58,6 +79,23 @@ bool	OGL_UtilsInit()
 		glMultiTexCoord2fvARB	 = (PFNGLMULTITEXCOORD2FVARBPROC )	 wglGetProcAddress("glMultiTexCoord2fvARB"   );
 		glGenerateMipmap		 = (PFNGLGENERATEMIPMAPPROC)		 wglGetProcAddress("glGenerateMipmap"		 );
 #endif		
+#ifdef DEBUG
+		if (OGL_HasExtension("GL_KHR_debug")) {
+#if IBM
+			glDebugMessageControl = (PFNGLDEBUGMESSAGECONTROLPROC)	wglGetProcAddress("glDebugMessageControl");
+			glDebugMessageInsert = (PFNGLDEBUGMESSAGEINSERTPROC)	wglGetProcAddress("glDebugMessageInsert");
+			glDebugMessageCallback = (PFNGLDEBUGMESSAGECALLBACKPROC)wglGetProcAddress("glDebugMessageCallback");
+			glGetDebugMessageLog = (PFNGLGETDEBUGMESSAGELOGPROC)	wglGetProcAddress("glGetDebugMessageLog");
+			glPushDebugGroup = (PFNGLPUSHDEBUGGROUPPROC)			wglGetProcAddress("glPushDebugGroup");
+			glPopDebugGroup = (PFNGLPOPDEBUGGROUPPROC)				wglGetProcAddress("glPopDebugGroup");
+			glObjectLabel = (PFNGLOBJECTLABELPROC)					wglGetProcAddress("glObjectLabel");
+			glGetObjectLabel = (PFNGLGETOBJECTLABELPROC)			wglGetProcAddress("glGetObjectLabel");
+			glObjectPtrLabel = (PFNGLOBJECTPTRLABELPROC)			wglGetProcAddress("glObjectPtrLabel");
+			glGetObjectPtrLabel = (PFNGLGETOBJECTPTRLABELPROC)		wglGetProcAddress("glGetObjectPtrLabel");
+#endif
+			xpmp_ogl_can_debug = true;
+		}
+#endif
 		firstTime = false;
 	}
 
@@ -78,4 +116,23 @@ bool	OGL_UtilsInit()
 	return true;
 #endif
 
+}
+
+std::set<std::string>	xpmp_glExtensions;
+
+bool	OGL_HasExtension(const std::string &inExtensionName) 
+{
+	if (xpmp_glExtensions.empty()) {
+		/* it's unthinkable that we'd have 0 extensions, so query the GL implementation to find
+		 * out what we do have. */
+		const GLubyte *	glExtAll = glGetString(GL_EXTENSIONS);
+		std::string 	allExtensions(reinterpret_cast<const char *>(glExtAll));
+
+		int offs;
+		while ((offs = allExtensions.find(" ")) != std::string::npos) {
+			xpmp_glExtensions.insert(allExtensions.substr(0, offs));
+			allExtensions = allExtensions.substr(offs+1);
+		}
+	}
+	return (xpmp_glExtensions.count(inExtensionName) > 0);
 }

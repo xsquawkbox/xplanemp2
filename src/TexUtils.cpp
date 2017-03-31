@@ -26,9 +26,11 @@
 #include "XOGLUtils.h"
 #include <utility>
 #include <algorithm>
-#include <stdio.h>
-#include <string.h>
-#include <utility>
+#include <string>
+#include <sstream>
+#include <cstdio>
+#include <cstring>
+#include <XPMPMultiplayer.h>
 #if IBM
 #include <GL/gl.h>
 #include <GL/glu.h>
@@ -187,8 +189,16 @@ bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inD
 	return ok;
 }
 
+
+#ifdef DEBUG
+extern void XPMPSetupGLDebug();
+#endif
+
 bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool mipmap, int &texNum)
 {
+	OGLDEBUG(glPushDebugGroup(GL_DEBUG_SOURCE_THIRD_PARTY, XPMP_DBG_TexLoad, -1, "LoadTextureFromMemory"));
+	OGLDEBUG(XPMPSetupGLDebug());
+
 	// we must use glGetError to force the error queue back into a known state before we can use it for anything meaningful below.
 	static bool dirtyGLState = false;
 	static bool dirtyGLStateReported = false;
@@ -208,6 +218,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 	{
 		XPLMDebugString(XPMP_CLIENT_NAME " Couldn't generate texture number.");
 		texNum = 0;
+		OGLDEBUG(glPopDebugGroup());
 		return false;
 	}
 
@@ -218,6 +229,8 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		{
 			XPLMBindTexture2d(texNum, 0);
 
+			
+			OGLDEBUG(glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER, XPMP_DBG_TexLoad_CreateTex, GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Creating Texture"));
 			if (magentaAlpha)
 			{
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, im.width ,im.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, im.bitmap.data());
@@ -243,6 +256,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 			}
 
 			if (mipmap) {
+				OGLDEBUG(glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER, XPMP_DBG_TexLoad_GenMips, GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Generating Mipmaps"));
 				// https://www.khronos.org/opengl/wiki/Common_Mistakes#Automatic_mipmap_generation:
 				// It has been reported that on some ATI drivers, glGenerateMipmap(GL_TEXTURE_2D)
 				// has no effect unless you precede it with a call to glEnable(GL_TEXTURE_2D) in this particular case.
@@ -253,6 +267,8 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 	}
 
 	DestroyBitmap(im);
+
+	OGLDEBUG(glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER, XPMP_DBG_TexLoad, GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Configuring Filtering"));
 
 	// BAS note: for some reason on my WinXP system with GF-FX, if
 	// I do not set these explicitly to linear, I get no drawing at all.
@@ -273,6 +289,8 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 			strncmp(ver_str,"1.4", 3) ||
 			strncmp(ver_str,"1.5", 3);
 
+	OGLDEBUG(glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER, XPMP_DBG_TexLoad, GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Configuring Texture Wrap"));
+
 
 	if(inWrap 		   ){glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT		 );
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT		 );}
@@ -280,6 +298,8 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);}
 	else					{glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP		 );
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP		 );}
+
+	OGLDEBUG(glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER, XPMP_DBG_TexLoad, GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Finished Load - checking errors"));
 
 	int err = glGetError();
 	if (err)
@@ -294,7 +314,9 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		while (GL_NO_ERROR != glGetError())
 			;
 		texNum = 0;
+		OGLDEBUG(glPopDebugGroup());
 		return false;
 	}
+	OGLDEBUG(glPopDebugGroup());
 	return true;
 }
