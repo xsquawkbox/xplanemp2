@@ -189,7 +189,28 @@ bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inD
 
 bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool mipmap, int &texNum)
 {
+	// we must use glGetError to force the error queue back into a known state before we can use it for anything meaningful below.
+	static bool dirtyGLState = false;
+	static bool dirtyGLStateReported = false;
+	while (GL_NO_ERROR != glGetError())
+		dirtyGLState = true;
+	if (dirtyGLState && !dirtyGLStateReported) {
+		XPLMDebugString(XPMP_CLIENT_NAME": GL Error State was bad upon texture load (will not be reported again)\n");
+		dirtyGLStateReported = true;
+	}
+
 	if (texNum == 0) { XPLMGenerateTextureNumbers(&texNum, 1); }
+	bool texNumError = false;
+	while (GL_NO_ERROR != glGetError()) {
+		texNumError = true;
+	}
+	if (texNumError)
+	{
+		XPLMDebugString(XPMP_CLIENT_NAME " Couldn't generate texture number.");
+		texNum = 0;
+		return false;
+	}
+
 
 	if (!magentaAlpha || ConvertBitmapToAlpha(&im) == 0)
 	{
@@ -206,8 +227,22 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, im.width ,im.height, 0, GL_RGB, GL_UNSIGNED_BYTE, im.bitmap.data());
 			}
 
-			if (mipmap)
-			{
+			bool texGenError = false;
+			GLenum	tErr;
+			while ((tErr = glGetError()) != GL_NO_ERROR) {
+				std::stringstream	msgOut;
+				msgOut << XPMP_CLIENT_NAME ": Failed to create texture: 0x" << std::ios::hex << tErr << std::endl;				
+				XPLMDebugString(msgOut.str().c_str());
+				texGenError = true;
+			}
+			if (texGenError) {
+				// asume no textures resources used because it was the glTexImage2D that failed, and bail
+				texNum = 0;
+				OGLDEBUG(glPopDebugGroup());
+				return false;
+			}
+
+			if (mipmap) {
 				// https://www.khronos.org/opengl/wiki/Common_Mistakes#Automatic_mipmap_generation:
 				// It has been reported that on some ATI drivers, glGenerateMipmap(GL_TEXTURE_2D)
 				// has no effect unless you precede it with a call to glEnable(GL_TEXTURE_2D) in this particular case.
@@ -250,8 +285,14 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 	if (err)
 	{
 		char buf[256];
-		sprintf(buf, "Texture load got OGL err: %d\n", err);
+		sprintf(buf, "Texture load got OGL err: %x\n", err);
 		XPLMDebugString(buf);
+		// flush any texture resources being held by the failed load
+		GLuint	textures[] = { texNum };
+		glDeleteTextures(1, textures);
+		// flush any pending error states
+		while (GL_NO_ERROR != glGetError())
+			;
 		texNum = 0;
 		return false;
 	}
