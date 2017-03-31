@@ -45,6 +45,10 @@
 
 using std::swap;
 
+float	xpmp_tex_MaxAnisotropy = 1.0;
+bool	xpmp_tex_useAnisotropy = false;
+float	xpmp_tex_anisotropyLevel = 2.0;
+
 static void HalfBitmap(ImageInfo& ioImage)
 {
 	int row_b = (ioImage.width * ioImage.channels) + ioImage.pad;
@@ -260,6 +264,9 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 				// https://www.khronos.org/opengl/wiki/Common_Mistakes#Automatic_mipmap_generation:
 				// It has been reported that on some ATI drivers, glGenerateMipmap(GL_TEXTURE_2D)
 				// has no effect unless you precede it with a call to glEnable(GL_TEXTURE_2D) in this particular case.
+				if (xpmp_tex_useAnisotropy) {
+					glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, xpmp_tex_anisotropyLevel);
+				}
 				glEnable(GL_TEXTURE_2D);
 				glGenerateMipmap(GL_TEXTURE_2D);
 			}
@@ -274,7 +281,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 	// I do not set these explicitly to linear, I get no drawing at all.
 	// Who knows what default state the card is in. :-(
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmap ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
 
 	static const char * ver_str = (const char *) glGetString(GL_VERSION);
 	static const char * ext_str = (const char *) glGetString(GL_EXTENSIONS);

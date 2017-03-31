@@ -26,6 +26,10 @@
 #include "BitmapUtils.h"
 #include <string>
 
+extern float	xpmp_tex_MaxAnisotropy;
+extern bool		xpmp_tex_useAnisotropy;
+extern float	xpmp_tex_anisotropyLevel;
+
 bool LoadTextureFromFile(const std::string &inFileName, bool magentaAlpha, bool inWrap, bool inMipmap, int inDeres, int * outTexNum, int * outWidth, int * outHeight);
 
 bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inDeres, ImageInfo &im, int * outWidth, int * outHeight);

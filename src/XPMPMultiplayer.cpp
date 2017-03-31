@@ -182,6 +182,31 @@ const char * 	XPMPMultiplayerInitLegacyData(
 	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT));
 	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS));
 	OGLDEBUG(XPMPSetupGLDebug());
+	
+
+	// check for a few GL extensions - this needs to be done after we've initialised the light texture because it doesn't compress.
+	xpmp_tex_useAnisotropy = OGL_HasExtension("GL_EXT_texture_filter_anisotropic");
+	if (xpmp_tex_useAnisotropy) {
+		GLfloat maxAnisoLevel;
+
+		XPLMDebugString(XPMP_CLIENT_NAME " - GL supports anisoptropic filtering.\n");
+
+		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisoLevel);
+		xpmp_tex_MaxAnisotropy = maxAnisoLevel;
+		xpmp_tex_anisotropyLevel = gFloatPrefsFunc("debug", "limit_anisotropy", maxAnisoLevel);
+		if (xpmp_tex_anisotropyLevel > xpmp_tex_MaxAnisotropy) {
+			xpmp_tex_anisotropyLevel = xpmp_tex_MaxAnisotropy;
+		}
+		if (xpmp_tex_anisotropyLevel <= 1.0) {
+			xpmp_tex_useAnisotropy = false;
+		}
+		if (xpmp_tex_useAnisotropy) {
+			std::stringstream debugOut;
+			debugOut << XPMP_CLIENT_NAME << " - Using " 
+				<< xpmp_tex_anisotropyLevel << "x anisotropic texture filtering" << std::endl;
+			XPLMDebugString(debugOut.str().c_str());
+		}
+	}
 
 	bool	problem = false;
 	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
