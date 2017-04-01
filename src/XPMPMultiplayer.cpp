@@ -200,7 +200,7 @@ const char * 	XPMPMultiplayerInitLegacyData(
 	if (!CSL_Init(inTexturePath))
 		problem = true;
 
-	if (problem)		return "There were problems initializing " XPMP_CLIENT_LONGNAME ". Please examine X-Plane's error.out file for detailed information.";
+	if (problem)		return "There were problems initializing " XPMP_CLIENT_LONGNAME ". Please examine X-Plane's Log.txt file for detailed information.";
 	else 				return "";
 }
 
