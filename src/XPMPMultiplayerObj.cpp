@@ -52,6 +52,8 @@
 // Set this to 1 to get resource loading and unloading diagnostics
 #define DEBUG_RESOURCE_CACHE 0
 
+int xpmp_spare_texhandle_decay_frames = -1;
+
 using namespace std;
 
 const	double	kMetersToNM = 0.000539956803;
@@ -241,7 +243,7 @@ static vector<ObjInfo_t>	sObjects;
 static ObjManager gObjManager(OBJ_LoadModelAsync);
 static TextureManager gTextureManager(OBJ_LoadTexture);
 
-static std::queue<int> sFreedTextures;
+static std::queue<GLuint> sFreedTextures;
 
 /*****************************************************
 		Utility functions to handle OBJ stuff
@@ -257,7 +259,7 @@ int OBJ_LoadLightTexture(const string &inFilePath, bool inForceMaxTex)
 	if (inForceMaxTex)
 		derez = 0;
 
-	int texNum = 0;
+	GLuint texNum = 0;
 	bool ok = LoadTextureFromFile(path, true, false, true, derez, &texNum, NULL, NULL);
 	if (!ok) return 0;
 
@@ -277,7 +279,12 @@ void DeleteTexture(CSLTexture_t* texture)
 	XPLMDebugString(")\n");
 #endif
 
-	sFreedTextures.push(texture->id);
+	if (sFreedTextures.size() >= MAX_SPARE_TEXHANDLES) {
+		GLuint textures[] = { texture->id };
+		glDeleteTextures(1, textures);
+	} else {
+		sFreedTextures.push(texture->id);
+	}
 	delete texture;
 }
 
@@ -531,6 +538,45 @@ std::string OBJ_DefaultModel(const string &path)
 /*****************************************************
 			Aircraft Model Drawing
 ******************************************************/
+
+/*
+ * xpmpGetGlTextureId tries to return a spare texture handle from our pool of
+ * unused GL texture handles.
+ *
+ * if we're out, return 0.  LoadTextureFromMemory knows that a textureid of 0 means
+ * that it has to get a new handle from the GL layer anyway.
+ *
+ * If we have any textures left after this operation, we bump the timer for texture handle release.
+ */
+GLuint xpmpGetGlTextureId() {
+	GLuint	retHandle = 0;
+	if (! sFreedTextures.empty()) {
+		retHandle = sFreedTextures.front();
+		sFreedTextures.pop();
+	}
+	if (sFreedTextures.empty()) {
+		xpmp_spare_texhandle_decay_frames = -1;
+	} else {
+		xpmp_spare_texhandle_decay_frames = SPARE_TEXHANDLES_DECAY_FRAMES;
+	}
+	return retHandle;
+}
+
+/* OBJ_MaintainTextures should be called every frame we render.  It cleans up the spare texture
+ * pool so it doesn't eat texture memory unnecessarily.
+ */
+void OBJ_MaintainTextures() {
+	if (xpmp_spare_texhandle_decay_frames >= 0) {
+		if (--xpmp_spare_texhandle_decay_frames <= 0) {
+			GLuint textures[] = { xpmpGetGlTextureId() };
+			if (textures[0] != 0) {
+				glDeleteTextures(1, textures);
+			}
+			// we don't need to reset the timer ourselves, using xpmpGetGlTextureId has done that for us.
+		}
+	}
+}
+
 // Note that texID and litTexID are OPTIONAL! They will only be filled
 // in if the user wants to override the default texture specified by the
 // obj file
@@ -580,11 +626,7 @@ void	OBJ_PlotModel(XPMPPlane_t *plane, float inDistance, double /*inX*/,
 
 	if (plane->texHandle && plane->texHandle->loadStatus == Succeeded && !plane->texHandle->id)
 	{
-		if (! sFreedTextures.empty())
-		{
-			plane->texHandle->id = sFreedTextures.front();
-			sFreedTextures.pop();
-		}
+		plane->texHandle->id = xpmpGetGlTextureId();
 		LoadTextureFromMemory(plane->texHandle->im, true, false, true, plane->texHandle->id);
 
 #if DEBUG_RESOURCE_CACHE
@@ -598,11 +640,7 @@ void	OBJ_PlotModel(XPMPPlane_t *plane, float inDistance, double /*inX*/,
 
 	if (plane->texLitHandle && plane->texLitHandle->loadStatus == Succeeded && !plane->texLitHandle->id)
 	{
-		if (! sFreedTextures.empty())
-		{
-			plane->texLitHandle->id = sFreedTextures.front();
-			sFreedTextures.pop();
-		}
+		plane->texLitHandle->id = xpmpGetGlTextureId();
 		LoadTextureFromMemory(plane->texLitHandle->im, true, false, true, plane->texLitHandle->id);
 
 #if DEBUG_RESOURCE_CACHE

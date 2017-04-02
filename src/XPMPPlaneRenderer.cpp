@@ -670,6 +670,9 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 	gEnableCount = (tcas+1);
 	
 	gDumpOneRenderCycle = 0;
+
+	// finally, cleanup textures.
+	OBJ_MaintainTextures();
 }
 
 void XPMPEnableAircraftLabels()

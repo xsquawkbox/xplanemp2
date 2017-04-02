@@ -33,6 +33,10 @@
 
 #include <memory>
 
+#define MAX_SPARE_TEXHANDLES	4
+#define SPARE_TEXHANDLES_DECAY_FRAMES	120
+extern int xpmp_spare_texhandle_decay_frames;
+
 struct XPMPPlane_t;
 
 /*****************************************************
@@ -96,7 +100,7 @@ struct CSLTexture_t
 {
 	std::string		path;
 	ImageInfo		im;
-	int				id;
+	GLuint			id;
 	LoadStatus		loadStatus;
 };
 using TextureManager = ResourceManager<CSLTexture_t>;
@@ -129,5 +133,8 @@ TextureManager::Future OBJ_LoadTexture(const std::string &path);
 int		OBJ_GetModelTexID(int model);
 
 std::string OBJ_GetLitTextureByTexture(const std::string &texturePath);
+
+void 	OBJ_MaintainTextures();
+
 
 #endif

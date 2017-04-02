@@ -146,7 +146,8 @@ static void HalfBitmap(ImageInfo& ioImage)
 
 }
 
-bool LoadTextureFromFile(const std::string &inFileName, bool magentaAlpha, bool inWrap, bool inMipmap, int inDeres, int * outTexNum, int * outWidth, int * outHeight)
+bool LoadTextureFromFile(const std::string &inFileName, bool magentaAlpha, bool inWrap, bool inMipmap, int inDeres,
+						 GLuint *outTexNum, int *outWidth, int *outHeight)
 {
 	struct ImageInfo	im;
 	if (!LoadImageFromFile(inFileName, magentaAlpha, inDeres, im, outWidth, outHeight)) { return false; }
@@ -198,7 +199,7 @@ bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inD
 extern void XPMPSetupGLDebug();
 #endif
 
-bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool mipmap, int &texNum)
+bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool mipmap, GLuint &texNum)
 {
 	float	tex_anisotropyLevel = gFloatPrefsFunc("planes", "texture_anisotropy", 0.0);
 	if (tex_anisotropyLevel > xpmp_tex_maxAnisotropy) {
@@ -218,7 +219,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		dirtyGLStateReported = true;
 	}
 
-	if (texNum == 0) { XPLMGenerateTextureNumbers(&texNum, 1); }
+	if (texNum == 0) { XPLMGenerateTextureNumbers(reinterpret_cast<int *>(&texNum), 1); }
 	bool texNumError = false;
 	while (GL_NO_ERROR != glGetError()) {
 		texNumError = true;

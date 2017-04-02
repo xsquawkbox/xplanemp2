@@ -29,12 +29,13 @@
 extern float	xpmp_tex_maxAnisotropy;
 extern bool		xpmp_tex_useAnisotropy;
 
-bool LoadTextureFromFile(const std::string &inFileName, bool magentaAlpha, bool inWrap, bool inMipmap, int inDeres, int * outTexNum, int * outWidth, int * outHeight);
+bool LoadTextureFromFile(const std::string &inFileName, bool magentaAlpha, bool inWrap, bool inMipmap, int inDeres,
+                         unsigned int *outTexNum, int *outWidth, int *outHeight);
 
 bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inDeres, ImageInfo &im, int * outWidth, int * outHeight);
 
 /* LoadTextureFromMemory reads image data from im and loads it as OpenGL texture. If texNum is 0, a new
    texture id will be allocated automatically, otherwise the texture with the given id will be overwritten. */
-bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool mipmap, int &texNum);
+bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool mipmap, unsigned int &texNum);
 
 #endif
