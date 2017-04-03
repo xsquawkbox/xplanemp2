@@ -28,6 +28,7 @@
 
 extern float	xpmp_tex_maxAnisotropy;
 extern bool		xpmp_tex_useAnisotropy;
+extern int 		xpmp_tex_maxSize;
 
 bool LoadTextureFromFile(const std::string &inFileName, bool magentaAlpha, bool inWrap, bool inMipmap, int inDeres,
                          unsigned int *outTexNum, int *outWidth, int *outHeight);
@@ -35,7 +36,16 @@ bool LoadTextureFromFile(const std::string &inFileName, bool magentaAlpha, bool 
 bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inDeres, ImageInfo &im, int * outWidth, int * outHeight);
 
 /* LoadTextureFromMemory reads image data from im and loads it as OpenGL texture. If texNum is 0, a new
-   texture id will be allocated automatically, otherwise the texture with the given id will be overwritten. */
+   texture id will be allocated automatically, otherwise the texture with the given id will be overwritten.
+ 
+   LoadTextureFromMemory tries to be a good OpenGL citizen, so doesn't check for errors unless DEBUG_GL is set.
+*/
 bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool mipmap, unsigned int &texNum);
+
+/* VerifyTextureImage runs a preflight that has to pass before we know that LoadTextureFromMemory will succeed - 
+ * this can be run asynchronously.
+ */
+bool VerifyTextureImage(const std::string &filename, const ImageInfo &im);
+
 
 #endif

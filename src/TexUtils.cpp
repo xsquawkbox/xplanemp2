@@ -48,6 +48,7 @@ using std::swap;
 
 float	xpmp_tex_maxAnisotropy = 1.0;
 bool	xpmp_tex_useAnisotropy = false;
+int 	xpmp_tex_maxSize = 1024;
 
 static void HalfBitmap(ImageInfo& ioImage)
 {
@@ -150,7 +151,12 @@ bool LoadTextureFromFile(const std::string &inFileName, bool magentaAlpha, bool 
 						 GLuint *outTexNum, int *outWidth, int *outHeight)
 {
 	struct ImageInfo	im;
-	if (!LoadImageFromFile(inFileName, magentaAlpha, inDeres, im, outWidth, outHeight)) { return false; }
+	if (!LoadImageFromFile(inFileName, magentaAlpha, inDeres, im, outWidth, outHeight)) { 
+		return false; 
+	}
+	if (!VerifyTextureImage(inFileName, im)) {
+		return false;
+	}
 	return LoadTextureFromMemory(im, magentaAlpha, inWrap, inMipmap, *outTexNum);
 }
 
@@ -194,8 +200,74 @@ bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inD
 	return ok;
 }
 
+/*
+   basically a BSR (x86) - find the highest bit set - this is so we can reverse it to do 
+   a Non-power-of-two check 
+ */
 
-#ifdef DEBUG
+inline int
+find_first_bit_set(unsigned int x)
+{
+	int r = -1;
+	for (int i = 0; i < sizeof(x)*8; i++) {
+		if ((1<<(i)) & x) {
+			r = i;
+		}
+	}
+	return r;
+}
+
+/*
+  Preflight an image to ensure it's a valid texture before we even attempt a LoadTextureFromMemory.
+  the main things that came from elsewhere that we can die horribly on are:
+
+  * non-power-of-two texture lengths (not technically required anymore, but this will probably 
+  *       break a bunch of other things in our code)
+  * excessive texture sizes (sides must be less than GL_MAX_TEXTURE_SIZE)
+  * sizes < 0 (should never happen)
+
+  nothing else we do should cause an error that we can't guard against, and all of these checks can 
+  take place asynchronously.
+*/
+bool
+VerifyTextureImage(const string &filename, const ImageInfo &im)
+{
+	stringstream errout;
+	if (im.width <= 0 || im.height <= 0) {
+		errout << XPMP_CLIENT_NAME": Texture " << filename << " failed vailidation - dimensions ("
+			<< im.width << " x " << im.height << ") <= 0" << endl;
+		XPLMDebugString(errout.str().c_str());
+		return false;
+	}
+	if (im.width > xpmp_tex_maxSize || im.height > xpmp_tex_maxSize) {
+		errout << XPMP_CLIENT_NAME": Texture " << filename << " failed validation - dimensions ("
+			<< im.width << " x " << im.height << ") exceeds GL maximum ("
+			<< xpmp_tex_maxSize << ")" << endl;
+		XPLMDebugString(errout.str().c_str());
+		return false;
+	}
+	// validate NPOT.
+	int wpow = find_first_bit_set(im.width);
+	// wpow can't be -1 becasue we checked for <=0 already.
+	if (im.width != (1<<(wpow)))  {
+		errout << XPMP_CLIENT_NAME": Texture " << filename << "failed validation - width ("
+			<< im.width << ") is not a power of two" << endl;			
+		XPLMDebugString(errout.str().c_str());
+		return false;
+	}
+	int hpow = find_first_bit_set(im.height);
+	// hpow can't be -1 becasue we checked for <=0 already.
+	if (im.height != (1<<(hpow)))  {
+		errout << XPMP_CLIENT_NAME": Texture " << filename << "failed validation - height ("
+			<< im.height << ") is not a power of two" << endl;			
+		XPLMDebugString(errout.str().c_str());
+		return false;
+	}
+	return true;
+}
+
+
+#ifdef DEBUG_GL
 extern void XPMPSetupGLDebug();
 #endif
 
@@ -206,6 +278,8 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		tex_anisotropyLevel = xpmp_tex_maxAnisotropy;
 	}
 
+
+#ifdef DEBUG_GL
 	OGLDEBUG(glPushDebugGroup(GL_DEBUG_SOURCE_THIRD_PARTY, XPMP_DBG_TexLoad, -1, "LoadTextureFromMemory"));
 	OGLDEBUG(XPMPSetupGLDebug());
 
@@ -218,6 +292,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		XPLMDebugString(XPMP_CLIENT_NAME": GL Error State was bad upon texture load (will not be reported again)\n");
 		dirtyGLStateReported = true;
 	}
+#endif /* #ifdef DEBUG_GL */
 
 	if (texNum == 0) { XPLMGenerateTextureNumbers(reinterpret_cast<int *>(&texNum), 1); }
 	bool texNumError = false;
@@ -250,6 +325,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, im.width ,im.height, 0, GL_RGB, GL_UNSIGNED_BYTE, im.bitmap.data());
 			}
 
+#ifdef DEBUG_GL
 			bool texGenError = false;
 			GLenum	tErr;
 			while ((tErr = glGetError()) != GL_NO_ERROR) {
@@ -264,6 +340,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 				OGLDEBUG(glPopDebugGroup());
 				return false;
 			}
+#endif /* #ifdef DEBUG_GL */
 
 			if (mipmap) {
 				OGLDEBUG(glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER, XPMP_DBG_TexLoad_GenMips, GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Generating Mipmaps"));
@@ -313,7 +390,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP		 );}
 
 	OGLDEBUG(glDebugMessageInsert(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER, XPMP_DBG_TexLoad, GL_DEBUG_SEVERITY_NOTIFICATION, -1, "Finished Load - checking errors"));
-
+#ifdef DEBUG_GL
 	int err = glGetError();
 	if (err)
 	{
@@ -330,6 +407,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		OGLDEBUG(glPopDebugGroup());
 		return false;
 	}
+#endif /* #ifdef DEBUG_GL */
 	OGLDEBUG(glPopDebugGroup());
 	return true;
 }

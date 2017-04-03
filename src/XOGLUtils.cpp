@@ -79,7 +79,7 @@ bool	OGL_UtilsInit()
 		glMultiTexCoord2fvARB	 = (PFNGLMULTITEXCOORD2FVARBPROC )	 wglGetProcAddress("glMultiTexCoord2fvARB"   );
 		glGenerateMipmap		 = (PFNGLGENERATEMIPMAPPROC)		 wglGetProcAddress("glGenerateMipmap"		 );
 #endif		
-#ifdef DEBUG
+#ifdef DEBUG_GL
 		if (OGL_HasExtension("GL_KHR_debug")) {
 #if IBM
 			glDebugMessageControl = (PFNGLDEBUGMESSAGECONTROLPROC)	wglGetProcAddress("glDebugMessageControl");

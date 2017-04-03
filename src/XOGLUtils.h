@@ -71,7 +71,7 @@ extern PFNGLCLIENTACTIVETEXTUREARBPROC	glClientActiveTextureARB;
 extern PFNGLGENERATEMIPMAPPROC          glGenerateMipmap;
 #endif
 
-#ifdef DEBUG
+#ifdef DEBUG_GL
 #ifdef IBM
 extern PFNGLDEBUGMESSAGECONTROLPROC		glDebugMessageControl;
 extern PFNGLDEBUGMESSAGEINSERTPROC		glDebugMessageInsert;
@@ -98,11 +98,11 @@ enum GLDebug_Group {
 	XPMP_DBG_OBJRender
 };
 
-#else
+#else /* #ifdef DEBUG_GL */
 
 #define OGLDEBUG(X)
 
-#endif
+#endif /* #ifdef DEBUG_GL */
 
 
 bool	OGL_UtilsInit();

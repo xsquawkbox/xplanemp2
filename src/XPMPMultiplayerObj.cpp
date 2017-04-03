@@ -312,7 +312,11 @@ TextureManager::Future OBJ_LoadTexture(const string &path)
 			texture.loadStatus = Failed;
 			return std::make_shared<CSLTexture_t>(texture);
 		}
-
+		if (!VerifyTextureImage(path, im)) {
+			// VTI reports it's own errors.
+			texture.loadStatus = Failed;
+			return std::make_shared<CSLTexture_t>(texture);			
+		}
 		texture.path = path;
 		texture.im = im;
 		texture.loadStatus = Succeeded;

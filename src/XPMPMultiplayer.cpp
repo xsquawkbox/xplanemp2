@@ -101,7 +101,7 @@ static	int				XPMPControlPlaneCount(
 		void *               inRefcon);
 
 
-#ifdef DEBUG
+#ifdef DEBUG_GL
 static void xpmpKhrDebugProc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *param)
 {
 	std::stringstream	msgOut;
@@ -175,8 +175,14 @@ const char * 	XPMPMultiplayerInitLegacyData(
 	gIntPrefsFunc = inIntPrefsFunc;
 	gFloatPrefsFunc = inFloatPrefsFunc;
 
-	// Initialize our OpenGL Utilities
+	// Set up OpenGL for our drawing callbacks
 	OGL_UtilsInit();
+
+#ifdef DEBUG_GL
+	XPLMDebugString(XPMP_CLIENT_NAME ": WARNING: This build includes OpenGL Debugging\n");
+	XPLMDebugString("    OpenGL Debugging induces a large overhead and produces large logfiles.\n");
+	XPLMDebugString("    Please do not use this build other than as directed.\n");
+#endif
 
 	OGLDEBUG(XPLMDebugString(XPMP_CLIENT_NAME " - GL supports debugging\n"));
 	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT));
@@ -192,6 +198,7 @@ const char * 	XPMPMultiplayerInitLegacyData(
 		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisoLevel);
 		xpmp_tex_maxAnisotropy = maxAnisoLevel;
 	}
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &xpmp_tex_maxSize);
 
 	bool	problem = false;
 	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
@@ -217,8 +224,6 @@ const char * 	XPMPMultiplayerInit(
 	//FILE *	fi;
 	
 	bool	problem = false;
-
-	//	TODO - FORM GOOD DIAGNOSTIC MESSAGES HERE!
 
 	XPMPInitDefaultPlaneRenderer();
 
