@@ -89,8 +89,11 @@ struct	CSLPlane_t {
 			modelName += ' ';
 		}
 		modelName += objectName;
-		modelName += ' ';
-		modelName += textureName;
+		if (! textureName.empty())
+		{
+			modelName += ' ';
+			modelName += textureName;
+		}
 		return modelName;
 	}
 

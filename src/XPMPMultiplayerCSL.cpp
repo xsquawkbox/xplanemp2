@@ -487,12 +487,19 @@ bool ParseObj8AircraftCommand(const std::vector<std::string> &tokens, CSLPackage
 	}
 
 	package.planes.push_back(CSLPlane_t());
+	package.planes.back().dirNames = { package.path.substr(package.path.find_last_of('/') + 1) };
+	package.planes.back().objectName = tokens[1];
 	package.planes.back().plane_type = plane_Obj8;
 	package.planes.back().file_path = tokens[1];
 	package.planes.back().moving_gear = true;
 	package.planes.back().texID = 0;
 	package.planes.back().texLitID = 0;
 	package.planes.back().obj_idx = -1;
+#if DEBUG_CSL_LOADING
+	XPLMDebugString("      Got OBJ8 Airplane: ");
+	XPLMDebugString(tokens[1].c_str());
+	XPLMDebugString("\n");
+#endif
 	return true;
 }
 
@@ -534,7 +541,6 @@ bool ParseObj8Command(const std::vector<std::string> &tokens, CSLPackage_t &pack
 
 	string relativePath = tokens[3];
 	MakePartialPathNativeObj(relativePath);
-	//! \todo Fill in Obj8 model name information
 	string absolutePath(relativePath);
 	if (!DoPackageSub(absolutePath))
 	{
