@@ -483,7 +483,7 @@ bool ParseObj8AircraftCommand(const std::vector<std::string> &tokens, CSLPackage
 	// OBJ8_AIRCRAFT <path>
 	if (tokens.size() != 2)
 	{
-		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJ8_AIRCARFT command takes 1 argument.\n";
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJ8_AIRCRAFT command takes 1 argument.\n";
 	}
 
 	package.planes.push_back(CSLPlane_t());
@@ -501,13 +501,15 @@ bool ParseObj8Command(const std::vector<std::string> &tokens, CSLPackage_t &pack
 	// OBJ8 <group> <animate YES|NO> <filename>
 	if (tokens.size() != 4)
 	{
-		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJ8_AIRCARFT command takes 1 argument.\n";
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJ8 command takes 3 arguments.\n";
 	}
 
 	// err - obj8 record at stupid place in file
 	if(package.planes.empty() || package.planes.back().plane_type != plane_Obj8) return false;
 
 	obj_for_acf		att;
+
+	att.load_state = load_none;
 
 	if(tokens[1] == "GLASS")
 		att.draw_type = draw_glass;

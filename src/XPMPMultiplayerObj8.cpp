@@ -199,8 +199,23 @@ static void		draw_objects_for_mode(one_obj * who, int want_translucent)
 
 void obj_loaded_cb(XPLMObjectRef obj, void * refcon)
 {
-	XPLMObjectRef * targ = (XPLMObjectRef *) refcon;
-	*targ = obj;
+	obj_for_acf *model = reinterpret_cast<obj_for_acf *>(refcon);
+	if (obj != NULL) {
+		model->load_state = load_loaded;
+		model->handle = obj;
+#ifdef DEBUG
+		XPLMDebugString(XPMP_CLIENT_NAME": Notified Successful Async Load of OBJ8: ");
+		XPLMDebugString(model->file.c_str());
+		XPLMDebugString("\n");
+#endif
+	} else {
+		model->load_state = load_failed;
+#ifdef DEBUG
+		XPLMDebugString(XPMP_CLIENT_NAME": Notified Failed Async Load of OBJ8: ");
+		XPLMDebugString(model->file.c_str());
+		XPLMDebugString("\n");
+#endif
+	}
 } 
 
 
@@ -218,18 +233,27 @@ void	obj_schedule_one_aircraft(
 {
 	one_obj * iter;
 	
-	for(vector<obj_for_acf>::iterator att = model->attachments.begin(); att != model->attachments.end(); ++att)
+	for(auto att = model->attachments.begin(); att != model->attachments.end(); ++att)
 	{
 		obj_for_acf * model = &*att;
 
-		if(model->handle == NULL &&
-				!model->file.empty())
-		{
-			if(XPLMLoadObjectAsync_p)
-				XPLMLoadObjectAsync_p(model->file.c_str(),obj_loaded_cb,(void *) &model->handle);
-			else
+		if(model->handle == NULL && model->load_state == load_none) {
+#ifdef DEBUG
+			XPLMDebugString(XPMP_CLIENT_NAME ": Loading Model ");
+			XPLMDebugString(model->file.c_str());
+			XPLMDebugString("\n");
+#endif			
+			if(XPLMLoadObjectAsync_p) {
+				XPLMLoadObjectAsync_p(model->file.c_str(),obj_loaded_cb,static_cast<void *>(model));
+				model->load_state = load_loading;
+			} else {
 				model->handle = XPLMLoadObject(model->file.c_str());
-			model->file.clear();
+				if (model->handle != NULL) {
+					model->load_state = load_loaded;
+				} else {
+					model->load_state = load_failed;
+				}
+			}
 		}
 
 
@@ -247,8 +271,7 @@ void	obj_schedule_one_aircraft(
 			iter->head = NULL;
 		}
 		
-		if(iter->model->handle)
-		{
+		if(iter->model->load_state == load_loaded) {
 			one_inst * i = new one_inst;
 			i->next = iter->head;
 			iter->head = i;
@@ -272,7 +295,7 @@ void	obj_draw_solid()
 
 void	obj_draw_translucent()
 {
-	draw_objects_for_mode(s_worklist, true);\
+	draw_objects_for_mode(s_worklist, true);
 }
 
 void	obj_draw_done()

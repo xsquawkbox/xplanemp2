@@ -48,13 +48,19 @@ enum obj_draw_type {
 
 };
 
-struct	obj_for_acf {
+enum obj_load_state {
+	load_none = 0,		// not loaded, no attempt yet.
+	load_loading,		// async load requested.
+	load_loaded,		// (a)sync load complete
+	load_failed			// (a)sync load failed
+};
 
+struct	obj_for_acf {
 	std::string			file;
 	XPLMObjectRef		handle;
 	obj_draw_type		draw_type;
+	obj_load_state		load_state;
 	bool				needs_animation;
-
 };
 
 struct	CSLPlane_t;
