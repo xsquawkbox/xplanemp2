@@ -187,8 +187,9 @@ static void		draw_objects_for_mode(one_obj * who, int want_translucent)
 		{
 			for(one_inst * i = who->head; i; i = i->next)
 			{
+				//set dataref ptr to light + obj sate from "one_inst".
 				s_cur_plane = i;
-				// set dataref ptr to light + obj sate from "one_inst".
+				
 				XPLMDrawObjects(who->model->handle, 1, &i->location, 1, 0);
 			}
 		}
