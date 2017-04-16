@@ -135,19 +135,7 @@ int obj_get_float_array(
 	return inCount;
 }
 
-
-
-
-
-
-
-
-
-
-static void (*XPLMLoadObjectAsync_p)(
-		const char *         inPath,
-		XPLMObjectLoaded_f   inCallback,
-		void *               inRefcon)=NULL;
+bool obj8_load_async = true;
 
 void	obj_init()
 {
@@ -157,9 +145,10 @@ void	obj_init()
 	// Ben says: we need the 2.10 SDK (e.g. X-Plane 10) to have async load at all.  But we need 10.30 to pick up an SDK bug
 	// fix where async load crashes if we queue a second load before the first completes.  So for users on 10.25, they get
 	// pauses.
-	if(sim >= 10300 && xplm >= 210)
-	{
-		XPLMLoadObjectAsync_p = (void (*)(const char *, XPLMObjectLoaded_f, void *)) XPLMFindSymbol("XPLMLoadObjectAsync");
+	if (1 == gIntPrefsFunc("debug", "allow_obj8_async_load", 0) && sim >= 10300) {
+		obj8_load_async = true;	
+	} else {
+		obj8_load_async = false;
 	}
 	
 	for(int i = 0; i < dref_dim; ++i)
@@ -244,8 +233,8 @@ void	obj_schedule_one_aircraft(
 			XPLMDebugString(model->file.c_str());
 			XPLMDebugString("\n");
 #endif			
-			if(XPLMLoadObjectAsync_p) {
-				XPLMLoadObjectAsync_p(model->file.c_str(),obj_loaded_cb,static_cast<void *>(model));
+			if(obj8_load_async) {
+				XPLMLoadObjectAsync(model->file.c_str(),obj_loaded_cb,reinterpret_cast<void *>(model));
 				model->load_state = load_loading;
 			} else {
 				model->handle = XPLMLoadObject(model->file.c_str());
