@@ -201,7 +201,7 @@ bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inD
 }
 
 /*
-   basically a BSR (x86) - find the highest bit set - this is so we can reverse it to do 
+   basically a BSL (x86) - find the lowest bit set - this is so we can reverse it to do 
    a Non-power-of-two check 
  */
 
