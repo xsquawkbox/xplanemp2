@@ -209,7 +209,7 @@ inline int
 find_first_bit_set(unsigned int x)
 {
 	int r = -1;
-	for (int i = 0; i < sizeof(x)*8; i++) {
+	for (unsigned i = 0; i < sizeof(x)*8; i++) {
 		if ((1<<(i)) & x) {
 			r = i;
 		}
