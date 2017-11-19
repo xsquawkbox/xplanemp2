@@ -108,6 +108,7 @@ union xpmp_LightStatus {
 	struct {
 		unsigned int timeOffset	: 16;
 
+		unsigned int taxiLights : 1;
 		unsigned int landLights	: 1;
 		unsigned int bcnLights	: 1;
 		unsigned int strbLights	: 1;
@@ -216,6 +217,15 @@ typedef	int			XPMPPlaneCallbackResult;
 typedef	void *		XPMPPlaneID;
 
 /************************************************************************************
+* Some additional functional by den_rain
+************************************************************************************/
+
+void actualVertOffsetInfo(const char *inMtl, char *outType, double *outOffset);
+void setUserVertOffset(const char *inMtlCode, double inOffset);
+void removeUserVertOffset(const char *inMtlCode);
+
+
+/************************************************************************************
  * PLANE CREATION API
  ************************************************************************************/
 
@@ -285,6 +295,9 @@ const char *	XPMPMultiplayerInitLegacyData(
  * section	key					type	default	description
  * planes	full_distance		float	3.0
  * planes	max_full_count		int		50
+ * 
+ * Additionally takes a string path to the resource directory of the calling plugin for storing the
+ * user vertical offset config file.
  *
  * The return value is a string indicating any problem that may have gone wrong in a human-readable
  * form, or an empty string if initalizatoin was okay.
@@ -294,7 +307,8 @@ const char *	XPMPMultiplayerInitLegacyData(
  */
 const char *    XPMPMultiplayerInit(
 		int (* inIntPrefsFunc)(const char *, const char *, int),
-		float (* inFloatPrefsFunc)(const char *, const char *, float));
+		float (* inFloatPrefsFunc)(const char *, const char *, float),
+		const char * resourceDir);
 
 /*
  * XPMPMultiplayerEnable
@@ -305,6 +319,15 @@ const char *    XPMPMultiplayerInit(
  *
  */
 const char *	XPMPMultiplayerEnable(void);
+
+/*
+ * XPMPMultiplayerOBJ7SupportEnable
+ *
+ * Sets the light texture to use for old OBJ7 models and initializes the required OpenGL hooks 
+ * for OBJ7 rendering. An empty string is returned on success, or a human-readable error message
+ * otherwise. Calling this function is required if you are going to use OBJ7 CSLs.
+ */
+const char * XPMPMultiplayerOBJ7SupportEnable(const char * inTexturePath);
 
 /*
  * XPMPMultiplayerDisable

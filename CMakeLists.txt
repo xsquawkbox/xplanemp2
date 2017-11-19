@@ -48,6 +48,7 @@ add_library(xplanemp
 	src/XPCAircraft.cpp
 	src/XPMPMultiplayer.cpp
 	src/XPMPMultiplayerCSL.cpp
+	src/XPMPMultiplayerCSLOffset.cpp
 	src/XPMPMultiplayerObj8.cpp
 	src/XPMPMultiplayerObj.cpp
 	src/XPMPMultiplayerVars.cpp

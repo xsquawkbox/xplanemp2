@@ -25,6 +25,7 @@
 #include "XPMPMultiplayerVars.h"
 #include "XPMPPlaneRenderer.h"
 #include "XPMPMultiplayerCSL.h"
+#include "XPMPMultiplayerCSLOffset.h"
 #include "XPLMUtilities.h"
 
 #include <algorithm>
@@ -100,6 +101,25 @@ static	int				XPMPControlPlaneCount(
 		int                  inIsBefore,
 		void *               inRefcon);
 
+void actualVertOffsetInfo(const char *inMtl, char *outType, double *outOffset) {
+	std::string type;
+	double offset;
+	cslVertOffsetCalc.actualVertOffsetInfo(inMtl, type, offset);
+	if(outType) {
+		std::strcpy(outType, type.c_str());
+	}
+	if (outOffset) {
+		*outOffset = offset;
+	}
+}
+
+void setUserVertOffset(const char *inMtlCode, double inOffset) {
+	cslVertOffsetCalc.setUserVertOffset(inMtlCode, inOffset);
+}
+
+void removeUserVertOffset(const char *inMtlCode) {
+	cslVertOffsetCalc.removeUserVertOffset(inMtlCode);
+}
 
 #ifdef DEBUG_GL
 static void xpmpKhrDebugProc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *param)
@@ -211,9 +231,43 @@ const char * 	XPMPMultiplayerInitLegacyData(
 	else 				return "";
 }
 
+const char *    XPMPMultiplayerOBJ7SupportEnable(const char * inTexturePath) {
+	// Set up OpenGL for our drawing callbacks
+	OGL_UtilsInit();
+#ifdef DEBUG_GL
+	XPLMDebugString(XPMP_CLIENT_NAME ": WARNING: This build includes OpenGL Debugging\n");
+	XPLMDebugString("    OpenGL Debugging induces a large overhead and produces large logfiles.\n");
+	XPLMDebugString("    Please do not use this build other than as directed.\n");
+#endif
+
+	OGLDEBUG(XPLMDebugString(XPMP_CLIENT_NAME " - GL supports debugging\n"));
+	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT));
+	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS));
+	OGLDEBUG(XPMPSetupGLDebug());
+	
+	xpmp_tex_useAnisotropy = OGL_HasExtension("GL_EXT_texture_filter_anisotropic");
+	if (xpmp_tex_useAnisotropy) {
+		GLfloat maxAnisoLevel;
+		
+		XPLMDebugString(XPMP_CLIENT_NAME " - GL supports anisoptropic filtering.\n");
+		
+		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisoLevel);
+		xpmp_tex_maxAnisotropy = maxAnisoLevel;
+	}
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &xpmp_tex_maxSize);
+
+	bool problem = false;
+	if (!CSL_Init(inTexturePath))
+		problem = true;
+
+	if (problem) return "There was a problem initializing " XPMP_CLIENT_LONGNAME ". Please examine X-Plane's Log.txt file for detailed information.";
+	else         return "";
+}
+
 const char * 	XPMPMultiplayerInit(
 		int (* inIntPrefsFunc)(const char *, const char *, int),
-		float (* inFloatPrefsFunc)(const char *, const char *, float))
+		float (* inFloatPrefsFunc)(const char *, const char *, float),
+		const char * resourceDir)
 {
 	gIntPrefsFunc = inIntPrefsFunc;
 	gFloatPrefsFunc = inFloatPrefsFunc;
@@ -222,6 +276,8 @@ const char * 	XPMPMultiplayerInit(
 	//char	line[256];
 	//char	sysPath[1024];
 	//FILE *	fi;
+
+	cslVertOffsetCalc.setResourcesDir(resourceDir);
 	
 	bool	problem = false;
 
@@ -247,6 +303,7 @@ void XPMPMultiplayerCleanup(void)
 	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 0, 0);
 	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 1, (void *) -1);
 	XPLMUnregisterDrawCallback(XPMPRenderMultiplayerPlanes, xplm_Phase_Airplanes, 0, 0);
+	XPMPDeinitDefaultPlaneRenderer();
 	OGLDEBUG(glDebugMessageCallback(NULL, NULL));
 }
 
