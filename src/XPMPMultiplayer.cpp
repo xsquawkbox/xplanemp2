@@ -498,11 +498,15 @@ int	XPMPChangePlaneModel(
 	plane->airline = inAirline;
 	plane->livery = inLivery;
 	plane->model = CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->match_quality, true);
+
 	// we're changing model, we must flush the resource handles so they get reloaded.
 	plane->objHandle = NULL;
 	plane->texHandle = NULL;
 	plane->texLitHandle = NULL;
-	
+	plane->objState = {};
+	plane->texState = {};
+	plane->texLitState = {};
+
 	for (XPMPPlaneNotifierVector::iterator iter2 = gObservers.begin(); iter2 !=
 		 gObservers.end(); ++iter2)
 	{

@@ -589,7 +589,7 @@ void	OBJ_PlotModel(XPMPPlane_t *plane, float inDistance, double /*inX*/,
 {
 	if (! plane->objHandle)
 	{
-		plane->objHandle = gObjManager.get(plane->model->file_path);
+		plane->objHandle = gObjManager.get(plane->model->file_path, &plane->objState);
 		if (plane->objHandle && plane->objHandle->loadStatus == Failed)
 		{
 			// Failed to load
@@ -606,7 +606,7 @@ void	OBJ_PlotModel(XPMPPlane_t *plane, float inDistance, double /*inX*/,
 	{
 		string texturePath = plane->model->texturePath;
 		if (texturePath.empty()) { texturePath = plane->objHandle->defaultTexture; }
-		plane->texHandle = gTextureManager.get(texturePath);
+		plane->texHandle = gTextureManager.get(texturePath, &plane->texState);
 
 		// Async loading completed with failure
 		if (plane->texHandle && plane->texHandle->loadStatus == Failed)
@@ -625,7 +625,7 @@ void	OBJ_PlotModel(XPMPPlane_t *plane, float inDistance, double /*inX*/,
 	{
 		string texturePath = model->textureLitPath;
 		if (texturePath.empty()) { texturePath = plane->objHandle->defaultLitTexture; }
-		plane->texLitHandle = gTextureManager.get(texturePath);
+		plane->texLitHandle = gTextureManager.get(texturePath, &plane->texLitState);
 	}
 
 	if (plane->texHandle && plane->texHandle->loadStatus == Succeeded && !plane->texHandle->id)
