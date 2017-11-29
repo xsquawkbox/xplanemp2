@@ -28,8 +28,10 @@
 #include "XPLMDataAccess.h"
 #include <stddef.h>
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <memory>
 using namespace std;
-
 
 struct	one_inst {
 	one_inst * next;
@@ -65,7 +67,9 @@ enum {
 	ptch_rat,
 	head_rat,
 	roll_rat,
+	thrs_rev,
 
+	tax_lite_on,
 	lan_lite_on,
 	bcn_lite_on,
 	str_lite_on,
@@ -85,7 +89,9 @@ const char * dref_names[dref_dim] = {
 	"libxplanemp/controls/yoke_pitch_ratio",
 	"libxplanemp/controls/yoke_heading_ratio",
 	"libxplanemp/controls/yoke_roll_ratio",
+	"libxplanemp/controls/thrust_revers",
 
+	"libxplanemp/controls/taxi_lites_on",
 	"libxplanemp/controls/landing_lites_on",
 	"libxplanemp/controls/beacon_lites_on",
 	"libxplanemp/controls/strobe_lites_on",
@@ -110,7 +116,9 @@ static float obj_get_float(void * inRefcon)
 	case ptch_rat:			return s_cur_plane->state->yokePitch;			break;
 	case head_rat:			return s_cur_plane->state->yokeHeading;			break;
 	case roll_rat:			return s_cur_plane->state->yokeRoll;			break;
+	case thrs_rev:			return (s_cur_plane->state->thrust < 0.0) ? 1.0 : 0.0; break; //if thrust less than zero, reverse is on
 
+	case tax_lite_on:		return static_cast<float>(s_cur_plane->lights.taxiLights);			break;
 	case lan_lite_on:		return static_cast<float>(s_cur_plane->lights.landLights);			break;
 	case bcn_lite_on:		return static_cast<float>(s_cur_plane->lights.bcnLights);			break;
 	case str_lite_on:		return static_cast<float>(s_cur_plane->lights.strbLights);			break;
@@ -164,6 +172,19 @@ void	obj_init()
 	}
 }
 
+static std::set<std::string> gCopyiedObj8Cache;
+
+void obj_deinit() {
+	for (const auto &fileName : gCopyiedObj8Cache) {
+		char xsystem[1024];
+		XPLMGetSystemPath(xsystem);
+		std::string fullPath = std::string(xsystem) + fileName;
+		int res = std::remove(fullPath.c_str());
+		if (res) {
+			XPLMDebugString(std::string(XPMP_CLIENT_NAME" Warning: Can't delete temporary created obj8 file. The file: " + fullPath + "\n").c_str());
+		}
+	}
+}
 
 
 static void		draw_objects_for_mode(one_obj * who, int want_translucent)
@@ -174,12 +195,14 @@ static void		draw_objects_for_mode(one_obj * who, int want_translucent)
 		if((want_translucent && dt == draw_glass) ||
 				(!want_translucent && dt != draw_glass))
 		{
-			for(one_inst * i = who->head; i; i = i->next)
+			static XPLMDataRef night_lighting_ref = XPLMFindDataRef("sim/graphics/scenery/percent_lights_on");
+			bool use_night = XPLMGetDataf(night_lighting_ref) > 0.25;
+
+			for (one_inst * i = who->head; i; i = i->next)
 			{
-				//set dataref ptr to light + obj sate from "one_inst".
 				s_cur_plane = i;
-				
-				XPLMDrawObjects(who->model->handle, 1, &i->location, 1, 0);
+				// TODO: set obj sate to state datarefs(dref_names) from "one_inst".
+				XPLMDrawObjects(who->model->handle, 1, &i->location, use_night, 0);
 			}
 		}
 		who = who->next;
@@ -208,6 +231,88 @@ void obj_loaded_cb(XPLMObjectRef obj, void * refcon)
 	}
 } 
 
+void prepareObj8ForUsingWithAnotherTexture(CSLPlane_t * model, obj_for_acf * obj8) {
+	// generate the name for new object
+	std::string destObjFile = obj8->file;
+	string::size_type pos2 = destObjFile.find_last_of(".");
+	if (pos2 != string::npos) {
+		destObjFile.insert(pos2, "_" + model->getModelName());
+	}
+	else {
+		destObjFile += std::string("_" + model->getModelName());
+	}
+
+	// trying to find an object in cache
+	const auto &findRes = gCopyiedObj8Cache.find(destObjFile);
+	if (findRes != gCopyiedObj8Cache.end()) {
+		obj8->file = destObjFile;
+		XPLMDebugString(std::string(XPMP_CLIENT_NAME": Modified obj8 has been found in the cache: " + obj8->file + "\n").c_str());
+		return;
+	}
+	// copy and edit new object
+	if (!obj8->textureFile.empty()) {
+		std::ifstream srcObj(obj8->file.c_str(), std::ios_base::in);
+		if (!srcObj.is_open()) {
+			XPLMDebugString(std::string(XPMP_CLIENT_NAME" Warning: Can't open the source obj8 file during copying and modifying: " + obj8->file + "\n").c_str());
+			return;
+		}
+
+		std::ofstream destObj(destObjFile, std::ios_base::out);
+		if (!srcObj.is_open()) {
+			XPLMDebugString(std::string(XPMP_CLIENT_NAME" Warning: Can't open the destination obj8 file during copying and modifying: " + destObjFile + "\n").c_str());
+			return;
+		}
+		bool textureHasWritten = false;
+		bool litTextureHasWritten = false;
+		while (srcObj.good()) {
+			std::string line;
+			std::getline(srcObj, line);
+			if (!textureHasWritten || !litTextureHasWritten) {
+				std::string trimmedLine = xmp::trim(line);
+				std::vector<std::string> tokens;
+				tokens = xmp::explode(trimmedLine);
+				if (tokens.size() >= 2 && xmp::trim(tokens[0]) == "TEXTURE") {
+					std::ostringstream os;
+					os << "TEXTURE " << obj8->textureFile;
+					line = os.str();
+					textureHasWritten = true;
+				}
+				if (tokens.size() >= 2 && xmp::trim(tokens[0]) == "TEXTURE_LIT") {
+					std::ostringstream os;
+					os << "TEXTURE_LIT " << obj8->litTextureFile;
+					line = os.str();
+					litTextureHasWritten = true;
+				}
+				if (tokens.size() >= 2
+					&& (xmp::trim(tokens[0]) == "VT"
+						|| xmp::trim(tokens[0]) == "VLINE"
+						|| xmp::trim(tokens[0]) == "VLIGHT"
+						|| xmp::trim(tokens[0]) == "IDX"
+						|| xmp::trim(tokens[0]) == "IDX10")
+					) {
+
+					if (!textureHasWritten) {
+						std::ostringstream os;
+						os << "TEXTURE " << obj8->textureFile;
+						destObj << os.str() << std::endl;
+						textureHasWritten = true;
+					}
+					if (!litTextureHasWritten) {
+						std::ostringstream os;
+						os << "TEXTURE_LIT " << obj8->litTextureFile;
+						destObj << os.str() << std::endl;
+						litTextureHasWritten = true;
+					}
+				}
+			}
+			destObj << line << std::endl;
+		}
+		obj8->file = destObjFile;
+		gCopyiedObj8Cache.emplace(destObjFile);
+		XPLMDebugString(std::string(XPMP_CLIENT_NAME": Modified obj8 has been created at: " + obj8->file + "\n").c_str());
+	}
+}
+
 
 void	obj_schedule_one_aircraft(
 		CSLPlane_t *			model,
@@ -225,23 +330,24 @@ void	obj_schedule_one_aircraft(
 	
 	for(auto att = model->attachments.begin(); att != model->attachments.end(); ++att)
 	{
-		obj_for_acf * model = &*att;
+		obj_for_acf * obj8 = &*att;
 
-		if(model->handle == NULL && model->load_state == load_none) {
+		if(obj8->handle == NULL && obj8->load_state == load_none && !obj8->file.empty()) {
 #ifdef DEBUG
 			XPLMDebugString(XPMP_CLIENT_NAME ": Loading Model ");
 			XPLMDebugString(model->file.c_str());
 			XPLMDebugString("\n");
 #endif			
+			prepareObj8ForUsingWithAnotherTexture(model, obj8);
 			if(obj8_load_async) {
-				XPLMLoadObjectAsync(model->file.c_str(),obj_loaded_cb,reinterpret_cast<void *>(model));
-				model->load_state = load_loading;
+				XPLMLoadObjectAsync(obj8->file.c_str(),obj_loaded_cb,reinterpret_cast<void *>(obj8));
+				obj8->load_state = load_loading;
 			} else {
-				model->handle = XPLMLoadObject(model->file.c_str());
-				if (model->handle != NULL) {
-					model->load_state = load_loaded;
+				obj8->handle = XPLMLoadObject(obj8->file.c_str());
+				if (obj8->handle != NULL) {
+					obj8->load_state = load_loaded;
 				} else {
-					model->load_state = load_failed;
+					obj8->load_state = load_failed;
 				}
 			}
 		}
@@ -249,7 +355,7 @@ void	obj_schedule_one_aircraft(
 
 		for(iter = s_worklist; iter; iter = iter->next)
 		{
-			if(iter->model == model)
+			if(iter->model == obj8)
 				break;
 		}
 		if(iter == NULL)
@@ -257,7 +363,7 @@ void	obj_schedule_one_aircraft(
 			iter = new one_obj;
 			iter->next = s_worklist;
 			s_worklist = iter;
-			iter->model = model;
+			iter->model = obj8;
 			iter->head = NULL;
 		}
 		

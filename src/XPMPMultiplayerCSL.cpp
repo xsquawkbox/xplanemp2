@@ -317,6 +317,11 @@ bool			CSL_Init(
 	return ok;
 }
 
+void			CSL_DeInit()
+{
+	obj_deinit();
+}
+
 bool ParseExportCommand(const std::vector<std::string> &tokens, CSLPackage_t &package, const string& path, int lineNum, const string& line)
 {
 	if (tokens.size() != 2)
@@ -506,10 +511,10 @@ bool ParseObj8AircraftCommand(const std::vector<std::string> &tokens, CSLPackage
 
 bool ParseObj8Command(const std::vector<std::string> &tokens, CSLPackage_t &package, const string& path, int lineNum, const string& line)
 {
-	// OBJ8 <group> <animate YES|NO> <filename>
-	if (tokens.size() != 4)
+	// OBJ8 <group> <animate YES|NO> <filename> {<texture filename> {<lit texture filename>}}
+	if (tokens.size() < 4 || tokens.size() > 6)
 	{
-		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJ8 command takes 3 arguments.\n";
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJ8 command takes 3-5 arguments.\n";
 	}
 
 	// err - obj8 record at stupid place in file
@@ -567,6 +572,35 @@ bool ParseObj8Command(const std::vector<std::string> &tokens, CSLPackage_t &pack
 	att.handle = NULL;
 	att.file = absolutePath;
 
+	if (tokens.size() >= 5)
+	{
+		string texturePath = tokens[4];
+		att.textureFile = texturePath;
+		if (tokens.size() == 6)
+		{
+			string litTexturePath = tokens[5];
+			att.litTextureFile = litTexturePath;
+		}
+		else {
+			string::size_type pos2 = texturePath.find_last_of(".");
+			if (pos2 != string::npos)
+			{
+				texturePath.insert(pos2, "_LIT");
+				att.litTextureFile = texturePath;
+			}
+			else
+			{
+				att.litTextureFile = texturePath + std::string("_LIT");
+			}
+		}
+	}
+	else
+	{
+		att.textureFile.clear();
+		att.litTextureFile.clear();
+	}
+
+
 	package.planes.back().attachments.push_back(att);
 
 	return true;
@@ -586,6 +620,7 @@ bool ParseVertOffsetCommand(const std::vector<std::string> &tokens, CSLPackage_t
 			package.planes.back().xsbVertOffset = atof(tokens[1].c_str());
 			package.planes.back().isXsbVertOffsetAvail = true;
 	}
+	return true;
 }
 
 bool ParseHasGearCommand(const std::vector<std::string> &tokens, CSLPackage_t &package, const string& path, int lineNum, const string& line)
@@ -1238,6 +1273,7 @@ void	CSL_Dump(void)
 
 int				CSL_GetOGLIndex(CSLPlane_t *		model)
 {
+
 	switch(model->plane_type) {
 	case plane_Austin:
 		return model->austin_idx;

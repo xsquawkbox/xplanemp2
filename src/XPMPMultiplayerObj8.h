@@ -61,11 +61,14 @@ struct	obj_for_acf {
 	obj_draw_type		draw_type;
 	obj_load_state		load_state;
 	bool				needs_animation;
+	std::string			textureFile;
+	std::string			litTextureFile;
 };
 
 struct	CSLPlane_t;
 
 void	obj_init();
+void	obj_deinit();
 
 bool	obj_load_one_attached_obj(
 		const char *		file_name,

@@ -280,4 +280,35 @@ extern int 								gEnableCount;			// Hack - see TCAS support
 
 extern string							gDefaultPlane;			// ICAO of default plane
 
+// Helper funcs
+namespace xmp {
+	inline std::string trim(std::string inStr, bool inLeft = true, bool inRight = true, const std::string &inDelim = " \t\f\v\r\n") {
+		if (inRight)
+		{
+			inStr.erase(inStr.find_last_not_of(inDelim) + 1);//trim right side
+		}
+		if (inLeft)
+		{
+			inStr.erase(0, inStr.find_first_not_of(inDelim));//trim left side
+		}
+		return inStr;
+	}
+
+	inline std::vector<std::string> explode(const std::string &inStr, const std::string &inDelim = " \t\f\v\r\n") {
+		std::vector<std::string> out;
+		std::size_t found = inStr.find_first_of(inDelim);
+		std::size_t lastFound = 0;
+
+		while (found != std::string::npos) {
+			if (lastFound != found)
+				out.push_back(trim(inStr.substr(lastFound, found - lastFound)));
+			found = inStr.find_first_of(inDelim, lastFound = found + 1);
+		}
+
+		if (lastFound != inStr.size())  // Critical end
+			out.push_back(trim(inStr.substr(lastFound, inStr.size() - lastFound)));
+
+		return out;
+	}
+}
 #endif
