@@ -42,6 +42,7 @@ using std::max;
 
 #if APL
 #include <Carbon/Carbon.h>
+#include "XPLMPlugin.h"
 #endif
 
 // Set this to 1 to get TONS of diagnostics on what the lib is doing.
