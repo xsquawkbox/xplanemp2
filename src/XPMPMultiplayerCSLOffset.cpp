@@ -30,6 +30,7 @@
 #include <string.h>
 #include <fstream>
 #include <sstream>
+#include <cmath>
 #include <functional>
 #include <cctype>
 #include <vector>
