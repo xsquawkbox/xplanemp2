@@ -138,45 +138,25 @@ struct	CSLPlane_t {
 	 */
 	 
 	// actual vert offset
-	eVertOffsetType actualVertOffsetType;
-	eVertOffsetType prevActualVertOffsetType;
-	double actualVertOffset;//meters
+	eVertOffsetType actualVertOffsetType = eVertOffsetType::none;
+	eVertOffsetType prevActualVertOffsetType = eVertOffsetType::none;
+	double actualVertOffset = 0.0;//meters
 	// local user's vert offset
-	bool isUserVertOffsetUpToDate;
-	bool isUserVertOffsetAvail;
-	double userVertOffset;
+	bool isUserVertOffsetUpToDate = false;
+	bool isUserVertOffsetAvail = false;
+	double userVertOffset = 0.0;
 	// vert offset from xsb file
-	bool isXsbVertOffsetUpToDate;
-	bool isXsbVertOffsetAvail;
-	double xsbVertOffset;
+	bool isXsbVertOffsetUpToDate = false;
+	bool isXsbVertOffsetAvail = false;
+	double xsbVertOffset = 0.0;
 	// vert offset from mtl file
-	bool isMtlVertOffsetUpToDate;
-	bool isMtlVertOffsetAvail;
-	double mtlVertOffset;
+	bool isMtlVertOffsetUpToDate = false;
+	bool isMtlVertOffsetAvail = false;
+	double mtlVertOffset = 0.0;
 	// calculated vert offset
-	bool isCalcVertOffsetUpToDate;
-	bool isCalcVertOffsetAvail;
-	double calcVertOffset;
-	
-	//-----------------------
-	CSLPlane_t() :
-		actualVertOffsetType(eVertOffsetType::none),
-		prevActualVertOffsetType(eVertOffsetType::none),
-		actualVertOffset(0.0),
-		isUserVertOffsetUpToDate(false),
-		isUserVertOffsetAvail(false),
-		userVertOffset(0.0),
-		isXsbVertOffsetUpToDate(false),
-		isXsbVertOffsetAvail(false),
-		xsbVertOffset(0.0),
-		isMtlVertOffsetUpToDate(false),
-		isMtlVertOffsetAvail(false),
-		mtlVertOffset(0.0),
-		isCalcVertOffsetUpToDate(false),
-		isCalcVertOffsetAvail(false),
-		calcVertOffset(0.0)
-		{}
-	//-----------------------
+	bool isCalcVertOffsetUpToDate = false;
+	bool isCalcVertOffsetAvail = false;
+	double calcVertOffset = 0.0;
 };
 
 // These enums define the eight levels of matching we might possibly
