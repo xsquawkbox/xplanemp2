@@ -34,12 +34,12 @@ public:
 	
 	static std::string offsetTypeToString(eVertOffsetType inOffsetType);
 	
-	void setResourcesDir(std::string inResDir);
+	void setResourcesDir(const std::string &inResDir);
 	void findOrUpdateActualVertOffset(CSLPlane_t &inOutCslModel);
 	
-	void actualVertOffsetInfo(std::string inMtl, std::string &outType, double &outOffset);
-	void setUserVertOffset(std::string inMtlCode, double inOffset);
-	void removeUserVertOffset(std::string inMtlCode);
+	void actualVertOffsetInfo(const std::string &inMtl, std::string &outType, double &outOffset);
+	void setUserVertOffset(const std::string &inMtlCode, double inOffset);
+	void removeUserVertOffset(const std::string &inMtlCode);
 	
 private:
 	bool findOffsetInObj8(CSLPlane_t &inOutCslModel);

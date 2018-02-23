@@ -41,7 +41,7 @@ CslModelVertOffsetCalculator::~CslModelVertOffsetCalculator() {
 	saveUserOffsets();
 }
 
-void CslModelVertOffsetCalculator::setResourcesDir(std::string inResDir) {
+void CslModelVertOffsetCalculator::setResourcesDir(const string &inResDir) {
 	if (mResourcesDir != inResDir) {
 		mResourcesDir = inResDir;
 		loadUserOffsets();
@@ -132,7 +132,7 @@ void CslModelVertOffsetCalculator::findOrUpdateActualVertOffset(CSLPlane_t & inO
 	}
 }
 
-void CslModelVertOffsetCalculator::actualVertOffsetInfo(std::string inMtl, std::string &outType, double &outOffset) {
+void CslModelVertOffsetCalculator::actualVertOffsetInfo(const std::string &inMtl, std::string &outType, double &outOffset) {
 	for (auto &package : gPackages) {
 		for (auto &model : package.planes) {
 			if (model.getModelName() == inMtl) {
@@ -145,12 +145,12 @@ void CslModelVertOffsetCalculator::actualVertOffsetInfo(std::string inMtl, std::
 	}
 }
 
-void CslModelVertOffsetCalculator::setUserVertOffset(std::string inMtlCode, double inOffset) {
+void CslModelVertOffsetCalculator::setUserVertOffset(const string &inMtlCode, double inOffset) {
 	mAvailableUserOffsets[inMtlCode] = inOffset;
 	mUpdateUserOffsetForThisMtl.emplace(inMtlCode);
 }
 
-void CslModelVertOffsetCalculator::removeUserVertOffset(std::string inMtlCode) {
+void CslModelVertOffsetCalculator::removeUserVertOffset(const string &inMtlCode) {
 	mAvailableUserOffsets.erase(inMtlCode);
 	mUpdateUserOffsetForThisMtl.emplace(inMtlCode);
 }
