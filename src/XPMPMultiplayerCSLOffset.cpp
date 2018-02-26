@@ -276,7 +276,7 @@ bool CslModelVertOffsetCalculator::findOffsetInObj(CSLPlane_t &inOutCslModel) {
 			inOutCslModel.calcVertOffset = -max;
 		}
 		inOutCslModel.isCalcVertOffsetAvail = true;
-		XPLMDebugString(std::string(XPMP_CLIENT_NAME ": The Y offset (" + std::to_string(inOutCslModel.calcVertOffset) + ") for the model has been calculated from its obj8 files; "
+		XPLMDebugString(std::string(XPMP_CLIENT_NAME ": The Y offset (" + std::to_string(inOutCslModel.calcVertOffset) + ") for the model has been calculated from its obj files; "
 			"Mtl code: " + inOutCslModel.getModelName() + "\n").c_str());
 		return true;
 	}

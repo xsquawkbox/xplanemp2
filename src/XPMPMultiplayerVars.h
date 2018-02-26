@@ -90,7 +90,7 @@ struct	CSLPlane_t {
 
 	string getModelName() const
 	{
-		string modelName;
+		string modelName = "";
 		for (const auto &dir : dirNames)
 		{
 			modelName += dir;
