@@ -75,6 +75,14 @@ enum {
 	plane_Count
 };
 
+enum class eVertOffsetType {
+	none = 0,
+	default_offset,
+	user,
+	xsb,
+	calculated
+};
+
 // This plane struct represents one model in one CSL packpage.
 // It has a type, a single file path for whatever we have to load,
 // and then implementation-specifc stuff.
@@ -120,6 +128,55 @@ struct	CSLPlane_t {
 
 	// plane_Obj8
 	vector<obj_for_acf>			attachments;
+	
+	/* distance between the origin point of an object and the lowest point of the object 
+	 * (usually a bottom point of the gears) along the vertical axis (y axis in the sim) 
+	 * for onground clamping purposes.
+	 *
+	 * in simple words, correct vert offset for accurate putting planes on the ground.
+	 * (in meters)
+	 */
+	 
+	// actual vert offset
+	eVertOffsetType actualVertOffsetType;
+	eVertOffsetType prevActualVertOffsetType;
+	double actualVertOffset;//meters
+	// local user's vert offset
+	bool isUserVertOffsetUpToDate;
+	bool isUserVertOffsetAvail;
+	double userVertOffset;
+	// vert offset from xsb file
+	bool isXsbVertOffsetUpToDate;
+	bool isXsbVertOffsetAvail;
+	double xsbVertOffset;
+	// vert offset from mtl file
+	bool isMtlVertOffsetUpToDate;
+	bool isMtlVertOffsetAvail;
+	double mtlVertOffset;
+	// calculated vert offset
+	bool isCalcVertOffsetUpToDate;
+	bool isCalcVertOffsetAvail;
+	double calcVertOffset;
+	
+	//-----------------------
+	CSLPlane_t() :
+		actualVertOffsetType(eVertOffsetType::none),
+		prevActualVertOffsetType(eVertOffsetType::none),
+		actualVertOffset(0.0),
+		isUserVertOffsetUpToDate(false),
+		isUserVertOffsetAvail(false),
+		userVertOffset(0.0),
+		isXsbVertOffsetUpToDate(false),
+		isXsbVertOffsetAvail(false),
+		xsbVertOffset(0.0),
+		isMtlVertOffsetUpToDate(false),
+		isMtlVertOffsetAvail(false),
+		mtlVertOffset(0.0),
+		isCalcVertOffsetUpToDate(false),
+		isCalcVertOffsetAvail(false),
+		calcVertOffset(0.0)
+		{}
+	//-----------------------
 };
 
 // These enums define the eight levels of matching we might possibly

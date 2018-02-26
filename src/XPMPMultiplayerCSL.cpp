@@ -22,6 +22,7 @@
  */
 
 #include "XPMPMultiplayerCSL.h"
+#include "XPMPMultiplayerCSLOffset.h"
 #include "XPLMUtilities.h"
 #include "XPMPMultiplayerObj.h"
 #include "XStringUtils.h"
@@ -571,6 +572,22 @@ bool ParseObj8Command(const std::vector<std::string> &tokens, CSLPackage_t &pack
 	return true;
 }
 
+bool ParseVertOffsetCommand(const std::vector<std::string> &tokens, CSLPackage_t &package, const string& path, int lineNum, const string& line)
+{
+	// VERT_OFFSET
+	// this is the csl-model vertical offset for accurately putting planes onto the ground.
+	if (tokens.size() != 2) 
+	{
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: VERT_OFFSET command takes 1 argument.\n";
+		return false;
+	}
+	else 
+	{
+			package.planes.back().xsbVertOffset = atof(tokens[1].c_str());
+			package.planes.back().isXsbVertOffsetAvail = true;
+	}
+}
+
 bool ParseHasGearCommand(const std::vector<std::string> &tokens, CSLPackage_t &package, const string& path, int lineNum, const string& line)
 {
 	// HASGEAR YES|NO
@@ -755,6 +772,7 @@ void ParseFullPackage(const std::string &content, CSLPackage_t &package)
 		{ "AIRCRAFT", &ParseAircraftCommand },
 		{ "OBJ8_AIRCRAFT", &ParseObj8AircraftCommand },
 		{ "OBJ8", &ParseObj8Command },
+		{ "VERT_OFFSET", &ParseVertOffsetCommand},
 		{ "HASGEAR", &ParseHasGearCommand },
 		{ "ICAO", &ParseIcaoCommand },
 		{ "AIRLINE", &ParseAirlineCommand },
