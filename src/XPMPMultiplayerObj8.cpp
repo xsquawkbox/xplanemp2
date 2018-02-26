@@ -65,7 +65,9 @@ enum {
 	ptch_rat,
 	head_rat,
 	roll_rat,
+	thrs_rev,
 
+	tax_lite_on,
 	lan_lite_on,
 	bcn_lite_on,
 	str_lite_on,
@@ -85,7 +87,9 @@ const char * dref_names[dref_dim] = {
 	"libxplanemp/controls/yoke_pitch_ratio",
 	"libxplanemp/controls/yoke_heading_ratio",
 	"libxplanemp/controls/yoke_roll_ratio",
+	"libxplanemp/controls/thrust_revers",
 
+	"libxplanemp/controls/taxi_lites_on",
 	"libxplanemp/controls/landing_lites_on",
 	"libxplanemp/controls/beacon_lites_on",
 	"libxplanemp/controls/strobe_lites_on",
@@ -110,7 +114,9 @@ static float obj_get_float(void * inRefcon)
 	case ptch_rat:			return s_cur_plane->state->yokePitch;			break;
 	case head_rat:			return s_cur_plane->state->yokeHeading;			break;
 	case roll_rat:			return s_cur_plane->state->yokeRoll;			break;
+	case thrs_rev:			return (s_cur_plane->state->thrust < 0.0) ? 1.0 : 0.0; break; //if thrust less than zero, reverse is on
 
+	case tax_lite_on:		return static_cast<float>(s_cur_plane->lights.taxiLights);			break;
 	case lan_lite_on:		return static_cast<float>(s_cur_plane->lights.landLights);			break;
 	case bcn_lite_on:		return static_cast<float>(s_cur_plane->lights.bcnLights);			break;
 	case str_lite_on:		return static_cast<float>(s_cur_plane->lights.strbLights);			break;

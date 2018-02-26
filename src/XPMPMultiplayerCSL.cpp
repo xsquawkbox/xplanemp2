@@ -583,8 +583,9 @@ bool ParseVertOffsetCommand(const std::vector<std::string> &tokens, CSLPackage_t
 	}
 	else 
 	{
-			package.planes.back().xsbVertOffset = atof(tokens[1].c_str());
-			package.planes.back().isXsbVertOffsetAvail = true;
+		package.planes.back().xsbVertOffset = atof(tokens[1].c_str());
+		package.planes.back().isXsbVertOffsetAvail = true;
+		return true;
 	}
 }
 

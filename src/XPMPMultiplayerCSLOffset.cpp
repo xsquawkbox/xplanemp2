@@ -22,6 +22,7 @@
  */
  
 #include "XPMPMultiplayerCSLOffset.h"
+#include "XPMPMultiplayerVars.h"
 #include "XPLMUtilities.h"
 #include <stdio.h>
 #include <algorithm>
@@ -157,35 +158,6 @@ void CslModelVertOffsetCalculator::removeUserVertOffset(std::string inMtlCode) {
 ///////////////////////////////////////////* Functions *////////////////////////////////////////////
 /**************************************************************************************************/
 
-std::string xmptrim(std::string inStr, bool inLeft = true, bool inRight = true, const std::string &inDelim = " \t\f\v\r\n") {
-	if (inRight)
-	{
-		inStr.erase(inStr.find_last_not_of(inDelim) + 1);//trim right side
-	}
-	if (inLeft)
-	{
-		inStr.erase(0, inStr.find_first_not_of(inDelim));//trim left side
-	}
-	return inStr;
-}
-
-std::vector<std::string> xmpexplode(const std::string &inStr, const std::string &inDelim = " \t\f\v\r\n") {
-	std::vector<std::string> out;
-	std::size_t found = inStr.find_first_of(inDelim);
-	std::size_t lastFound = 0;
-
-	while (found != std::string::npos) {
-		if (lastFound != found)
-			out.push_back(xmptrim(inStr.substr(lastFound, found - lastFound)));
-		found = inStr.find_first_of(inDelim, lastFound = found + 1);
-	}
-
-	if (lastFound != inStr.size())  // Critical end
-		out.push_back(xmptrim(inStr.substr(lastFound, inStr.size() - lastFound)));
-
-	return out;
-}
-
 bool CslModelVertOffsetCalculator::findOffsetInObj8(CSLPlane_t &inOutCslModel) {
 	// todo: add warning for rotate and translate
 	if (inOutCslModel.plane_type == plane_Obj8) {
@@ -203,7 +175,7 @@ bool CslModelVertOffsetCalculator::findOffsetInObj8(CSLPlane_t &inOutCslModel) {
 				for (size_t lineNumber = 0; file.good(); lineNumber++) {
 					std::string line;
 					std::getline(file, line);
-					line = xmptrim(line);
+					line = xmp::trim(line);
 					if (line.size() == 0 || line.at(0) == ';' || line.at(0) == '#' || line.at(0) == '/') continue;
 					if (lineNumber == 1 && atoi(line.c_str()) < 800) {
 						XPLMDebugString(std::string(XPMP_CLIENT_NAME " Warning: The Y offset for the model is not found in obj. "
@@ -211,10 +183,10 @@ bool CslModelVertOffsetCalculator::findOffsetInObj8(CSLPlane_t &inOutCslModel) {
 						return false;
 					}
 					std::vector<std::string> tokens;
-					tokens = xmpexplode(line);
+					tokens = xmp::explode(line);
 					if (tokens.size() >= 4) {
-						if (xmptrim(tokens[0]) == "VT" || xmptrim(tokens[0]) == "VLINE") {
-							double y = std::atof(xmptrim(tokens[2]).c_str());
+						if (xmp::trim(tokens[0]) == "VT" || xmp::trim(tokens[0]) == "VLINE") {
+							double y = std::atof(xmp::trim(tokens[2]).c_str());
 							if (y < min) {
 								min = y;
 							}
@@ -224,7 +196,7 @@ bool CslModelVertOffsetCalculator::findOffsetInObj8(CSLPlane_t &inOutCslModel) {
 							++coordLinesNumber;
 						}
 					}
-					if (xmptrim(tokens[0]) == "ANIM_trans" || xmptrim(tokens[0]) == "ANIM_rotate") {
+					if (xmp::trim(tokens[0]) == "ANIM_trans" || xmp::trim(tokens[0]) == "ANIM_rotate") {
 						isRotateOrTranslateAnimDetected = true;
 					}
 				}
@@ -267,7 +239,7 @@ bool CslModelVertOffsetCalculator::findOffsetInObj(CSLPlane_t &inOutCslModel) {
 		for (size_t lineNumber = 0; file.good(); lineNumber++) {
 			std::string line;
 			std::getline(file, line);
-			line = xmptrim(line);
+			line = xmp::trim(line);
 			if (line.size() == 0 || line.at(0) == ';' || line.at(0) == '#' || line.at(0) == '/') continue;
 			if (lineNumber == 1 && atoi(line.c_str()) >= 800) {
 				XPLMDebugString(std::string(XPMP_CLIENT_NAME " Warning: The Y offset for the model is not found in obj. "
@@ -275,7 +247,7 @@ bool CslModelVertOffsetCalculator::findOffsetInObj(CSLPlane_t &inOutCslModel) {
 				return false;
 			}
 			std::vector<std::string> tokens;
-			tokens = xmpexplode(line);
+			tokens = xmp::explode(line);
 			if (tokens.size() >= 3) {
 				double x, y, z;
 				x = std::atof(tokens[0].c_str());
@@ -322,22 +294,22 @@ void CslModelVertOffsetCalculator::loadUserOffsets() {
 	while (file.good()) {
 		std::string line;
 		std::getline(file, line);
-		line = xmptrim(line);
+		line = xmp::trim(line);
 		if (line.size() == 0 || line.at(0) == ';' || line.at(0) == '#' || line.at(0) == '/') continue;
 		std::vector<std::string> tokens;
-		tokens = xmpexplode(line, ",");
+		tokens = xmp::explode(line, ",");
 		if (tokens.size() < 2) continue;
 		if (tokens[0].size() <= 4) {// only icao
-			mAvailableUserOffsets.emplace(xmptrim(tokens[0]), std::atof(tokens[1].c_str()));
+			mAvailableUserOffsets.emplace(xmp::trim(tokens[0]), std::atof(tokens[1].c_str()));
 		}
 		else if (tokens[0].size() == 7) {// icao and airline
-			mAvailableUserOffsets.emplace(xmptrim(tokens[0].substr(0, 4)) + xmptrim(tokens[0].substr(4)),
+			mAvailableUserOffsets.emplace(xmp::trim(tokens[0].substr(0, 4)) + xmp::trim(tokens[0].substr(4)),
 				std::atof(tokens[1].c_str()));
 		}
 		else if (tokens[0].size() > 7) {// icao, airline, livery
-			mAvailableUserOffsets.emplace(xmptrim(tokens[0].substr(0, 4))
-				+ xmptrim(tokens[0].substr(4, 3))
-				+ xmptrim(tokens[0].substr(7)),
+			mAvailableUserOffsets.emplace(xmp::trim(tokens[0].substr(0, 4))
+				+ xmp::trim(tokens[0].substr(4, 3))
+				+ xmp::trim(tokens[0].substr(7)),
 				std::atof(tokens[1].c_str()));
 		}
 		else {
