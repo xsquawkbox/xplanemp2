@@ -295,6 +295,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 #endif /* #ifdef DEBUG_GL */
 
 	if (texNum == 0) { XPLMGenerateTextureNumbers(reinterpret_cast<int *>(&texNum), 1); }
+#ifdef DEBUG_GL
 	bool texNumError = false;
 	while (GL_NO_ERROR != glGetError()) {
 		texNumError = true;
@@ -306,6 +307,7 @@ bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool m
 		OGLDEBUG(glPopDebugGroup());
 		return false;
 	}
+#endif /* #ifdef DEBUG_GL */
 
 
 	if (!magentaAlpha || ConvertBitmapToAlpha(&im) == 0)
