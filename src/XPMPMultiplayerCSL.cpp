@@ -553,7 +553,8 @@ bool ParseObj8Command(const std::vector<std::string> &tokens, CSLPackage_t &pack
 	XPLMGetSystemPath(xsystem);
 
 #if APL
-	HFS2PosixPath(xsystem, xsystem, 1024);
+	if (XPLMIsFeatureEnabled("XPLM_USE_NATIVE_PATHS") == 0)
+		HFS2PosixPath(xsystem, xsystem, 1024);
 #endif
 
 	size_t sys_len = strlen(xsystem);
@@ -925,7 +926,14 @@ bool CSL_LoadCSL(const char * inFolderPath, const char * inRelatedFile, const ch
 	char folder[1024];
 
 #if APL
-	Posix2HFSPath(inFolderPath, folder, sizeof(folder));
+	if (XPLMIsFeatureEnabled("XPLM_USE_NATIVE_PATHS") == 0)
+	{
+		Posix2HFSPath(inFolderPath, folder, sizeof(folder));
+	}
+	else
+	{
+		strcpy(folder, inFolderPath);
+	}
 #else
 	strcpy(folder,inFolderPath);
 #endif
