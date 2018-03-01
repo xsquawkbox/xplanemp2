@@ -201,10 +201,33 @@ bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inD
 }
 
 /*
-   basically a BSL (x86) - find the lowest bit set - this is so we can reverse it to do 
+   basically a BSF (x86) - find the lowest bit set - this is so we can reverse it to do
    a Non-power-of-two check 
  */
+#ifdef _MSC_VER
+inline int
+find_first_bit_set(unsigned int x)
+{
+	__asm {
+		mov eax, 0
+		bsf	eax, x
+	}
+	// returns eax
+}
+#else
+#ifdef __GNUC__
+inline int
+find_first_bit_set(unsigned int x)
+{
+	unsigned int out = 0;
 
+	asm ("bsfl %[out], %[x]"
+	 	: [out] "=r" (out)
+	 	: [x] "rm" (x) );
+
+	return r;
+}
+#else
 inline int
 find_first_bit_set(unsigned int x)
 {
@@ -216,6 +239,8 @@ find_first_bit_set(unsigned int x)
 	}
 	return r;
 }
+#endif
+#endif
 
 /*
   Preflight an image to ensure it's a valid texture before we even attempt a LoadTextureFromMemory.
