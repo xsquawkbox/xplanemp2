@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(xpsdk LANGUAGES C CXX)
+project(xpsdk LANGUAGES C CXX VERSION 2.0)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
 find_package(XPSDK REQUIRED)
 
@@ -53,7 +53,10 @@ add_library(xplanemp
 	src/XPMPMultiplayerObj.cpp
 	src/XPMPMultiplayerVars.cpp
 	src/XPMPPlaneRenderer.cpp
-	src/XUtils.cpp)
+	src/XUtils.cpp
+	src/XStringUtils.h
+	src/ResourceManager.h
+	src/Interpolation.h)
 target_include_directories(xplanemp
 	PUBLIC 
 		${XPSDK_INCLUDE_DIRS}
