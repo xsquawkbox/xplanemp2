@@ -21,13 +21,10 @@
  *
  */
 
-#include "XPMPMultiplayer.h"
-#include "XPMPMultiplayerVars.h"
-#include "XPMPPlaneRenderer.h"
-#include "XPMPMultiplayerCSL.h"
-#include "XPMPMultiplayerCSLOffset.h"
-#include "XPLMUtilities.h"
-
+#include <cstdlib>
+#include <cstdio>
+#include <set>
+#include <cassert>
 #include <algorithm>
 #include <cctype>
 #include <vector>
@@ -35,54 +32,26 @@
 #include <cstring>
 #include <sstream>
 
-#include "XPLMProcessing.h"
-#include "XPLMPlanes.h"
-#include "XPLMDataAccess.h"
-#include "XPLMDisplay.h"
-#include "XPLMPlugin.h"
-#include "XPLMUtilities.h"
+#include <XPLMUtilities.h>
+#include <XPLMProcessing.h>
+#include <XPLMPlanes.h>
+#include <XPLMDataAccess.h>
+#include <XPLMDisplay.h>
+#include <XPLMPlugin.h>
+#include <XPLMUtilities.h>
 
-#include "XOGLUtils.h"
-//#include "PlatformUtils.h"
+#include "TCASHack.h"
+#include "XPMPMultiplayer.h"
+#include "XPMPMultiplayerVars.h"
+#include "XPMPPlaneRenderer.h"
+#include "XPMPMultiplayerCSL.h"
+#include "XPMPMultiplayerCSLOffset.h"
+#include "legacycsl/LegacyCSL.h"
+#include "XUtils.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <set>
-#include <cassert>
 
 // This prints debug info on our process of loading Austin's planes.
 #define	DEBUG_MANUAL_LOADING	0
-
-
-/******************************************************************************
-
-	T H E   T C A S   H A C K
-	
- The 1.0 SDK provides no way to add TCAS blips to a panel - we simply don't know
- where on the panel to draw.  The only way to get said blips is to manipulate
- Austin's "9 planes" plane objects, which he refers to when drawing the moving
- map.
- 
- But how do we integrate this with our system, which relies on us doing
- the drawing (either by calling Austin's low level drawing routine or just
- doing it ourselves with OpenGL)?
- 
- The answer is the TCAS hack.  Basically we set Austin's number of multiplayer
- planes to zero while 3-d drawing is happening so he doesn't draw.  Then during
- 2-d drawing we pop this number back up to the number of planes that are
- visible on TCAS and set the datarefs to move them, so that they appear on TCAS.
-
- One note: since all TCAS blips are the same, we do no model matching for
- TCAS - we just place the first 9 planes at the right place.
- 
- Our rendering loop records for us in gEnableCount how many TCAS planes should
- be visible.
-
- ******************************************************************************/
-
-
-
-
 
 static	XPMPPlanePtr	XPMPPlaneFromID(
 		XPMPPlaneID 		inID,
@@ -121,63 +90,7 @@ void removeUserVertOffset(const char *inMtlCode) {
 	cslVertOffsetCalc.removeUserVertOffset(inMtlCode);
 }
 
-#ifdef DEBUG_GL
-static void xpmpKhrDebugProc(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *param)
-{
-	std::stringstream	msgOut;
-	msgOut << XPMP_CLIENT_NAME << ": GL Debug: ";
-	switch (type)
-	{
-	case GL_DEBUG_TYPE_ERROR:
-		msgOut << "[ERR] ";
-		break;
-	case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
-		msgOut << "[DEP] ";
-		break;
-	case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
-		msgOut << "[UND] ";
-		break;
-	case GL_DEBUG_TYPE_PORTABILITY:
-		msgOut << "[PORT] ";
-		break;
-	case GL_DEBUG_TYPE_PERFORMANCE:
-		msgOut << "[PERF] ";
-		break;
-	case GL_DEBUG_TYPE_MARKER:
-		msgOut << "*** ";
-		break;
-	case GL_DEBUG_TYPE_PUSH_GROUP:
-		msgOut << " -> ";
-		break;
-	case GL_DEBUG_TYPE_POP_GROUP:
-		msgOut << " <- ";
-		break;
-	default:
-		break;
-	}
-	msgOut << std::string(message, length) << std::endl;
-	XPLMDebugString(msgOut.str().c_str());
-}
 
-void XPMPSetupGLDebug()
-{
-	glDebugMessageCallback(xpmpKhrDebugProc, NULL);
-	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
-
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, GL_DONT_CARE, 0, NULL, GL_TRUE);
-
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_HIGH, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DEBUG_SOURCE_API, GL_DONT_CARE, GL_DEBUG_SEVERITY_MEDIUM, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_PUSH_GROUP, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_POP_GROUP, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DEBUG_TYPE_MARKER, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	glDebugMessageControl(GL_DEBUG_SOURCE_THIRD_PARTY, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
-	// eat errors.
-	while (GL_NO_ERROR != glGetError())
-		;
-}
-#endif
 
 /********************************************************************************
  * SETUP
@@ -186,45 +99,15 @@ void XPMPSetupGLDebug()
 
 const char * 	XPMPMultiplayerInitLegacyData(
 		const char * inCSLFolder, const char * inRelatedPath,
-		const char * inTexturePath, const char * inDoc8643,
-		const char * inDefaultPlane,
-		int (* inIntPrefsFunc)(const char *, const char *, int),
-		float (* inFloatPrefsFunc)(const char *, const char *, float))
+		const char * inTexturePath, const char * inDoc8643)
 {
-	gDefaultPlane = inDefaultPlane;
-	gIntPrefsFunc = inIntPrefsFunc;
-	gFloatPrefsFunc = inFloatPrefsFunc;
-
-	// Set up OpenGL for our drawing callbacks
-	OGL_UtilsInit();
-
-#ifdef DEBUG_GL
-	XPLMDebugString(XPMP_CLIENT_NAME ": WARNING: This build includes OpenGL Debugging\n");
-	XPLMDebugString("    OpenGL Debugging induces a large overhead and produces large logfiles.\n");
-	XPLMDebugString("    Please do not use this build other than as directed.\n");
-#endif
-
-	OGLDEBUG(XPLMDebugString(XPMP_CLIENT_NAME " - GL supports debugging\n"));
-	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT));
-	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS));
-	OGLDEBUG(XPMPSetupGLDebug());
-	
-	xpmp_tex_useAnisotropy = OGL_HasExtension("GL_EXT_texture_filter_anisotropic");
-	if (xpmp_tex_useAnisotropy) {
-		GLfloat maxAnisoLevel;
-
-		XPLMDebugString(XPMP_CLIENT_NAME " - GL supports anisoptropic filtering.\n");
-
-		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisoLevel);
-		xpmp_tex_maxAnisotropy = maxAnisoLevel;
-	}
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &xpmp_tex_maxSize);
-
 	bool	problem = false;
-	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
-		problem = true;
 
-	if (!CSL_Init(inTexturePath))
+	if (!LegacyCSL_Init(inTexturePath)) {
+		problem = true;
+	}
+
+	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
 		problem = true;
 
 	if (problem)		return "There were problems initializing " XPMP_CLIENT_LONGNAME ". Please examine X-Plane's Log.txt file for detailed information.";
@@ -232,32 +115,8 @@ const char * 	XPMPMultiplayerInitLegacyData(
 }
 
 const char *    XPMPMultiplayerOBJ7SupportEnable(const char * inTexturePath) {
-	// Set up OpenGL for our drawing callbacks
-	OGL_UtilsInit();
-#ifdef DEBUG_GL
-	XPLMDebugString(XPMP_CLIENT_NAME ": WARNING: This build includes OpenGL Debugging\n");
-	XPLMDebugString("    OpenGL Debugging induces a large overhead and produces large logfiles.\n");
-	XPLMDebugString("    Please do not use this build other than as directed.\n");
-#endif
-
-	OGLDEBUG(XPLMDebugString(XPMP_CLIENT_NAME " - GL supports debugging\n"));
-	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT));
-	OGLDEBUG(glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS));
-	OGLDEBUG(XPMPSetupGLDebug());
-	
-	xpmp_tex_useAnisotropy = OGL_HasExtension("GL_EXT_texture_filter_anisotropic");
-	if (xpmp_tex_useAnisotropy) {
-		GLfloat maxAnisoLevel;
-		
-		XPLMDebugString(XPMP_CLIENT_NAME " - GL supports anisoptropic filtering.\n");
-		
-		glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisoLevel);
-		xpmp_tex_maxAnisotropy = maxAnisoLevel;
-	}
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &xpmp_tex_maxSize);
-
 	bool problem = false;
-	if (!CSL_Init(inTexturePath))
+	if (!LegacyCSL_Init(inTexturePath))
 		problem = true;
 
 	if (problem) return "There was a problem initializing " XPMP_CLIENT_LONGNAME ". Please examine X-Plane's Log.txt file for detailed information.";
@@ -265,45 +124,54 @@ const char *    XPMPMultiplayerOBJ7SupportEnable(const char * inTexturePath) {
 }
 
 const char * 	XPMPMultiplayerInit(
-		int (* inIntPrefsFunc)(const char *, const char *, int),
-		float (* inFloatPrefsFunc)(const char *, const char *, float),
-		const char * resourceDir)
+	XPMPConfiguration_t *inConfiguration,
+	const char * inRelated,
+	const char * inDoc8643,
+	const char * resourceDir)
 {
-	gIntPrefsFunc = inIntPrefsFunc;
-	gFloatPrefsFunc = inFloatPrefsFunc;
+	memcpy(&gConfiguration, inConfiguration, sizeof(gConfiguration));
+
+	char	cPrefPath[512]; // length as defined by SDK documentation
+	XPLMGetPrefsPath(cPrefPath);
+	string	prefPath(cPrefPath);
+
+	string::size_type pathEnd = prefPath.find_last_of(XPLMGetDirectorySeparator());
+	if (pathEnd == string::npos) {
+		gPreferenceDir = resourceDir;
+	} else {
+		gPreferenceDir = prefPath.substr(0, pathEnd+1);
+	}
+	XPLMDump() << XPMP_CLIENT_NAME << " storing preferences and other user data in " << gPreferenceDir << "\n";
+
 	//char	myPath[1024];
 	//char	airPath[1024];
 	//char	line[256];
 	//char	sysPath[1024];
 	//FILE *	fi;
 
-	cslVertOffsetCalc.setResourcesDir(resourceDir);
+	cslVertOffsetCalc.setResourcesDir(gPreferenceDir);
 	
 	bool	problem = false;
 
+	if (!CSL_LoadData(inRelated, inDoc8643)) {
+		problem = true;
+	}
+
 	XPMPInitDefaultPlaneRenderer();
-
-	// Register the plane control calls.
-	XPLMRegisterDrawCallback(XPMPControlPlaneCount,
-							 xplm_Phase_Gauges, 0, /* after*/ 0 /* hide planes*/);
-
-	XPLMRegisterDrawCallback(XPMPControlPlaneCount,
-							 xplm_Phase_Gauges, 1, /* before */ (void *) -1 /* show planes*/);
 
 	// Register the actual drawing func.
 	XPLMRegisterDrawCallback(XPMPRenderMultiplayerPlanes,
 							 xplm_Phase_Airplanes, 0, /* after*/ 0 /* refcon */);
 
-	if (problem)		return "There were problems initializing " XPMP_CLIENT_LONGNAME ".  Please examine X-Plane's error.out file for detailed information.";
+	if (problem)		return "There were problems initializing " XPMP_CLIENT_LONGNAME ".  Please examine X-Plane's log.txt file for detailed information.";
 	else 				return "";
 }
 
-void XPMPMultiplayerCleanup(void)
+void XPMPMultiplayerCleanup()
 {
-	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 0, 0);
-	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 1, (void *) -1);
 	XPLMUnregisterDrawCallback(XPMPRenderMultiplayerPlanes, xplm_Phase_Airplanes, 0, 0);
 	XPMPDeinitDefaultPlaneRenderer();
+	LegacyCSL_DeInit();
 	OGLDEBUG(glDebugMessageCallback(NULL, NULL));
 }
 
@@ -311,20 +179,17 @@ void XPMPMultiplayerCleanup(void)
 // We use this array to track Austin's planes, since we have to mess with them.
 static	vector<string>	gPlanePaths;
 
-const  char * XPMPMultiplayerEnable(void)
+const  char * XPMPMultiplayerEnable()
 {
 	// First build up a list of all of Austin's planes, and assign
 	// their effective index numbers.
 	gPlanePaths.clear();
 	std::vector<char *>		ptrs;
 	gPlanePaths.push_back("");
-	
-	for (size_t p = 0; p < gPackages.size(); ++p)
-	{
-		for (size_t pp = 0; pp < gPackages[p].planes.size(); ++pp)
-		{
-			if (gPackages[p].planes[pp].plane_type == plane_Austin)
-			{
+
+	for (size_t p = 0; p < gPackages.size(); ++p) {
+		for (size_t pp = 0; pp < gPackages[p].planes.size(); ++pp) {
+			if (gPackages[p].planes[pp].plane_type == plane_Austin) {
 				gPackages[p].planes[pp].austin_idx = static_cast<int>(gPlanePaths.size());
 				char	buf[1024];
 				strcpy(buf,gPackages[p].planes[pp].file_path.c_str());
@@ -338,7 +203,7 @@ const  char * XPMPMultiplayerEnable(void)
 			}
 		}
 	}
-	
+
 	// Copy the list into something that's not permanent, but is needed by the XPLM.
 	for (size_t n = 0; n < gPlanePaths.size(); ++n)
 	{
@@ -381,7 +246,7 @@ const char * 	XPMPLoadCSLPackage(
 {
 	bool	problem = false;
 
-	if (!CSL_LoadCSL(inCSLFolder, inRelatedPath, inDoc8643))
+	if (!CSL_LoadCSL(inCSLFolder))
 		problem = true;
 
 	if (problem)		return "There were problems initializing " XPMP_CLIENT_LONGNAME ".  Please examine X-Plane's error.out file for detailed information.";
@@ -469,7 +334,7 @@ XPMPPlaneID		XPMPCreatePlane(
 	plane->airline = inAirline;
 	plane->dataFunc = inDataFunc;
 	plane->ref = inRefcon;
-	plane->model = CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->match_quality, true);
+	plane->setModel(CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->match_quality, true));
 	
 	plane->pos.size = sizeof(plane->pos);
 	plane->surface.size = sizeof(plane->surface);
@@ -557,7 +422,7 @@ int	XPMPChangePlaneModel(
 	plane->icao = inICAOCode;
 	plane->airline = inAirline;
 	plane->livery = inLivery;
-	plane->model = CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->match_quality, true);
+	plane->setModel(CSL_MatchPlane(inICAOCode, inAirline, inLivery, &plane->match_quality, true));
 
 	// we're changing model, we must flush the resource handles so they get reloaded.
 	plane->objHandle = NULL;
@@ -714,21 +579,6 @@ void		XPMPSetPlaneRenderer(
  * RENDERING
  ********************************************************************************/
 
-// This callback ping-pongs the multiplayer count up and back depending 
-// on whether we're drawing the TCAS gauges or not.
-int	XPMPControlPlaneCount(
-		XPLMDrawingPhase     /*inPhase*/,
-		int                  /*inIsBefore*/,
-		void *               inRefcon)
-{
-	if (inRefcon == NULL)
-	{
-		XPLMSetActiveAircraftCount(1);
-	} else {
-		XPLMSetActiveAircraftCount(gEnableCount);
-	}
-	return 1;
-}
 
 
 // This routine draws the actual planes.

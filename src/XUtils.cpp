@@ -23,7 +23,7 @@
 #include "XUtils.h"
 #include <stdio.h>
 #include <ctype.h>
-#include "XObjDefs.h"
+#include "legacycsl/XObjDefs.h"
 #include <stdlib.h>
 //#include "PlatformUtils.h"
 //#include <time.h>

@@ -50,9 +50,18 @@ bool			CSL_Init(
  *
  */
 bool			CSL_LoadCSL(
-		const char * inFolderPath, 		// Path to CSL folder
-		const char * inRelated,			// Path to related.txt - used by renderer for model matching
-		const char * inIcao8643);		// Path to ICAO document 8643 (list of aircraft)
+		const char * inFolderPath); 		// Path to CSL folder
+
+/*
+ * CSL_LoadData
+ *
+ * This routine loads all CSL packages and the related.txt file.
+ *
+ */
+bool			CSL_LoadData(
+	const char * inRelated,			// Path to related.txt - used by renderer for model matching
+	const char * inDoc8643);		// Path to ICAO document 8643 (list of aircraft)
+
 
 /*
  * CSL_MatchPlane
@@ -63,7 +72,7 @@ bool			CSL_LoadCSL(
  * if match_quality is set, it is set with the pass upon which a match was determined.  
  *   (see XPMPMultiplayerCSL.h)
  */
-CSLPlane_t *	CSL_MatchPlane(
+CSL *	CSL_MatchPlane(
 		const char * inICAO, 
 		const char * inAirline, 
 		const char * inLivery, 

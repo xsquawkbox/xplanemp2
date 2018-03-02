@@ -29,8 +29,9 @@ struct	XObj;
 #include <string>
 #include <vector>
 #include <memory>
+#include <XPLMUtilities.h>
 
-using namespace std;
+#include "XPMPMultiplayer.h"
 
 class	StTextFileScanner {
 public:
@@ -41,27 +42,27 @@ public:
 	void	skip_blanks(bool skip_blanks);
 	bool	done();
 	void	next();
-	string	get();
+	std::string	get();
 
 private:
 
 	void	read_next(void);
 
 	FILE *	mFile;
-	string	mBuf;
+	std::string	mBuf;
 	bool	mDone;
 	bool	mSkipBlanks;
 };	
 
-void	BreakString(const string& line, vector<string>& words);
+void	BreakString(const std::string& line, std::vector<std::string>& words);
 
-void	StringToUpper(string&);
+void	StringToUpper(std::string&);
 
-bool	HasExtNoCase(const string& inStr, const char * inExt);
+bool	HasExtNoCase(const std::string& inStr, const char * inExt);
 
 void	ChangePolyCmdCW(XObjCmd& ioCmd);
 
-bool	GetNextNoComments(StTextFileScanner& f, string& s);
+bool	GetNextNoComments(StTextFileScanner& f, std::string& s);
 
 // WARNING: this is a dumb radius, a radius from 0,0,0.  It is not
 // the radius of a bounding sphere!  Why it is in this translation
@@ -72,7 +73,7 @@ double	GetObjRadius(const XObj& inObj);
 //void	StripPathCP(string& ioPath);
 //void	ExtractPath(string& ioPath);
 
-int		PickRandom(vector<double>& chances);
+int		PickRandom(std::vector<double>& chances);
 bool	RollDice(double inProb);
 double	RandRange(double mmin, double mmax);
 double	RandRangeBias(double mmin, double mmax, double biasRatio, double randomAmount);
@@ -88,22 +89,22 @@ void	FSSpec_2_String(const FSSpec& inSpec, string& outString);
 #endif
 
 void	ExtractFixedRecordString(	
-		const string&		inLine,
-		int					inBegin,
-		int					inEnd,
-		string&				outString);
+		const std::string&		inLine,
+		int						inBegin,
+		int						inEnd,
+		std::string&			outString);
 
 bool	ExtractFixedRecordLong(
-		const string&		inLine,
-		int					inBegin,
-		int					inEnd,
-		long&				outLong);
+		const std::string&		inLine,
+		int						inBegin,
+		int						inEnd,
+		long&					outLong);
 
 bool	ExtractFixedRecordUnsignedLong(
-		const string&		inLine,
-		int					inBegin,
-		int					inEnd,
-		unsigned long&		outUnsignedLong);
+		const std::string&		inLine,
+		int						inBegin,
+		int						inEnd,
+		unsigned long&			outUnsignedLong);
 
 class	XPointPool {
 public:
@@ -126,9 +127,58 @@ private:
 
 };
 
-void	DecomposeObjCmd(const XObjCmd& inCmd, vector<XObjCmd>& outCmd, int maxValence);
+void	DecomposeObjCmd(const XObjCmd& inCmd, std::vector<XObjCmd>& outCmd, int maxValence);
 void	DecomposeObj(const XObj& inObj, XObj& outObj, int maxValence);
 
 bool DoesFileExist(const std::string &filePath);
+
+struct XPLMDump {
+	XPLMDump() { }
+
+	XPLMDump(const std::string& inFileName, int lineNum, const char * line) {
+		XPLMDebugString(XPMP_CLIENT_NAME " WARNING: Parse Error in file ");
+		XPLMDebugString(inFileName.c_str());
+		XPLMDebugString(" line ");
+		char buf[32];
+		sprintf(buf,"%d", lineNum);
+		XPLMDebugString(buf);
+		XPLMDebugString(".\n              ");
+		XPLMDebugString(line);
+		XPLMDebugString(".\n");
+	}
+
+	XPLMDump(const std::string& inFileName, int lineNum, const std::string& line) {
+		XPLMDebugString(XPMP_CLIENT_NAME " WARNING: Parse Error in file ");
+		XPLMDebugString(inFileName.c_str());
+		XPLMDebugString(" line ");
+		char buf[32];
+		sprintf(buf,"%d", lineNum);
+		XPLMDebugString(buf);
+		XPLMDebugString(".\n              ");
+		XPLMDebugString(line.c_str());
+		XPLMDebugString(".\n");
+	}
+
+	XPLMDump& operator<<(const char * rhs) {
+		XPLMDebugString(rhs);
+		return *this;
+	}
+	XPLMDump& operator<<(const std::string& rhs) {
+		XPLMDebugString(rhs.c_str());
+		return *this;
+	}
+	XPLMDump& operator<<(int n) {
+		char buf[255];
+		sprintf(buf, "%d", n);
+		XPLMDebugString(buf);
+		return *this;
+	}
+	XPLMDump& operator<<(size_t n) {
+		char buf[255];
+		sprintf(buf, "%u", static_cast<unsigned>(n));
+		XPLMDebugString(buf);
+		return *this;
+	}
+};
 
 #endif

@@ -43,6 +43,7 @@ extern "C" {
  * X-PLANE MULTIPLAYER
  ************************************************************************************/
 
+
 /*
 	Multiplayer - THEORY OF OPERATION
 	
@@ -59,20 +60,52 @@ extern "C" {
 	A plug-in can also read the current aircrafts or any of their data.  Aircraft data is
 	cached to guarantee minimum computing of data.
 	
-	Each 'kind' of data has an enumeration and corresponding structure.*/
+	Each 'kind' of data has an enumeration and corresponding structure.
+*/
 
-
-/************************************************************************************
- * PLANE DATA TYPES
- ************************************************************************************/
-
-/*
- * XPMPPosition_t
+/** XPMPAircraftStyle_t contains the three keys we use to differentiate aircraft:
+ *   - ICAO Type Code
+ *   - Airline Code
+ *   - Livery Code
  *
- * This data structure contains the basic position info for an aircraft.
+ *   The string fields are of fixed length to permit safe copy-in and copy-out in the
+ *   C ABI.
+ */
+typedef struct XPMPAircraftStyle_s {
+	const char 		type[5];		// ICAO code - 4 characters + NUL
+	const char		airline[4];		// Airline code - 3 characters + NUL
+	const char		livery[9];		// Livery code - 8 characters + NUL
+} XPMPAircraftStyle_t;
+
+/** XPMPConfiguration_t contains all of the configurable paramaters for libxplanemp
+ */
+typedef struct XPMPConfiguration_s {
+	XPMPAircraftStyle_t		defaultAircraft;			// Which configuration do we use when we can't find anything better?
+	unsigned int			maxPlaneRenderCount;		// Maximum aircraft to draw
+	bool 					enableSurfaceClamping;		// do we clamp the aircraft to the surface?
+	float					maxFullAircraftRenderingDistance;	// Beyond what distance do we start using lights-only rendering?
+
+	struct {
+		unsigned int		maxResolution;				// what is the maximum texture resolution we should permit for LegacyCSL?
+		bool				useAnisotropicFiltering;	// should we permit the CSL textures to be rendered using anisotropic filtering?
+	} legacyCslOptions;
+
+	struct {
+		bool modelMatching;								// Enable Verbose Debugging about Model matching
+		bool allowObj8AsyncLoad;						// Enable the asynchronous Obj8 model loader (was buggy)
+	} debug;
+} XPMPConfiguration_t;
+
+
+/* ***********************************************************************************
+ *  PLANE DATA TYPES
+ * ***********************************************************************************/
+
+/**
+ * XPMPPosition_t contains the basic position info for an aircraft.
+ *
  * Lat and lon are the position of the aircraft in the world.  They are double-precision to
- * provide reasonably precise positioning anywhere.
- * Elevation is in feet above mean sea level.
+ * provide reasonably precise positioning anywhere.  Elevation is in feet above mean sea level.
  *
  * Pitch, roll, and heading define the aircraft's orientation.  Heading is in degrees, positive
  * is clockwise from north.  Pitch is the number of degrees, positive is nose up, and roll
@@ -90,14 +123,11 @@ typedef	struct {
 	float	pitch;
 	float	roll;
 	float	heading;
-	char label[32];
+	char 	label[32];
 } XPMPPlanePosition_t;
 
 
-/*
- * XPMPLightStatus
- *
- * This enum defines the settings for the lights bitfield in XPMPPlaneSurfaces_t
+/** The XPMPLightStatus enum defines the settings for the lights bitfield in XPMPPlaneSurfaces_t
  *
  * The upper 16 bit of the light code (timeOffset) should be initialized only once
  * with a random number by the application. This number will be used to have strobes
@@ -118,7 +148,7 @@ union xpmp_LightStatus {
 	};
 };
 
-/*
+/**
  * Light flash patterns
  */
 enum {
@@ -128,10 +158,8 @@ enum {
 };
 
 
-/*
- * XPMPPlaneSurfaces_t
- *
- * This data structure will contain information about the external physical configuration of the plane,
+/**
+ * XPMPPlaneSurfaces_t will contain information about the external physical configuration of the plane,
  * things you would notice if you are seeing it from outside.  This includes flap position, gear position,
  * etc.
  *
@@ -139,7 +167,7 @@ enum {
  *
  */
 typedef	struct {
-	long					size;
+	long				  size;
 	float                 gearPosition;
 	float                 flapRatio;
 	float                 spoilerRatio;
@@ -154,7 +182,7 @@ typedef	struct {
 } XPMPPlaneSurfaces_t;
 
 
-/*
+/**
  * XPMPTransponderMode
  *
  * These enumerations define the way the transponder of a given plane is operating.
@@ -169,10 +197,8 @@ enum {
 };
 typedef	int	XPMPTransponderMode;
 
-/*
- * XPMPPlaneRadar_t
- *
- * This structure defines information about an aircraft visible to radar.  Eventually it can include
+/**
+ * XPMPPlaneRadar_t defines information about an aircraft visible to radar.  Eventually it can include
  * information about radar profiles, stealth technology, radar jamming, etc.
  *
  */
@@ -182,10 +208,8 @@ typedef	struct {
 	XPMPTransponderMode		mode;
 } XPMPPlaneRadar_t;
 
-/*
- * XPMPPlaneData
- *
- * This enum defines the different categories of aircraft information we can query about.
+/**
+ * The XPMPPlaneData enum defines the different categories of aircraft information we can query about.
  *
  */
 enum {
@@ -195,11 +219,8 @@ enum {
 };
 typedef	int			XPMPPlaneDataType;
 
-/*
- * XPMPPlaneCallbackResult
- *
- * This definfes the different responses to asking for information.
- *
+/**
+ * XPMPPlaneCallbackResult defines the different responses to asking for information.
  */
 enum {
 	xpmpData_Unavailable = 0,	/* The information has never been specified. */
@@ -208,10 +229,8 @@ enum {
 };
 typedef	int			XPMPPlaneCallbackResult;
 
-/*
- * XPMPPlaneID
- *
- * This is a unique ID for an aircraft created by a plug-in.
+/**
+ * XPMPPlaneID is a unique ID for an aircraft created by a plug-in.
  *
  */
 typedef	void *		XPMPPlaneID;

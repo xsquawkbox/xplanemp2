@@ -21,11 +21,17 @@
  *
  */
 #include "XPMPMultiplayerVars.h"
-#include <stddef.h>
 
+#include <string>
+#include <vector>
+#include <map>
 
-int								(* gIntPrefsFunc)(const char *, const char *, int) = NULL;
-float							(* gFloatPrefsFunc)(const char *, const char *, float) = NULL;
+using namespace std;
+
+XPMPConfiguration_t				gConfiguration;
+
+string							gPreferenceDir;
+
 
 XPMPPlaneVector					gPlanes;
 XPMPPlaneNotifierVector			gObservers;
@@ -37,5 +43,4 @@ int 							gEnableCount = 1;
 vector<CSLPackage_t>			gPackages;
 map<string, string>				gGroupings;
 
-string							gDefaultPlane;
 map<string, CSLAircraftCode_t>	gAircraftCodes;

@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.1)
 
 project(xpsdk LANGUAGES C CXX VERSION 2.0)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
+include(CMakeDependentOption)
 find_package(XPSDK REQUIRED)
-
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
 	set(XPMP_DEFINES ${XPMP_DEFINES} DEBUG=1)
@@ -11,7 +11,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 else()
 	set(XPMP_DEBUG OFF)
 endif()
-CMAKE_DEPENDENT_OPTION(XPMP_DEBUG_OPENGL "Install OpenGL Debug hooks and debug info" ON "XPMP_DEBUG" OFF)
+cmake_dependent_option(XPMP_DEBUG_OPENGL "Install OpenGL Debug hooks and debug info" ON "XPMP_DEBUG" OFF)
 if(XPMP_DEBUG_OPENGL)
 	set(XPMP_DEFINES ${XPMP_DEFINES} DEBUG_GL=1)
 endif()
@@ -40,23 +40,26 @@ add_definitions(-DXPLM200=1 -DXPLM210=1)
 
 add_library(xplanemp
 	${XPMP_PLATFORM_SOURCES}
-	src/BitmapUtils.cpp
-	src/TexUtils.cpp
-	src/XObjDefs.cpp
-	src/XObjReadWrite.cpp
-	src/XOGLUtils.cpp
+	src/legacycsl/ResourceManager.h
+	src/TCASHack.cpp
+	src/TCASHack.h
 	src/XPCAircraft.cpp
 	src/XPMPMultiplayer.cpp
 	src/XPMPMultiplayerCSL.cpp
 	src/XPMPMultiplayerCSLOffset.cpp
-	src/XPMPMultiplayerObj8.cpp
-	src/XPMPMultiplayerObj.cpp
+	src/obj8/XPMPMultiplayerObj8.cpp
 	src/XPMPMultiplayerVars.cpp
 	src/XPMPPlaneRenderer.cpp
-	src/XUtils.cpp
 	src/XStringUtils.h
-	src/ResourceManager.h
-	src/Interpolation.h)
+	src/XUtils.cpp
+	src/legacycsl/BitmapUtils.cpp
+	src/legacycsl/Interpolation.h
+	src/legacycsl/TexUtils.cpp
+	src/legacycsl/XObjDefs.cpp
+	src/legacycsl/XObjReadWrite.cpp
+	src/legacycsl/XOGLUtils.cpp
+	src/legacycsl/XPMPMultiplayerObj.cpp
+	src/legacycsl/GlDebug.cpp src/legacycsl/GlDebug.h src/legacycsl/LegacyCSL.cpp src/legacycsl/LegacyCSL.h src/CSL.cpp src/CSL.h src/AustinCSL.cpp src/AustinCSL.h src/obj8/Obj8CSL.cpp src/obj8/Obj8CSL.h)
 target_include_directories(xplanemp
 	PUBLIC 
 		${XPSDK_INCLUDE_DIRS}

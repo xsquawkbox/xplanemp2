@@ -21,13 +21,14 @@
  *
  */
 
+#include "TCASHack.h"
 #include "XPMPPlaneRenderer.h"
 #include "XPMPMultiplayer.h"
 #include "XPMPMultiplayerCSL.h"
 #include "XPMPMultiplayerCSLOffset.h"
 #include "XPMPMultiplayerVars.h"
-#include "XPMPMultiplayerObj.h"
-#include "XPMPMultiplayerObj8.h"
+#include "legacycsl/XPMPMultiplayerObj.h"
+#include "obj8/XPMPMultiplayerObj8.h"
 
 #include "XPLMGraphics.h"
 #include "XPLMDisplay.h"
@@ -58,17 +59,10 @@
 // Turn this on to put rendering stats in datarefs for realtime observatoin.
 #define		RENDERER_STATS 0
 
-// Maximum altitude difference in feet for TCAS blips
-#define		MAX_TCAS_ALTDIFF		10000
-
 // Even in good weather we don't want labels on things
 // that we can barely see.  Cut labels at 5 km.
 #define		MAX_LABEL_DIST			5000.0
 
-
-std::vector<XPLMDataRef>			gMultiRef_X;
-std::vector<XPLMDataRef>			gMultiRef_Y;
-std::vector<XPLMDataRef>			gMultiRef_Z;
 
 bool gDrawLabels = true;
 
@@ -183,12 +177,12 @@ static	int		gNavPlanes = 0;			// Number of Austin's planes we drew with lights o
 static	int		gOBJPlanes = 0;			// Number of our OBJ planes we drew in full
 
 static	XPLMDataRef		gVisDataRef = NULL;		// Current air visiblity for culling.
-static	XPLMDataRef		gAltitudeRef = NULL;	// Current aircraft altitude (for TCAS)
 
 static XPLMProbeRef terrainProbe = NULL; // Probe to probe where the ground is for clamping
 
 
-void			XPMPInitDefaultPlaneRenderer(void)
+void
+XPMPInitDefaultPlaneRenderer()
 {
 	XPLMDestroyProbe(terrainProbe);
 	terrainProbe = XPLMCreateProbe(xplm_ProbeY);
@@ -199,8 +193,6 @@ void			XPMPInitDefaultPlaneRenderer(void)
 	if (gVisDataRef == NULL) gVisDataRef = XPLMFindDataRef("sim/weather/visibility_effective_m");
 	if (gVisDataRef == NULL)
 		XPLMDebugString("WARNING: Default renderer could not find effective visibility in the sim.\n");
-
-	if(gAltitudeRef == NULL) gAltitudeRef = XPLMFindDataRef("sim/flightmodel/position/elevation");
 
 #if RENDERER_STATS
 	XPLMRegisterDataAccessor("hack/renderer/planes", xplmType_Int, 0, GetRendererStat, NULL,
@@ -215,29 +207,9 @@ void			XPMPInitDefaultPlaneRenderer(void)
 	XPLMRegisterDataAccessor("hack/renderer/acfs", xplmType_Int, 0, GetRendererStat, NULL,
 							 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 							 &gACFPlanes, NULL);
-#endif		
+#endif
 
-	// We don't know how many multiplayer planes there are - fetch as many as we can.
-
-	int 		n = 1;
-	char		buf[100];
-	XPLMDataRef	d;
-	while (1)
-	{
-		sprintf(buf,"sim/multiplayer/position/plane%d_x", n);
-		d = XPLMFindDataRef(buf);
-		if (!d) break;
-		gMultiRef_X.push_back(d);
-		sprintf(buf,"sim/multiplayer/position/plane%d_y", n);
-		d = XPLMFindDataRef(buf);
-		if (!d) break;
-		gMultiRef_Y.push_back(d);
-		sprintf(buf,"sim/multiplayer/position/plane%d_z", n);
-		d = XPLMFindDataRef(buf);
-		if (!d) break;
-		gMultiRef_Z.push_back(d);
-		++n;
-	}
+	TCAS_Init();
 }
 
 void XPMPDeinitDefaultPlaneRenderer() {

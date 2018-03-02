@@ -25,11 +25,12 @@
 #define XPLMMULTIPLAYEROBJ_H
 
 #include "XPMPMultiplayer.h"	// for light status
-#include "XObjDefs.h"
+#include "legacycsl/XObjDefs.h"
 #include "XPLMCamera.h"
-#include "XOGLUtils.h"
+#include "legacycsl/XOGLUtils.h"
 #include "ResourceManager.h"
 #include "TexUtils.h"
+#include "LegacyCSL.h"
 
 #include <memory>
 
@@ -118,8 +119,8 @@ std::string OBJ_DefaultModel(const std::string &path);
 // Note that texID and litTexID are OPTIONAL! They will only be filled
 // in if the user wants to override the default texture specified by the
 // obj file
-void	OBJ_PlotModel(XPMPPlane_t *plane, float inDistance, double inX, double inY,
-					  double inZ, double inPitch, double inRoll, double inHeading);
+void
+OBJ_PlotModel(LegacyCSL *model, float inDistance);
 
 // TEXTURED LIGHTS DRAWING
 void	OBJ_BeginLightDrawing();
@@ -135,6 +136,10 @@ int		OBJ_GetModelTexID(int model);
 std::string OBJ_GetLitTextureByTexture(const std::string &texturePath);
 
 void 	OBJ_MaintainTextures();
+
+
+extern ObjManager gObjManager(OBJ_LoadModelAsync);
+extern TextureManager gTextureManager(OBJ_LoadTexture);
 
 
 #endif

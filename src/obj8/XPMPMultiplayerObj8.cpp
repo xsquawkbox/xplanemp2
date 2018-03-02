@@ -26,8 +26,14 @@
 #include "XPLMScenery.h"
 #include "XPLMUtilities.h"
 #include "XPLMDataAccess.h"
+#include "obj8/Obj8CSL.h"
 #include <stddef.h>
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <memory>
+#include <XPMPMultiplayer.h>
+
 using namespace std;
 
 
@@ -43,7 +49,7 @@ struct	one_inst {
 
 struct	one_obj {
 	one_obj *			next;
-	obj_for_acf *		model;
+	Obj8Attachment *	model;
 	one_inst *			head;
 	
 	~one_obj() { delete head; delete next; }
@@ -151,7 +157,7 @@ void	obj_init()
 	// Ben says: we need the 2.10 SDK (e.g. X-Plane 10) to have async load at all.  But we need 10.30 to pick up an SDK bug
 	// fix where async load crashes if we queue a second load before the first completes.  So for users on 10.25, they get
 	// pauses.
-	if (1 == gIntPrefsFunc("debug", "allow_obj8_async_load", 0) && sim >= 10300) {
+	if (1 == gConfiguration.debug.allowObj8AsyncLoad && sim >= 10300) {
 		obj8_load_async = true;	
 	} else {
 		obj8_load_async = false;
@@ -215,17 +221,19 @@ void obj_loaded_cb(XPLMObjectRef obj, void * refcon)
 } 
 
 
-void	obj_schedule_one_aircraft(
-		CSLPlane_t *			model,
-		double 					x,
-		double 					y,
-		double 					z,
-		double 					pitch,
-		double 					roll,
-		double 					heading,
-		int	   					/*full*/,		//
-		xpmp_LightStatus		lights,
-		XPLMPlaneDrawState_t *	state)
+void
+Obj8CSL::drawPlane(
+	float distance,
+	double x,
+	double y,
+	double z,
+	double pitch,
+	double roll,
+	double heading,
+	int,
+	xpmp_LightStatus lights,
+	XPLMPlaneDrawState_t *state,
+	void *&instanceData)
 {
 	one_obj * iter;
 	

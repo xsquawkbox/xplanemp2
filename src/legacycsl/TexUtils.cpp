@@ -23,7 +23,7 @@
 #include "XPLMGraphics.h"
 #include "TexUtils.h"
 #include "XPLMUtilities.h"
-#include "XOGLUtils.h"
+#include "legacycsl/XOGLUtils.h"
 #include "XPMPMultiplayerVars.h"
 #include <utility>
 #include <algorithm>

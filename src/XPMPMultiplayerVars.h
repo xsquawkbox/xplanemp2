@@ -36,13 +36,12 @@
 #include <map>
 #include <memory>
 
-#include "XObjDefs.h"
-
-using namespace std;
-
 #include "XPMPMultiplayer.h"
-#include "XPMPMultiplayerObj.h"
-#include "XPMPMultiplayerObj8.h"	// for obj8 attachment info
+
+#include "obj8/XPMPMultiplayerObj8.h"    // for obj8 attachment info
+#include "legacycsl/XObjDefs.h"
+#include "legacycsl/XPMPMultiplayerObj.h"
+#include "CSL.h"
 
 template <class T>
 inline
@@ -183,16 +182,15 @@ struct	CSLPackage_t {
 		return !name.empty() && !path.empty();
 	}
 
-	string						name;
-	string                      path;
-	vector<CSLPlane_t>			planes;
-	map<string, int>			matches[match_count];
-
+	std::string					name;
+	std::string					path;
+	std::vector<CSL *>			planes;
+	std::map<std::string, int>	matches[match_count];
 };
 
-extern vector<CSLPackage_t>		gPackages;
+extern std::vector<CSLPackage_t>		gPackages;
 
-extern map<string, string>		gGroupings;
+extern std::map<std::string, std::string>		gGroupings;
 
 /**************** Model matching using ICAO doc 8643
 		(http://www.icao.int/anb/ais/TxtFiles/Doc8643.txt) ***********/
@@ -209,35 +207,44 @@ extern map<string, CSLAircraftCode_t>	gAircraftCodes;
 
 // This plane struct reprents one instance of a 
 // multiplayer plane.
-struct	XPMPPlane_t {
-
+struct	XPMPPlane_t
+{
 	// Modeling properties
-	string					icao;
-	string					airline;
-	string					livery;
-	CSLPlane_t *			model = nullptr; // May be null if no good match
-	int 					match_quality;
-	
-	// This callback is used to pull data from the client for posiitons, etc.
-	XPMPPlaneData_f			dataFunc;
-	void *					ref = nullptr;
-	
+	XPMPAircraftStyle_t modelCode;
+	CSL *model = nullptr; // May be null if no good match
+	void *modelInstanceData;
+	int match_quality;
+
+	// This callback is used to pull data from the client for positions, etc.
+	XPMPPlaneData_f dataFunc;
+	void *ref = nullptr;
+
 	// This is last known data we got for the plane, with timestamps.
-	int						posAge;
-	XPMPPlanePosition_t		pos;
+	int posAge;
+	XPMPPlanePosition_t pos;
+	int surfaceAge;
+	XPMPPlaneSurfaces_t surface;
+	int radarAge;
+	XPMPPlaneRadar_t radar;
 
-	int						surfaceAge;
-	XPMPPlaneSurfaces_t		surface;
-	int						radarAge;
-	XPMPPlaneRadar_t		radar;
+	OBJ7Handle objHandle;
+	TextureHandle texHandle;
+	TextureHandle texLitHandle;
 
-	OBJ7Handle                  objHandle;
-	TextureHandle               texHandle;
-	TextureHandle               texLitHandle;
+	ObjManager::TransientState objState;
+	TextureManager::TransientState texState;
+	TextureManager::TransientState texLitState;
 
-	ObjManager::TransientState      objState;
-	TextureManager::TransientState  texState;
-	TextureManager::TransientState  texLitState;
+	void setModel(CSL *newModel) {
+		if (model) {
+			model->deleteInstanceData(modelInstanceData);
+			modelInstanceData = nullptr;
+		}
+		model = newModel;
+		if (model) {
+			modelInstanceData = model->newInstanceData();
+		}
+	}
 };
 
 typedef	XPMPPlane_t *								XPMPPlanePtr;
@@ -249,11 +256,9 @@ typedef	pair<XPMPPlaneNotifier_f, void *>			XPMPPlaneNotifierPair;
 typedef	pair<XPMPPlaneNotifierPair, XPLMPluginID>	XPMPPlaneNotifierTripple;
 typedef	vector<XPMPPlaneNotifierTripple>			XPMPPlaneNotifierVector;
 
-// Prefs funcs - the client provides callbacks to pull ini key values 
-// for various functioning.
 
-extern int			(* gIntPrefsFunc)(const char *, const char *, int);
-extern float		(* gFloatPrefsFunc)(const char *, const char *, float);
+extern XPMPConfiguration_t				gConfiguration;
+extern std::string						gPreferenceDir;
 
 extern XPMPPlaneVector					gPlanes;				// All planes
 extern XPMPPlaneNotifierVector			gObservers;				// All notifiers
@@ -261,8 +266,6 @@ extern XPMPRenderPlanes_f				gRenderer;				// The actual rendering func
 extern void *							gRendererRef;			// The actual rendering func
 extern int								gDumpOneRenderCycle;	// Debug
 extern int 								gEnableCount;			// Hack - see TCAS support
-
-extern string							gDefaultPlane;			// ICAO of default plane
 
 // Helper funcs
 namespace xmp {

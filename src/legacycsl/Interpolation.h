@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2004, Laminar Research.
+ * Copyright (c) 2006, Laminar Research.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,62 +20,39 @@
  * THE SOFTWARE.
  *
  */
-#include "PlatformUtils.h"
-#include <stdio.h>
+#ifndef _Interpolation_h_
+#define _Interpolation_h_
 
+/* Interpolation Utilities.  These are defined inline in the hope of speed. */
 
-void	EndianFlipShort(short * ioShort)
+double	clamp(double v, double min, double max);
 
-{
-	// Not necessary on WINTEL machines.
-}
+double	BilinearInterpolate1d(
+		double		v0,
+		double		v1,
+		double		position);
 
-void	EndianFlipLong(long * ioLong)
+double	BilinearInterpolate2d(
+		double		v0,	double	v1,
+		double		v2, double	v3,
+		double		hPosition,
+		double		vPosition);
 
-{
-	// Not necessary on WINTEL machines.
-}
+double	BicubicInterpolate1d(
+		double		v0,
+		double		v1,
+		double		v2,
+		double		v3,
+		double		position);
 
+double	BicubicInterpolate2d(
+		double		v0,		double	v1,		double	v2,		double	v3,
+		double		v4,		double	v5,		double	v6,		double	v7,
+		double		v8,		double	v9,		double	v10,	double	v11,
+		double		v12,	double	v13,	double	v14,	double	v15,
+		double		hPosition,
+		double		vPosition);
 
-int		GetFilePathFromUser(
-		int					inType,
-		const char * 		inPrompt,
-		const char *		inAction,
-		int					inID,
-		char * 				outFileName)
-{	
-}
+#include "Interpolation.i"
 
-
-void	DoUserAlert(const char * inMsg)
-{
-}
-
-
-void	ShowProgressMessage(const char * inMsg, float * inProgress)
-{
-
-}
-
-
-int		ConfirmMessage(const char * inMsg, const char * proceedBtn, const char * cancelBtn)
-{
-}
-
-void MakePartialPathNative(char * ioBegin, char * ioEnd)
-{
-	for (char * p = ioBegin; p != ioEnd; ++p)
-	{
-		if (*p == '/' || *p == ':' || *p == '\\')
-			*p = DIR_CHAR;
-	}
-}
-
-// getting the application path on Linux systems is impossible.
-// Thus, we return a link to a directory in the users home
-// (this is better anyway - this way, the password won't be stored 
-// on a common system)
-const char * GetApplicationPath(void)
-{
-	return "./dummy";
-}
+#endif

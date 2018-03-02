@@ -25,7 +25,7 @@
 #include "XPMPMultiplayerVars.h"
 
 //#include "PlatformUtils.h"
-#include "XObjReadWrite.h"
+#include "legacycsl/XObjReadWrite.h"
 #include "TexUtils.h"
 #include "XUtils.h"
 
@@ -40,6 +40,7 @@
 #include "XPLMUtilities.h"
 #include "XPLMDataAccess.h"
 #include "XPLMProcessing.h"
+#include "LegacyCSL.h"
 
 #define DEBUG_NORMALS 0
 #define	DISABLE_SHARING 0
@@ -240,8 +241,8 @@ void OBJ_PointPool::DebugDrawNormals()
 static	map<string, int>	sTexes;
 static vector<ObjInfo_t>	sObjects;
 
-static ObjManager gObjManager(OBJ_LoadModelAsync);
-static TextureManager gTextureManager(OBJ_LoadTexture);
+ObjManager gObjManager(OBJ_LoadModelAsync);
+TextureManager gTextureManager(OBJ_LoadTexture);
 
 static std::queue<GLuint> sFreedTextures;
 
@@ -584,90 +585,84 @@ void OBJ_MaintainTextures() {
 // Note that texID and litTexID are OPTIONAL! They will only be filled
 // in if the user wants to override the default texture specified by the
 // obj file
-void	OBJ_PlotModel(XPMPPlane_t *plane, float inDistance, double /*inX*/,
-					  double /*inY*/, double /*inZ*/, double /*inPitch*/, double /*inRoll*/, double /*inHeading*/)
+void
+LegacyCSL::_PlotModel(float inDistance)
 {
-	if (! plane->objHandle)
-	{
-		plane->objHandle = gObjManager.get(plane->model->file_path, &plane->objState);
-		if (plane->objHandle && plane->objHandle->loadStatus == Failed)
-		{
+	if (!mObjHandle) {
+		mObjHandle = gObjManager.get(mFilePath, &mObjState);
+		if (mObjHandle && mObjHandle->loadStatus == Failed) {
 			// Failed to load
 			XPLMDebugString("Skipping ");
-			XPLMDebugString(plane->model->getModelName().c_str());
+			XPLMDebugString(getModelName().c_str());
 			XPLMDebugString(" since object could not be loaded.");
 			XPLMDebugString("\n");
 		}
 	}
-	if (! plane->objHandle || plane->objHandle->loadStatus == Failed) { return; }
+	if (!mObjHandle || mObjHandle->loadStatus == Failed) {
+		return;
+	}
 
 	// Try to load a texture if not yet done. If one can't be loaded continue without texture
-	if (! plane->texHandle)
-	{
-		string texturePath = plane->model->texturePath;
-		if (texturePath.empty()) { texturePath = plane->objHandle->defaultTexture; }
-		plane->texHandle = gTextureManager.get(texturePath, &plane->texState);
+	if (!mTexHandle) {
+		string texturePath = mTexturePath;
+		if (texturePath.empty()) {
+			texturePath = mObjHandle->defaultTexture;
+		}
+		mTexHandle = gTextureManager.get(texturePath, &mTexState);
 
 		// Async loading completed with failure
-		if (plane->texHandle && plane->texHandle->loadStatus == Failed)
+		if (mTexHandle && mTexHandle->loadStatus == Failed)
 		{
 			// Failed to load
 			XPLMDebugString("Texture for ");
-			XPLMDebugString(plane->model->getModelName().c_str());
+			XPLMDebugString(getModelName().c_str());
 			XPLMDebugString(" cannot be loaded.");
 			XPLMDebugString("\n");
 		}
 	}
 
-	auto model = plane->model;
 	// Try to load a texture if not yet done. If one can't be loaded continue without texture
-	if (! plane->texLitHandle)
-	{
-		string texturePath = model->textureLitPath;
-		if (texturePath.empty()) { texturePath = plane->objHandle->defaultLitTexture; }
-		plane->texLitHandle = gTextureManager.get(texturePath, &plane->texLitState);
+	if (!mTexLitHandle)	{
+		string texturePath = mTextureLitPath;
+		if (texturePath.empty()) {
+			texturePath = mObjHandle->defaultLitTexture;
+		}
+		mTexLitHandle = gTextureManager.get(texturePath, &mTexLitState);
 	}
-
-	if (plane->texHandle && plane->texHandle->loadStatus == Succeeded && !plane->texHandle->id)
-	{
-		plane->texHandle->id = xpmpGetGlTextureId();
-		LoadTextureFromMemory(plane->texHandle->im, true, false, true, plane->texHandle->id);
-
+	if (mTexHandle && mTexHandle->loadStatus == Succeeded && !mTexHandle->id) {
+		mTexHandle->id = xpmpGetGlTextureId();
+		LoadTextureFromMemory(mTexHandle->im, true, false, true, mTexHandle->id);
 #if DEBUG_RESOURCE_CACHE
 		XPLMDebugString(XPMP_CLIENT_NAME ": Finished loading of texture id=");
 		char buf[32];
-		sprintf(buf,"%d", plane->texHandle->id);
+		sprintf(buf,"%d", mTexHandle->id);
+		XPLMDebugString(buf);
+		XPLMDebugString("\n");
+#endif
+	}
+	if (mTexLitHandle && mTexLitHandle->loadStatus == Succeeded && !mTexLitHandle->id) {
+		mTexLitHandle->id = xpmpGetGlTextureId();
+		LoadTextureFromMemory(mTexLitHandle->im, true, false, true, mTexLitHandle->id);
+#if DEBUG_RESOURCE_CACHE
+		XPLMDebugString(XPMP_CLIENT_NAME ": Finished loading of texture id=");
+		char buf[32];
+		sprintf(buf,"%d", mTexLitHandle->id);
 		XPLMDebugString(buf);
 		XPLMDebugString("\n");
 #endif
 	}
 
-	if (plane->texLitHandle && plane->texLitHandle->loadStatus == Succeeded && !plane->texLitHandle->id)
-	{
-		plane->texLitHandle->id = xpmpGetGlTextureId();
-		LoadTextureFromMemory(plane->texLitHandle->im, true, false, true, plane->texLitHandle->id);
+	auto obj = mObjHandle.get();
 
-#if DEBUG_RESOURCE_CACHE
-		XPLMDebugString(XPMP_CLIENT_NAME ": Finished loading of texture id=");
-		char buf[32];
-		sprintf(buf,"%d", plane->texLitHandle->id);
-		XPLMDebugString(buf);
-		XPLMDebugString("\n");
-#endif
-	}
-
-	auto obj = plane->objHandle.get();
 	// Find out what LOD we need to draw
 	int lodIdx = -1;
-	for(size_t n = 0; n < obj->lods.size(); n++)
-	{
-		if((inDistance >= obj->lods[n].nearDist) &&
-				(inDistance <= obj->lods[n].farDist))
-		{
+	for(size_t n = 0; n < obj->lods.size(); n++) {
+		if((inDistance >= obj->lods[n].nearDist) &&	(inDistance <= obj->lods[n].farDist)) {
 			lodIdx = static_cast<int>(n);
 			break;
 		}
 	}
+
 	// If we didn't find a good LOD bin, we don't draw!
 	if(lodIdx == -1)
 		return;
@@ -681,15 +676,13 @@ void	OBJ_PlotModel(XPMPPlane_t *plane, float inDistance, double /*inX*/,
 
 	int tex = 0;
 	int lit = 0;
-	auto texture = plane->texHandle.get();
-	if(texture && texture->id)
-	{
+	auto texture = mTexHandle.get();
+	if(texture && texture->id) {
 		tex = texture->id;
 	}
 
-	auto litTexure = plane->texLitHandle.get();
-	if (litTexure && litTexure->id)
-	{
+	auto litTexure = mTexLitHandle.get();
+	if (litTexure && litTexure->id) {
 		lit = litTexure->id;
 	}
 
