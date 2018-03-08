@@ -97,6 +97,23 @@ CullInfo::CullInfo()
 	far_clip[0] =-proj[2]+proj[3];	far_clip[1] =-proj[6]+proj[7];	far_clip[2] =-proj[10]+proj[11];far_clip[3] =-proj[14]+proj[15];
 }
 
+CullInfo::CullInfo(const CullInfo &src)
+{
+	for (int c = 0; c < 16; c++) {
+		proj[c] = src.proj[c];
+		model_view[c] = src.model_view[c];
+	}
+	for (int c = 0; c < 4; c++) {
+		lft_clip[c] = src.lft_clip[c];
+		rgt_clip[c] = src.rgt_clip[c];
+		bot_clip[c] = src.bot_clip[c];
+		top_clip[c] = src.top_clip[c];
+		nea_clip[c] = src.nea_clip[c];
+		far_clip[c] = src.far_clip[c];
+	}
+}
+
+
 void
 CullInfo::GetCurrentViewport(GLfloat vp[])
 {

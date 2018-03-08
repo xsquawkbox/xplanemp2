@@ -60,6 +60,7 @@ public:
 	static void init();
 
 	CullInfo();
+	CullInfo(const CullInfo &src);
 
 	static void GetCurrentViewport(GLfloat vp[]);
 
