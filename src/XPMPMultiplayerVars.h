@@ -38,125 +38,16 @@
 
 #include "XPMPMultiplayer.h"
 
+#include "CSL.h"
+#include "PlaneType.h"
 #include "obj8/XPMPMultiplayerObj8.h"    // for obj8 attachment info
 #include "legacycsl/XObjDefs.h"
-#include "legacycsl/XPMPMultiplayerObj.h"
-#include "CSL.h"
-
-template <class T>
-inline
-const T&
-XPMP_TMIN(const T& a, const T& b)
-{
-	return b < a ? b : a;
-}
-
-template <class T>
-inline
-const T&
-XPMP_TMAX(const T& a, const T& b)
-{
-	return a < b ? b : a;
-}
-
+#include "legacycsl/LegacyObj.h"
 
 const	double	kFtToMeters = 0.3048;
 const	double	kMaxDistTCAS = 40.0 * 6080.0 * kFtToMeters;
 
-
 /****************** MODEL MATCHING CRAP ***************/
-
-enum {
-	plane_Austin,
-	plane_Obj,
-	plane_Lights,
-	plane_Obj8,
-	plane_Count
-};
-
-enum class eVertOffsetType {
-	none = 0,
-	default_offset,
-	user,
-	xsb,
-	calculated
-};
-
-// This plane struct represents one model in one CSL packpage.
-// It has a type, a single file path for whatever we have to load,
-// and then implementation-specifc stuff.
-struct	CSLPlane_t {
-
-	string getModelName() const
-	{
-		string modelName = "";
-		for (const auto &dir : dirNames)
-		{
-			modelName += dir;
-			modelName += ' ';
-		}
-		modelName += objectName;
-		if (! textureName.empty())
-		{
-			modelName += ' ';
-			modelName += textureName;
-		}
-		return modelName;
-	}
-
-	vector<string>              dirNames;       // Relative directories from xsb_aircrafts.txt down to object file
-	string                      objectName;     // Basename of the object file
-	string                      textureName;    // Basename of the texture file
-	string                      icao;           // Icao type of this model
-	string                      airline;        // Airline identifier. Can be empty.
-	string                      livery;         // Livery identifier. Can be empty.
-
-	int							plane_type;		// What kind are we?
-	string						file_path;		// Where do we load from (oz and obj, debug-use-only for OBJ8)
-	string						texturePath;	// Full path to the planes texture
-	string						textureLitPath; // Full path to the planes lit texture
-	bool						moving_gear;	// Does gear retract?
-
-	// plane_Austin
-	int							austin_idx;
-
-	// plane_Obj
-	int							obj_idx;
-	int							texID;			// can be 0 for no customization
-	int							texLitID;		// can be 0 for no customization
-
-	// plane_Obj8
-	vector<obj_for_acf>			attachments;
-	
-	/* distance between the origin point of an object and the lowest point of the object 
-	 * (usually a bottom point of the gears) along the vertical axis (y axis in the sim) 
-	 * for onground clamping purposes.
-	 *
-	 * in simple words, correct vert offset for accurate putting planes on the ground.
-	 * (in meters)
-	 */
-	 
-	// actual vert offset
-	eVertOffsetType actualVertOffsetType = eVertOffsetType::none;
-	eVertOffsetType prevActualVertOffsetType = eVertOffsetType::none;
-	double actualVertOffset = 0.0;//meters
-	// local user's vert offset
-	bool isUserVertOffsetUpToDate = false;
-	bool isUserVertOffsetAvail = false;
-	double userVertOffset = 0.0;
-	// vert offset from xsb file
-	bool isXsbVertOffsetUpToDate = false;
-	bool isXsbVertOffsetAvail = false;
-	double xsbVertOffset = 0.0;
-	// vert offset from mtl file
-	bool isMtlVertOffsetUpToDate = false;
-	bool isMtlVertOffsetAvail = false;
-	double mtlVertOffset = 0.0;
-	// calculated vert offset
-	bool isCalcVertOffsetUpToDate = false;
-	bool isCalcVertOffsetAvail = false;
-	double calcVertOffset = 0.0;
-};
 
 // These enums define the eight levels of matching we might possibly
 // make.  For each level of matching, we use a single string as a key.
@@ -172,6 +63,16 @@ enum {
 	match_group, 						//	B731 B732 B733 B734 B735 B736 B737 B738 B739
 	match_count
 };
+
+enum {
+	match_fallback_wtc_fullconfig = 0,
+	match_fallback_wtc_engines_enginetype,
+	match_fallback_wtc_engines,
+	match_fallback_wtc_enginetype,
+	match_fallback_wtc,
+	match_fallback_count
+};
+
 
 // A CSL package - a vector of planes and six maps from the above matching 
 // keys to the internal index of the plane.
@@ -205,67 +106,17 @@ extern map<string, CSLAircraftCode_t>	gAircraftCodes;
 
 /**************** PLANE OBJECTS ********************/
 
-// This plane struct reprents one instance of a 
-// multiplayer plane.
-struct	XPMPPlane_t
-{
-	// Modeling properties
-	XPMPAircraftStyle_t modelCode;
-	CSL *model = nullptr; // May be null if no good match
-	void *modelInstanceData;
-	int match_quality;
+#include "XPMPPlane.h"
 
-	// This callback is used to pull data from the client for positions, etc.
-	XPMPPlaneData_f dataFunc;
-	void *ref = nullptr;
-
-	// This is last known data we got for the plane, with timestamps.
-	int posAge;
-	XPMPPlanePosition_t pos;
-	int surfaceAge;
-	XPMPPlaneSurfaces_t surface;
-	int radarAge;
-	XPMPPlaneRadar_t radar;
-
-	OBJ7Handle objHandle;
-	TextureHandle texHandle;
-	TextureHandle texLitHandle;
-
-	ObjManager::TransientState objState;
-	TextureManager::TransientState texState;
-	TextureManager::TransientState texLitState;
-
-	void setModel(CSL *newModel) {
-		if (model) {
-			model->deleteInstanceData(modelInstanceData);
-			modelInstanceData = nullptr;
-		}
-		model = newModel;
-		if (model) {
-			modelInstanceData = model->newInstanceData();
-		}
-	}
-};
-
-typedef	XPMPPlane_t *								XPMPPlanePtr;
-typedef	vector<std::unique_ptr<XPMPPlane_t>>		XPMPPlaneVector;
-
-// Notifiers - clients can install callbacks and be told when a plane's
-// data changes.
-typedef	pair<XPMPPlaneNotifier_f, void *>			XPMPPlaneNotifierPair;
-typedef	pair<XPMPPlaneNotifierPair, XPLMPluginID>	XPMPPlaneNotifierTripple;
-typedef	vector<XPMPPlaneNotifierTripple>			XPMPPlaneNotifierVector;
-
+typedef	XPMPPlane *								XPMPPlanePtr;
+typedef	vector<std::unique_ptr<XPMPPlane>>		XPMPPlaneVector;
 
 extern XPMPConfiguration_t				gConfiguration;
+extern PlaneType						gDefaultPlane;
 extern std::string						gPreferenceDir;
 
 extern XPMPPlaneVector					gPlanes;				// All planes
-extern XPMPPlaneNotifierVector			gObservers;				// All notifiers
-extern XPMPRenderPlanes_f				gRenderer;				// The actual rendering func
-extern void *							gRendererRef;			// The actual rendering func
 extern int								gDumpOneRenderCycle;	// Debug
-extern int 								gEnableCount;			// Hack - see TCAS support
 
 // Helper funcs
 namespace xmp {

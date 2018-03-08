@@ -65,17 +65,18 @@ using namespace std;
 
  ******************************************************************************/
 
-std::vector<XPLMDataRef>			gMultiRef_X;
-std::vector<XPLMDataRef>			gMultiRef_Y;
-std::vector<XPLMDataRef>			gMultiRef_Z;
+std::vector<XPLMDataRef>			TCAS::gMultiRef_X;
+std::vector<XPLMDataRef>			TCAS::gMultiRef_Y;
+std::vector<XPLMDataRef>			TCAS::gMultiRef_Z;
 
-XPLMDataRef							gAltitudeRef = NULL;	// Current aircraft altitude (for TCAS)
-bool								gTCASHooksRegistered = false;
+XPLMDataRef							TCAS::gAltitudeRef = nullptr;	// Current aircraft altitude (for TCAS)
+bool								TCAS::gTCASHooksRegistered = false;
+int 								TCAS::gEnableCount = 1;
+int									TCAS::gMaxTCASItems = 0;
 
-const float							kTCASInterval = 1.0 / 30; // no more than 30 times a second.
 
-int
-TCAS_Init()
+void
+TCAS::Init()
 {
 	gAltitudeRef = XPLMFindDataRef("sim/flightmodel/position/elevation");
 
@@ -104,13 +105,12 @@ TCAS_Init()
 		gMultiRef_Z.push_back(d);
 		++n;
 	}
-
-	return n;
+	gMaxTCASItems = n-1;
 }
 
 // This callback ping-pongs the multiplayer count up and back depending
 // on whether we're drawing the TCAS gauges or not.
-int	XPMPControlPlaneCount(
+int	TCAS::ControlPlaneCount(
 	XPLMDrawingPhase     /*inPhase*/,
 	int                  /*inIsBefore*/,
 	void *               inRefcon)
@@ -118,66 +118,52 @@ int	XPMPControlPlaneCount(
 	if (inRefcon == NULL) {
 		XPLMSetActiveAircraftCount(1);
 	} else {
-		XPLMSetActiveAircraftCount(gEnableCount);
+		// quickly splat over multiplayer datarefs
+		int tcasItems = min((int)gTCASPlanes.size(), gMaxTCASItems);
+		auto tcasIter = gTCASPlanes.cbegin();
+		for (int c = 0; c < tcasItems; c++, tcasIter++) {
+			XPLMSetDataf(gMultiRef_X[c], tcasIter->second.x);
+			XPLMSetDataf(gMultiRef_Y[c], tcasIter->second.y);
+			XPLMSetDataf(gMultiRef_Z[c], tcasIter->second.z);
+		}
+		// and set the count
+		XPLMSetActiveAircraftCount(tcasItems+1);
 	}
 	return 1;
 }
 
-static void
-TCAS_EnableHooks()
-{
-	XPLMRegisterDrawCallback(
-		XPMPControlPlaneCount, xplm_Phase_Gauges, 0, /* after*/ 0 /* hide planes*/);
-	XPLMRegisterDrawCallback(
-		XPMPControlPlaneCount, xplm_Phase_Gauges, 1, /* before */ (void *) -1 /* show planes*/);
-	gTCASHooksRegistered = true;
-}
-
-static void
-TCAS_DisableHooks()
-{
-	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 0, 0);
-	XPLMUnregisterDrawCallback(XPMPControlPlaneCount, xplm_Phase_Gauges, 1, (void *) -1);
-	gTCASHooksRegistered = false;
-}
-
-static float
-TCAS_DoUpdate(
-	float                inElapsedSinceLastCall,
-	float                inElapsedTimeSinceLastFlightLoop,
-	int                  inCounter,
-	void *               inRefcon)
-{
-	int modelCount, active, plugin, tcas;
-	XPLMCountAircraft(&modelCount, &active, &plugin);
-	tcas = modelCount - 1;	//
-
-	// calculate our altitude
-	double acft_alt = XPLMGetDatad(gAltitudeRef) / kFtToMeters;
-
-
-	if (gEnableCount > 1 && !gTCASHooksRegistered) {
-		// Register the plane control calls.
-		TCAS_EnableHooks();
-	} else if (gEnableCount <= 1 && gTCASHooksRegistered) {
-			TCAS_DisableHooks();
-			XPLMSetActiveAircraftCount(1);
-		}
-	return kTCASInterval;
-}
-
 void
-TCAS_Enable()
+TCAS::EnableHooks()
 {
-	XPLMRegisterFlightLoopCallback(TCAS_DoUpdate, -1.0, nullptr);
-}
-
-void
-TCAS_Disable()
-{
-	XPLMUnregisterFlightLoopCallback(TCAS_DoUpdate, nullptr);
-	if (gTCASHooksRegistered) {
-		TCAS_DisableHooks();
+	if (!gTCASHooksRegistered) {
+		XPLMRegisterDrawCallback(
+			&TCAS::ControlPlaneCount, xplm_Phase_Gauges, 0, /* after*/ 0 /* hide planes*/);
+		XPLMRegisterDrawCallback(
+			&TCAS::ControlPlaneCount, xplm_Phase_Gauges, 1, /* before */ (void *) -1 /* show planes*/);
+		gTCASHooksRegistered = true;
 	}
 }
 
+void
+TCAS::DisableHooks()
+{
+	if (gTCASHooksRegistered) {
+		XPLMUnregisterDrawCallback(&TCAS::ControlPlaneCount, xplm_Phase_Gauges, 0, 0);
+		XPLMUnregisterDrawCallback(&TCAS::ControlPlaneCount, xplm_Phase_Gauges, 1, (void *) -1);
+		gTCASHooksRegistered = false;
+	}
+}
+
+TCAS::TCASMap TCAS::gTCASPlanes;
+
+void
+TCAS::cleanFrame()
+{
+	gTCASPlanes.clear();
+}
+
+void
+TCAS::addPlane(float distanceSqr, float x, float y, float z, bool isReportingAltitude)
+{
+	gTCASPlanes.emplace( distanceSqr, plane_record{x, y, z} );
+}

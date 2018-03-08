@@ -32,7 +32,7 @@
  *
  */
 
-#include "XPLMPlanes.h"
+#include <XPLMPlanes.h>
 #include "XPMPMultiplayerVars.h"
 
 /*
@@ -52,19 +52,31 @@ bool			CSL_Init(
 bool			CSL_LoadCSL(
 		const char * inFolderPath); 		// Path to CSL folder
 
-/*
- * CSL_LoadData
+/** CSL_LoadData starts loading the non-package data required to handle the CSL
+ * library.
  *
- * This routine loads all CSL packages and the related.txt file.
+ * If there are any issues, details about the cause are sent to the XPlane log.
  *
+ * @param inRelated path to the related.txt - used by the renderer to pick a suitable model when no specific model is available
+ * @param inDoc8643 path to the doc8643.txt table - used by the renderer to pick a suitable model when there's no specific model and the related types don't help
+ *
+ * @returns true if successful, false if there were any issues.
  */
 bool			CSL_LoadData(
 	const char * inRelated,			// Path to related.txt - used by renderer for model matching
 	const char * inDoc8643);		// Path to ICAO document 8643 (list of aircraft)
 
+/** CSL_LoadCSL loads all of the packages underneath the specified path
+ *
+ * If there are any issues, details about the cause are sent to the XPlane log.
+ *
+ * @param inFolderPath path to the packages directory to traverse
+ * @returns true if successful, false otherwise.
+*/
+bool			CSL_LoadCSL(const char *inFolderPath);
 
-/*
- * CSL_MatchPlane
+
+/** CSL_MatchPlane finds a CSL that matches the specified PlaneType.
  *
  * Given an ICAO and optionally a livery and airline, this routine returns the best plane match, or
  * NULL if there is no good plane match.
@@ -72,12 +84,7 @@ bool			CSL_LoadData(
  * if match_quality is set, it is set with the pass upon which a match was determined.  
  *   (see XPMPMultiplayerCSL.h)
  */
-CSL *	CSL_MatchPlane(
-		const char * inICAO, 
-		const char * inAirline, 
-		const char * inLivery, 
-		int *  match_quality,
-		bool use_default);
+CSL *			CSL_MatchPlane(const PlaneType &type,int *match_quality, bool allow_default);
 
 /*
  * CSL_Dump
@@ -85,43 +92,6 @@ CSL *	CSL_MatchPlane(
  * This routine dumps the total state of the CSL system to the error.out file.
  *
  */
-void			CSL_Dump(void);
-
-/*
- * CSL_GetOGLIndex
- *
- * Given a model, this routine returns some kind of index number such that
- * sorting all models by these indices gives the ideal OpenGL draw order.
- * In other words, this index number sorts models by OGL state.
- *
- */
-int				CSL_GetOGLIndex(CSLPlane_t *		model);
-
-/*
- * CSL_DrawObject
- *
- * Given a plane model rep and the params, this routine does the real drawing.  The coordinate system must be pre-shifted
- * to the plane's location.  (This just dispatches to the appropriate drawing method).
- *
- */
-void			CSL_DrawObject(
-		XPMPPlanePtr			plane,
-		float					distance,
-		double 					x,
-		double 					y,
-		double 					z,
-		double 					pitch,
-		double 					roll,
-		double 					heading,
-		int						type,
-		int	   					full,
-		xpmp_LightStatus		lights,
-		XPLMPlaneDrawState_t *	state);
-
-
-#if APL
-int Posix2HFSPath(const char *path, char *result, int resultLen);
-int HFS2PosixPath(const char *path, char *result, int resultLen);
-#endif
+void			CSL_Dump();
 
 #endif /* XPLMMULTIPLAYERCSL_H */

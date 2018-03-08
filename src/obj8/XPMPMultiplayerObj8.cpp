@@ -182,7 +182,7 @@ static void		draw_objects_for_mode(one_obj * who, int want_translucent)
 {
 	while(who)
 	{
-		obj_draw_type dt = who->model->draw_type;
+		obj_draw_type dt = who->model->mDrawType;
 		if((want_translucent && dt == draw_glass) ||
 				(!want_translucent && dt != draw_glass))
 		{
@@ -191,7 +191,7 @@ static void		draw_objects_for_mode(one_obj * who, int want_translucent)
 				//set dataref ptr to light + obj sate from "one_inst".
 				s_cur_plane = i;
 				
-				XPLMDrawObjects(who->model->handle, 1, &i->location, 1, 0);
+				XPLMDrawObjects(who->model->getObjectHandle(), 1, &i->location, 1, 0);
 			}
 		}
 		who = who->next;

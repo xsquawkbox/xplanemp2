@@ -8,25 +8,45 @@
 #include <vector>
 
 #include <XPLMDataAccess.h>
+#include <XPLMDisplay.h>
 
 /* Maximum altitude difference in feet for TCAS blips */
 #define		MAX_TCAS_ALTDIFF		10000
 
-/* TCAS datarefs */
-extern std::vector<XPLMDataRef>			gMultiRef_X;
-extern std::vector<XPLMDataRef>			gMultiRef_Y;
-extern std::vector<XPLMDataRef>			gMultiRef_Z;
 
-/** TCAS_Init prepares the TCAS hack subsystem
- *
- * @return number of multiplayer aircraft positions we were able to get datarefs for.
- */
-int		TCAS_Init();
+class TCAS {
+private:
+	static std::vector<XPLMDataRef>			gMultiRef_X;
+	static std::vector<XPLMDataRef>			gMultiRef_Y;
+	static std::vector<XPLMDataRef>			gMultiRef_Z;
 
-/** TCAS_Enable starts the TCAS evaluation callbacks */
-void	TCAS_Enable();
+	static int 								gEnableCount; // Hack - see TCAS support
 
-/** TCAS_Disable stops the TCAS evaluation callbacks and disables the TCAS data injection if it was enabled */
-void	TCAS_Disable();
+	static bool								gTCASHooksRegistered;
+
+	static int ControlPlaneCount(XPLMDrawingPhase, int, void *);
+
+	struct plane_record {
+		float x;
+		float y;
+		float z;
+	};
+	typedef std::multimap<float, struct plane_record>	TCASMap;
+
+	static TCASMap 							gTCASPlanes;
+	static int								gMaxTCASItems;
+
+public:
+	static XPLMDataRef						gAltitudeRef; // Current aircraft altitude (for TCAS)
+
+	static void Init();
+	static void EnableHooks();
+	static void DisableHooks();
+
+	static void cleanFrame();
+
+	/** adds a plane to the list of aircraft we're going to report on */
+	static void addPlane(float distanceSqr, float x, float y, float z, bool isReportingAltitude);
+};
 
 #endif //XPMP_TCASHACK_H

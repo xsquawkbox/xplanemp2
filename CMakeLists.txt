@@ -18,17 +18,14 @@ endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set(XPMP_DEFINES ${XPMP_DEFINES} LIN=1)
-	#set(XPMP_PLATFORM_SOURCES
-	#	src/PlatformUtils.lin.cpp)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	set(XPMP_DEFINES ${XPMP_DEFINES} IBM=1)
-	#set(XPMP_PLATFORM_SOURCES
-	#	src/PlatformUtils.win.cpp)
 	set(XPMP_PLATFORM_LIBRARIES opengl32 glu32)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	set(XPMP_DEFINES ${XPMP_DEFINES} APL=1)
-	#set(XPMP_PLATFORM_SOURCES
-	#	src/PlatformUtils.mac.cpp)
+	set(XPMP_PLATFORM_SOURCES
+		src/AplFSUtil.cpp
+		src/AplFSUtil.h)
 	find_library(OPENGL OpenGL)
 	set(XPMP_PLATFORM_LIBRARIES ${OPENGL})
 endif()
@@ -40,26 +37,47 @@ add_definitions(-DXPLM200=1 -DXPLM210=1)
 
 add_library(xplanemp
 	${XPMP_PLATFORM_SOURCES}
-	src/legacycsl/ResourceManager.h
+	src/CSL.cpp
+	src/CSL.h
+	src/CullInfo.cpp
+	src/CullInfo.h
+	src/PlaneType.cpp
+	src/PlaneType.h
+	src/Renderer.cpp
+	src/Renderer.h
 	src/TCASHack.cpp
 	src/TCASHack.h
-	src/XPCAircraft.cpp
 	src/XPMPMultiplayer.cpp
-	src/XPMPMultiplayerCSL.cpp
-	src/XPMPMultiplayerCSLOffset.cpp
-	src/obj8/XPMPMultiplayerObj8.cpp
+	src/CSLLibrary.cpp
+	src/CSLLibrary.h
 	src/XPMPMultiplayerVars.cpp
-	src/XPMPPlaneRenderer.cpp
+	src/XPMPMultiplayerVars.h
+	src/XPMPPlane.cpp
+	src/XPMPPlane.h
+	src/XStringUtils.cpp
 	src/XStringUtils.h
 	src/XUtils.cpp
+
+	src/obj8/InstanceCompat.h
+	src/obj8/InstanceCompat.cpp
+	src/obj8/InstanceWrapper.cpp
+	src/obj8/InstanceWrapper.h
+	src/obj8/Obj8CSL.cpp
+	src/obj8/Obj8CSL.h
+
 	src/legacycsl/BitmapUtils.cpp
+	src/legacycsl/GlDebug.cpp
+	src/legacycsl/GlDebug.h
 	src/legacycsl/Interpolation.h
+	src/legacycsl/LegacyCSL.cpp
+	src/legacycsl/LegacyCSL.h
+	src/legacycsl/ResourceManager.h
 	src/legacycsl/TexUtils.cpp
 	src/legacycsl/XObjDefs.cpp
 	src/legacycsl/XObjReadWrite.cpp
 	src/legacycsl/XOGLUtils.cpp
-	src/legacycsl/XPMPMultiplayerObj.cpp
-	src/legacycsl/GlDebug.cpp src/legacycsl/GlDebug.h src/legacycsl/LegacyCSL.cpp src/legacycsl/LegacyCSL.h src/CSL.cpp src/CSL.h src/AustinCSL.cpp src/AustinCSL.h src/obj8/Obj8CSL.cpp src/obj8/Obj8CSL.h)
+	src/legacycsl/LegacyObj.cpp
+	)
 target_include_directories(xplanemp
 	PUBLIC 
 		${XPSDK_INCLUDE_DIRS}

@@ -3,37 +3,21 @@
 
 #include <string>
 #include <vector>
-#include <algorithm>
 
-std::vector<std::string> tokenize(const std::string &str, const std::string &delim)
-{
-	std::string dup = str;
-	std::vector<std::string> result;
-	if (delim.empty())
-	{
-		result.push_back(dup);
-		return result;
-	}
+namespace xpmp {
+	std::vector<std::string> tokenize(const std::string &str, const std::string &delim);
+	void	ltrim(std::string &s);
+	void	rtrim(std::string &s);
+	void	trim(std::string &s);
 
-	if (dup.empty()) return result;
+	void	BreakStringPvt(
+		const char *inString,
+		std::vector<std::string> &outStrings,
+		int maxBreak,
+		const std::string &inSeparators);
 
-	while (true)
-	{
-		auto position = dup.find_first_of(delim);
-		std::string token = dup.substr(0, position);
-
-		if (!token.empty())
-		{
-			result.push_back(token);
-		}
-
-		// Nothing remaining
-		if (position == std::string::npos) return result;
-
-		dup = dup.substr(position + 1);
-	}
+	char *	fgets_multiplatform(char *s, int n, FILE *file);
 }
-
 
 #endif // STRING_UTILS_H
 

@@ -20,25 +20,33 @@
  * THE SOFTWARE.
  *
  */
-#include "XPMPMultiplayerVars.h"
 
 #include <string>
 #include <vector>
 #include <map>
 
+#include "PlaneType.h"
+#include "XPMPMultiplayerVars.h"
+
+
 using namespace std;
 
-XPMPConfiguration_t				gConfiguration;
+XPMPConfiguration_t				gConfiguration = {
+	100,	// maxPlaneRenderCount
+	3.0,	// maxFullAircraftRenderingDistance
+	5000.0,	// maxLabelDistance
+	false,	// enableSurfaceClamping
+	true,	// drawLabels
+	{ 5, true, 0.0 },	// legacyCSL Options
+	{ false, true }	// debug options
+};
 
+PlaneType						gDefaultPlane;
 string							gPreferenceDir;
 
 
 XPMPPlaneVector					gPlanes;
-XPMPPlaneNotifierVector			gObservers;
-XPMPRenderPlanes_f				gRenderer = NULL;
-void *							gRendererRef;
 int								gDumpOneRenderCycle = 0;
-int 							gEnableCount = 1;
 
 vector<CSLPackage_t>			gPackages;
 map<string, string>				gGroupings;

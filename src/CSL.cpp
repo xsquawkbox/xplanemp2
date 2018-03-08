@@ -3,10 +3,43 @@
 //
 
 #include <string>
+#include <XPLMDataAccess.h>
+#include <XPLMScenery.h>
 
 #include "CSL.h"
+#include "CullInfo.h"
+#include "XPMPMultiplayerVars.h"
+#include "Renderer.h"
+#include "TCASHack.h"
 
 using namespace std;
+
+void
+RenderedCSLInstanceData::updateInstance(
+	CSL *csl,
+	double x,
+	double y,
+	double z,
+	double pitch,
+	double roll,
+	double heading,
+	xpmp_LightStatus lights,
+	XPLMPlaneDrawState_t *state)
+{
+	mX = x;
+	mY = y;
+	mZ = z;
+	mPitch = pitch;
+	mRoll = roll;
+	mHeading = heading;
+	mLights = lights;
+	mFull = true;
+	if (mDistanceSqr > (Render_FullPlaneDistance * Render_FullPlaneDistance)) {
+		mFull = false;
+	}
+
+	memcpy(&mState, state, sizeof(mState));
+};
 
 CSL::CSL()
 {
@@ -34,6 +67,7 @@ CSL::getVertOffset() const
 	case VerticalOffsetSource::Preference:
 		return mPreferencesVertOffset;
 	}
+	return 0.0;
 }
 
 VerticalOffsetSource
@@ -121,13 +155,75 @@ CSL::isUsable() const {
 	return true;
 }
 
-void *
-CSL::newInstanceData()
+void
+CSL::drawPlane(CSLInstanceData *instanceData, bool is_blend, int data) const
 {
-	return nullptr;
 }
 
 void
-CSL::deleteInstanceData(void *instanceData)
+CSL::newInstanceData(CSLInstanceData *&newInstanceData) const
 {
-};
+	newInstanceData = new RenderedCSLInstanceData();
+}
+
+void
+CSL::updateInstance(
+	const CullInfo &cullInfo,
+	double &x,
+	double &y,
+	double &z,
+	double roll,
+	double heading,
+	double pitch,
+	XPLMPlaneDrawState_t *state,
+	xpmp_LightStatus lights,
+	CSLInstanceData *&instanceData)
+{
+	if (instanceData == nullptr) {
+		newInstanceData(instanceData);
+	}
+	if (instanceData == nullptr) {
+		return;
+	}
+
+	// clamp to the surface if enabled
+	if (gConfiguration.enableSurfaceClamping) {
+		XPLMProbeInfo_t	probeResult = {
+			sizeof(XPLMProbeInfo_t),
+		};
+		XPLMProbeResult r = XPLMProbeTerrainXYZ(gTerrainProbe, x, y, z, &probeResult);
+		if (r == xplm_ProbeHitTerrain) {
+			float minY = probeResult.locationY + getVertOffset();
+			if (y < minY) {
+				y = minY;
+				instanceData->mClamped = true;
+			} else {
+				instanceData->mClamped = false;
+			}
+		}
+	}
+	instanceData->mDistanceSqr = cullInfo.SphereDistanceSqr(x, y, z);
+
+	// TCAS checks.
+	instanceData->mTCAS = true;
+	// If the plane is farther than our TCAS range, it's just not visible.  Drop it!
+	if (instanceData->mDistanceSqr> (kMaxDistTCAS * kMaxDistTCAS)) {
+		instanceData->mTCAS = false;
+	}
+
+	// we need to assess cull state so we can work out if we need to render labels or not
+	instanceData->mCulled = false;
+	// cull if the aircraft is not visible due to poor horizontal visibility
+	if (gVisDataRef) {
+		float horizVis = XPLMGetDataf(gVisDataRef);
+		if (instanceData->mDistanceSqr > horizVis*horizVis) {
+			instanceData->mCulled = true;
+		}
+	}
+	if (!instanceData->mCulled) {
+		//FIXME: the 50-unit sphere is too small when we're zoomed with some models.
+		instanceData->mCulled = !cullInfo.SphereIsVisible(
+			static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), 50.0);
+	}
+	instanceData->updateInstance(this, x, y, z, pitch, roll, heading, lights, state);
+}

@@ -24,21 +24,14 @@
 #ifndef XPLMMULTIPLAYEROBJ_H
 #define XPLMMULTIPLAYEROBJ_H
 
-#include "XPMPMultiplayer.h"	// for light status
-#include "legacycsl/XObjDefs.h"
-#include "XPLMCamera.h"
-#include "legacycsl/XOGLUtils.h"
-#include "ResourceManager.h"
-#include "TexUtils.h"
-#include "LegacyCSL.h"
-
 #include <memory>
+#include <XPLMCamera.h>
 
-#define MAX_SPARE_TEXHANDLES	4
-#define SPARE_TEXHANDLES_DECAY_FRAMES	120
-extern int xpmp_spare_texhandle_decay_frames;
-
-struct XPMPPlane_t;
+#include "XPMPMultiplayer.h"	// for light status
+#include "legacycsl/ResourceManager.h"
+#include "legacycsl/XObjDefs.h"
+#include "legacycsl/XOGLUtils.h"
+#include "legacycsl/TexUtils.h"
 
 /*****************************************************
 			Ben's Crazy Point Pool Class
@@ -115,31 +108,13 @@ ObjManager::Future OBJ_LoadModelAsync(const std::string &inFilePath);
 // Get name of objects default model
 std::string OBJ_DefaultModel(const std::string &path);
 
-// MODEL DRAWING
-// Note that texID and litTexID are OPTIONAL! They will only be filled
-// in if the user wants to override the default texture specified by the
-// obj file
-void
-OBJ_PlotModel(LegacyCSL *model, float inDistance);
-
-// TEXTURED LIGHTS DRAWING
-void	OBJ_BeginLightDrawing();
-void	OBJ_DrawLights(XPMPPlane_t *plane, float inDistance, double inX, double inY,
-					   double inZ, double inPitch, double inRoll, double inHeading,
-					   xpmp_LightStatus lights);
-
 // Texture loading
 int		OBJ_LoadLightTexture(const std::string &inFilePath, bool inForceMaxTex);
 TextureManager::Future OBJ_LoadTexture(const std::string &path);
-int		OBJ_GetModelTexID(int model);
 
 std::string OBJ_GetLitTextureByTexture(const std::string &texturePath);
 
-void 	OBJ_MaintainTextures();
-
-
-extern ObjManager gObjManager(OBJ_LoadModelAsync);
-extern TextureManager gTextureManager(OBJ_LoadTexture);
-
+extern ObjManager 		gObjManager;
+extern TextureManager	gTextureManager;
 
 #endif

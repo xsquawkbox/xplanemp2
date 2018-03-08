@@ -24,10 +24,10 @@
 #include "TCASHack.h"
 #include "XPMPPlaneRenderer.h"
 #include "XPMPMultiplayer.h"
-#include "XPMPMultiplayerCSL.h"
+#include "CSLLibrary.h"
 #include "XPMPMultiplayerCSLOffset.h"
 #include "XPMPMultiplayerVars.h"
-#include "legacycsl/XPMPMultiplayerObj.h"
+#include "legacycsl/LegacyObj.h"
 #include "obj8/XPMPMultiplayerObj8.h"
 
 #include "XPLMGraphics.h"
@@ -36,6 +36,7 @@
 #include "XPLMPlanes.h"
 #include "XPLMUtilities.h"
 #include "XPLMDataAccess.h"
+#include "CullInfo.h"
 
 #include <stdio.h>
 #include <math.h>
@@ -66,100 +67,6 @@
 
 bool gDrawLabels = true;
 
-struct cull_info_t {					// This struct has everything we need to cull fast!
-	float	model_view[16];				// The model view matrix, to get from local OpenGL to eye coordinates.
-	float	proj[16];					// Proj matrix - this is just a hack to use for gluProject.
-	float	nea_clip[4];				// Four clip planes in the form of Ax + By + Cz + D = 0 (ABCD are in the array.)
-	float	far_clip[4];				// They are oriented so the positive side of the clip plane is INSIDE the view volume.
-	float	lft_clip[4];
-	float	rgt_clip[4];
-	float	bot_clip[4];
-	float	top_clip[4];
-};
-
-static void setup_cull_info(cull_info_t * i)
-{
-	// First, just read out the current OpenGL matrices...do this once at setup because it's not the fastest thing to do.
-	glGetFloatv(GL_MODELVIEW_MATRIX ,i->model_view);
-	glGetFloatv(GL_PROJECTION_MATRIX,i->proj);
-	
-	// Now...what the heck is this?  Here's the deal: the clip planes have values in "clip" coordinates of: Left = (1,0,0,1)
-	// Right = (-1,0,0,1), Bottom = (0,1,0,1), etc.  (Clip coordinates are coordinates from -1 to 1 in XYZ that the driver
-	// uses.  The projection matrix converts from eye to clip coordinates.)
-	//
-	// How do we convert a plane backward from clip to eye coordinates?  Well, we need the transpose of the inverse of the
-	// inverse of the projection matrix.  (Transpose of the inverse is needed to transform a plane, and the inverse of the
-	// projection is the matrix that goes clip -> eye.)  Well, that cancels out to the transpose of the projection matrix,
-	// which is nice because it means we don't need a matrix inversion in this bit of sample code.
-	
-	// So this nightmare down here is simply:
-	// clip plane * transpose (proj_matrix)
-	// worked out for all six clip planes.  If you squint you can see the patterns:
-	// L:  1  0 0 1
-	// R: -1  0 0 1
-	// B:  0  1 0 1
-	// T:  0 -1 0 1
-	// etc.
-	
-	i->lft_clip[0] = i->proj[0]+i->proj[3];	i->lft_clip[1] = i->proj[4]+i->proj[7];	i->lft_clip[2] = i->proj[8]+i->proj[11];	i->lft_clip[3] = i->proj[12]+i->proj[15];
-	i->rgt_clip[0] =-i->proj[0]+i->proj[3];	i->rgt_clip[1] =-i->proj[4]+i->proj[7];	i->rgt_clip[2] =-i->proj[8]+i->proj[11];	i->rgt_clip[3] =-i->proj[12]+i->proj[15];
-	
-	i->bot_clip[0] = i->proj[1]+i->proj[3];	i->bot_clip[1] = i->proj[5]+i->proj[7];	i->bot_clip[2] = i->proj[9]+i->proj[11];	i->bot_clip[3] = i->proj[13]+i->proj[15];
-	i->top_clip[0] =-i->proj[1]+i->proj[3];	i->top_clip[1] =-i->proj[5]+i->proj[7];	i->top_clip[2] =-i->proj[9]+i->proj[11];	i->top_clip[3] =-i->proj[13]+i->proj[15];
-
-	i->nea_clip[0] = i->proj[2]+i->proj[3];	i->nea_clip[1] = i->proj[6]+i->proj[7];	i->nea_clip[2] = i->proj[10]+i->proj[11];	i->nea_clip[3] = i->proj[14]+i->proj[15];
-	i->far_clip[0] =-i->proj[2]+i->proj[3];	i->far_clip[1] =-i->proj[6]+i->proj[7];	i->far_clip[2] =-i->proj[10]+i->proj[11];	i->far_clip[3] =-i->proj[14]+i->proj[15];
-}
-
-static int sphere_is_visible(const cull_info_t * i, float x, float y, float z, float r)
-{
-	// First: we transform our coordinate into eye coordinates from model-view.
-	float xp = x * i->model_view[0] + y * i->model_view[4] + z * i->model_view[ 8] + i->model_view[12];
-	float yp = x * i->model_view[1] + y * i->model_view[5] + z * i->model_view[ 9] + i->model_view[13];
-	float zp = x * i->model_view[2] + y * i->model_view[6] + z * i->model_view[10] + i->model_view[14];
-
-	// Now - we apply the "plane equation" of each clip plane to see how far from the clip plane our point is.
-	// The clip planes are directed: positive number distances mean we are INSIDE our viewing area by some distance;
-	// negative means outside.  So ... if we are outside by less than -r, the ENTIRE sphere is out of bounds.
-	// We are not visible!  We do the near clip plane, then sides, then far, in an attempt to try the planes
-	// that will eliminate the most geometry first...half the world is behind the near clip plane, but not much is
-	// behind the far clip plane on sunny day.
-	if ((xp * i->nea_clip[0] + yp * i->nea_clip[1] + zp * i->nea_clip[2] + i->nea_clip[3] + r) < 0)	return false;
-	if ((xp * i->bot_clip[0] + yp * i->bot_clip[1] + zp * i->bot_clip[2] + i->bot_clip[3] + r) < 0)	return false;
-	if ((xp * i->top_clip[0] + yp * i->top_clip[1] + zp * i->top_clip[2] + i->top_clip[3] + r) < 0)	return false;
-	if ((xp * i->lft_clip[0] + yp * i->lft_clip[1] + zp * i->lft_clip[2] + i->lft_clip[3] + r) < 0)	return false;
-	if ((xp * i->rgt_clip[0] + yp * i->rgt_clip[1] + zp * i->rgt_clip[2] + i->rgt_clip[3] + r) < 0)	return false;
-	if ((xp * i->far_clip[0] + yp * i->far_clip[1] + zp * i->far_clip[2] + i->far_clip[3] + r) < 0)	return false;
-	return true;
-}
-
-static float sphere_distance_sqr(const cull_info_t * i, float x, float y, float z)
-{
-	float xp = x * i->model_view[0] + y * i->model_view[4] + z * i->model_view[ 8] + i->model_view[12];
-	float yp = x * i->model_view[1] + y * i->model_view[5] + z * i->model_view[ 9] + i->model_view[13];
-	float zp = x * i->model_view[2] + y * i->model_view[6] + z * i->model_view[10] + i->model_view[14];
-	return xp*xp+yp*yp+zp*zp;
-}
-
-static void convert_to_2d(const cull_info_t * i, const float * vp, float x, float y, float z, float w, float * out_x, float * out_y)
-{
-	float xe = x * i->model_view[0] + y * i->model_view[4] + z * i->model_view[ 8] + w * i->model_view[12];
-	float ye = x * i->model_view[1] + y * i->model_view[5] + z * i->model_view[ 9] + w * i->model_view[13];
-	float ze = x * i->model_view[2] + y * i->model_view[6] + z * i->model_view[10] + w * i->model_view[14];
-	float we = x * i->model_view[3] + y * i->model_view[7] + z * i->model_view[11] + w * i->model_view[15];
-
-	float xc = xe * i->proj[0] + ye * i->proj[4] + ze * i->proj[ 8] + we * i->proj[12];
-	float yc = xe * i->proj[1] + ye * i->proj[5] + ze * i->proj[ 9] + we * i->proj[13];
-	//	float zc = xe * i->proj[2] + ye * i->proj[6] + ze * i->proj[10] + we * i->proj[14];
-	float wc = xe * i->proj[3] + ye * i->proj[7] + ze * i->proj[11] + we * i->proj[15];
-	
-	xc /= wc;
-	yc /= wc;
-	//	zc /= wc;
-
-	*out_x = vp[0] + (1.0f + xc) * vp[2] / 2.0f;
-	*out_y = vp[1] + (1.0f + yc) * vp[3] / 2.0f;
-}
 
 
 #if RENDERER_STATS
@@ -176,7 +83,6 @@ static	int		gACFPlanes = 0;			// Number of Austin's planes we drew in full
 static	int		gNavPlanes = 0;			// Number of Austin's planes we drew with lights only
 static	int		gOBJPlanes = 0;			// Number of our OBJ planes we drew in full
 
-static	XPLMDataRef		gVisDataRef = NULL;		// Current air visiblity for culling.
 
 static XPLMProbeRef terrainProbe = NULL; // Probe to probe where the ground is for clamping
 
@@ -245,7 +151,7 @@ struct	PlaneToRender_t {
 	XPLMPlaneDrawState_t	state;		// Flaps, gear, etc.
 	float					dist;
 };
-typedef	std::map<float, PlaneToRender_t>	RenderMap;
+// typedef	std::map<float, PlaneToRender_t>	RenderMap;
 
 
 void			XPMPDefaultPlaneRenderer(int is_blend)
@@ -266,8 +172,8 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 		return;
 	}
 	
-	cull_info_t			gl_camera;
-	setup_cull_info(&gl_camera);
+	CullInfo			gl_camera;
+
 	XPLMCameraPosition_t x_camera;
 
 	XPLMReadCameraPosition(&x_camera);	// only for zoom!
@@ -324,8 +230,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 			double	x,y,z;
 			XPLMWorldToLocal(pos.lat, pos.lon, pos.elevation * kFtToMeters, &x, &y, &z);
 			
-			float distMeters = sqrt(sphere_distance_sqr(&gl_camera,
-														static_cast<float>(x),
+			float distMeters = sqrt(gl_camera.SphereDistanceSqr(static_cast<float>(x),
 														static_cast<float>(y),
 														static_cast<float>(z)));
 			
@@ -336,7 +241,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 			// Only draw if it's in range.
 			bool cull = (distMeters > maxDist);
 			
-			XPMPPlaneRadar_t radar;
+			XPMPPlaneSurveillance_t radar;
 			radar.size = sizeof(radar);
 			bool tcas = true;
 			if (XPMPGetPlaneData(id, xpmpDataType_Radar, &radar) != xpmpData_Unavailable)
@@ -353,7 +258,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 			// Calculate the angles between the camera angles and the real angles.
 			// Cull if we exceed half the FOV.
 			
-			if(!cull && !sphere_is_visible(&gl_camera, static_cast<float>(x),
+			if(!cull && !gl_camera.SphereIsVisible(static_cast<float>(x),
 										   static_cast<float>(y),
 										   static_cast<float>(z), 50.0))
 			{
@@ -414,7 +319,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 					renderRecord.plane->surface.lights.bcnLights = 1;
 					renderRecord.plane->surface.lights.navLights = 1;
 				}
-				if (renderRecord.plane->model && !renderRecord.plane->model->moving_gear)
+				if (renderRecord.plane->model && !renderRecord.plane->model->mMovingGear)
 					renderRecord.plane->surface.gearPosition = 1.0;
 				renderRecord.full = drawFullPlane;
 				renderRecord.dist = distMeters;
@@ -648,7 +553,7 @@ void			XPMPDefaultPlaneRenderer(int is_blend)
 					if(!iter->second.cull)		// IMPORTANT - airplane BEHIND us still maps XY onto screen...so we get 180 degree reflections.  But behind us acf are culled, so that's good.
 					{
 						float x, y;
-						convert_to_2d(&gl_camera, vp, iter->second.x, iter->second.y, iter->second.z, 1.0, &x, &y);
+						gl_camera.ConvertTo2D(vp, iter->second.x, iter->second.y, iter->second.z, 1.0, &x, &y);
 
 						float rat = 1.0f - (iter->first / static_cast<float>(labelDist));
 						c[0] = c[1] = 0.5f + 0.5f * rat;

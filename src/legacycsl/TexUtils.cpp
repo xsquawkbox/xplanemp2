@@ -204,18 +204,36 @@ bool LoadImageFromFile(const std::string &inFileName, bool magentaAlpha, int inD
    basically a BSF (x86) - find the lowest bit set - this is so we can reverse it to do
    a Non-power-of-two check 
  */
+
+// fallback C version first
+inline int
+purec_find_first_bit_set(unsigned int x)
+{
+	int r = -1;
+	for (unsigned i = 0; i < sizeof(x)*8; i++) {
+		if ((1<<(i)) & x) {
+			r = i;
+		}
+	}
+	return r;
+}
+
 #ifdef _MSC_VER
+#  if _MSC_VER >= 1900
+#include <intrin.h>
+
 inline int
 find_first_bit_set(unsigned int x)
 {
-	__asm {
-		mov eax, 0
-		bsf	eax, x
-	}
-	// returns eax
+	DWORD rv = -1;
+	_BitScanForward(&rv, static_cast<DWORD>(x));
+	return rv;
 }
+#  else
+#define find_first_bit_set(x) purec_find_first_bit_set(x)
+#  endif
 #else
-#ifdef __GNUC__
+#  ifdef __GNUC__
 inline int
 find_first_bit_set(unsigned int x)
 {
@@ -227,19 +245,9 @@ find_first_bit_set(unsigned int x)
 
 	return r;
 }
-#else
-inline int
-find_first_bit_set(unsigned int x)
-{
-	int r = -1;
-	for (unsigned i = 0; i < sizeof(x)*8; i++) {
-		if ((1<<(i)) & x) {
-			r = i;
-		}
-	}
-	return r;
-}
-#endif
+#  else
+#define find_first_bit_set(x) purec_find_first_bit_set(x)
+#  endif
 #endif
 
 /*
@@ -247,7 +255,7 @@ find_first_bit_set(unsigned int x)
   the main things that came from elsewhere that we can die horribly on are:
 
   * non-power-of-two texture lengths (not technically required anymore, but this will probably 
-  *       break a bunch of other things in our code)
+          break a bunch of other things in our code)
   * excessive texture sizes (sides must be less than GL_MAX_TEXTURE_SIZE)
   * sizes < 0 (should never happen)
 
@@ -298,7 +306,7 @@ extern void XPMPSetupGLDebug();
 
 bool LoadTextureFromMemory(ImageInfo &im, bool magentaAlpha, bool inWrap, bool mipmap, GLuint &texNum)
 {
-	float	tex_anisotropyLevel = gFloatPrefsFunc("planes", "texture_anisotropy", 0.0);
+	float	tex_anisotropyLevel = gConfiguration.legacyCslOptions.textureAnisotropicFilteringLevel;
 	if (tex_anisotropyLevel > xpmp_tex_maxAnisotropy) {
 		tex_anisotropyLevel = xpmp_tex_maxAnisotropy;
 	}

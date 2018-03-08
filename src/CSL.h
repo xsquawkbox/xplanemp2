@@ -9,20 +9,75 @@
 #include <vector>
 #include <XPLMPlanes.h>
 #include <XPMPMultiplayer.h>
+#include "CullInfo.h"
 
-enum class CSLType {
-	Austin,
-	Obj,
-	Lights,
-	Obj8,
-	Count
-};
+// forward declare XPMPPlane - we can't access it's details, but we can record info.
+class XPMPPlane;
 
 enum class VerticalOffsetSource {
 	None,
 	Model,
 	Mtl,
 	Preference
+};
+
+class CSL;
+class CSLInstanceData
+{
+protected:
+	CSLInstanceData() = default;
+
+	virtual void updateInstance(
+		CSL *csl,
+		double x,
+		double y,
+		double z,
+		double pitch,
+		double roll,
+		double heading,
+		xpmp_LightStatus lights,
+		XPLMPlaneDrawState_t *state) = 0;
+
+public:
+	float	mDistanceSqr;		// the distance squared
+	bool	mTCAS = false;
+	bool	mCulled = false;
+	bool	mClamped = false;
+
+
+	virtual ~CSLInstanceData() = default;
+
+	friend class CSL;
+};
+
+class RenderedCSLInstanceData : public CSLInstanceData
+{
+public:
+	RenderedCSLInstanceData() = default;
+
+	double					mX = 0.0;
+	double					mY = 0.0;
+	double					mZ = 0.0;
+	double				 	mPitch = 0.0;
+	double				 	mRoll = 0.0;
+	double				 	mHeading = 0.0;
+	int					 	mFull = false;
+	xpmp_LightStatus	 	mLights;
+	XPLMPlaneDrawState_t 	mState;
+protected:
+
+	virtual void updateInstance(
+		CSL *csl,
+		double x,
+		double y,
+		double z,
+		double pitch,
+		double roll,
+		double heading,
+		xpmp_LightStatus lights,
+		XPLMPlaneDrawState_t *state);
+
+	friend class CSL;
 };
 
 /** a CSL is a single multiplayer aircraft that can be rendered.
@@ -37,12 +92,6 @@ public:
 	VerticalOffsetSource getVertOffsetSource() const;
 
 	void setVertOffsetSource(VerticalOffsetSource offsetSource);
-
-	/** needRenderCallback is used to validate if the CSL requires hooks in the rendering loop to be drawn.
-	 *
-	 * @returns true if a rendering hook is required, false otherwise.
-	 */
-	virtual bool needsRenderCallback() = 0;
 
 	/** getModelName should return a meaningful name to reference the CSL in question
 	 *
@@ -84,44 +133,50 @@ public:
 	std::string 	getAirline() const;
 	std::string		getLivery() const;
 
-	/* drawPlane renders the plane when called from within the rendering callback */
-	virtual void drawPlane(
-		float distance,
-		double x,
-		double y,
-		double z,
-		double pitch,
+	virtual void newInstanceData(CSLInstanceData *&newInstanceData) const;
+
+	/** updateInstance updates the instanceData for rendering this frame.  If
+	 * the instanceData is not initialised, this method invokes the
+	 * newInstanceData virtual method to produce it.
+	 *
+	 * @param cullInfo the CullInfo to use to cull objects
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @param pitch
+	 * @param roll
+	 * @param heading
+	 * @param lights
+	 * @param state
+	 * @param instanceData the instanceData pointer in the XPMPPlane for this plane
+	 */
+	virtual void updateInstance(
+		const CullInfo &cullInfo,
+		double &x,
+		double &y,
+		double &z,
 		double roll,
 		double heading,
-		int full,
-		xpmp_LightStatus lights,
+		double pitch,
 		XPLMPlaneDrawState_t *state,
-		void *&instanceData) = 0;
+		xpmp_LightStatus lights,
+		CSLInstanceData *&instanceData);
 
-	/* newInstanceData attaches state data to the plane object, if necessary.
-	 *
-	 * @returns an opaque datareference for the renderer to use to track state if necessary, nullptr otherwise
+	/* drawPlane is responsible for rendering the plane.
 	 */
-	virtual void *		newInstanceData();
+ 	virtual void drawPlane(CSLInstanceData *instanceData, bool is_blend, int data) const;
 
-	/* deleteInstanceData releases instance data previously generated using newInstanceData()
-	 *
-	 * @param instanceData a result from a previous call of newInstanceData().
-	 */
-	virtual void		deleteInstanceData(void *instanceData);
+	std::string					mICAO;          // Icao type of this model
+	std::string 				mAirline;       // Airline identifier. Can be empty.
+	std::string 				mLivery;        // Livery identifier. Can be empty.
+	bool 						mMovingGear;	// Does gear retract?
+	VerticalOffsetSource		mOffsetSource;
 protected:
 	CSL();
 	CSL(std::vector<std::string> dirNames);
 
-	std::string mICAO;           // Icao type of this model
-	std::string mAirline;        // Airline identifier. Can be empty.
-	std::string mLivery;         // Livery identifier. Can be empty.
-
 	std::vector<std::string>	mDirNames;       // Relative directories from xsb_aircrafts.txt down to object file
 
-	bool 						mMovingGear;	// Does gear retract?
-
-	VerticalOffsetSource		mOffsetSource;
 
 	// as defined in the Model definition
 	double mModelVertOffset = 0.0;
