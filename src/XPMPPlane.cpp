@@ -3,6 +3,7 @@
 //
 
 #include <algorithm>
+#include <cstring>
 
 #include <XPLMGraphics.h>
 #include <XPLMProcessing.h>

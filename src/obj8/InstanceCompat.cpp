@@ -2,12 +2,12 @@
 #include <XPLMDisplay.h>
 #include <vector>
 #include <algorithm>
+#include <cstring>
 
 #include "Obj8CSL.h"
 #include "InstanceCompat.h"
 
-using std::vector;
-using std::find;
+using namespace std;
 
 struct xplm_instance_t {
 	XPLMObjectRef				model;
