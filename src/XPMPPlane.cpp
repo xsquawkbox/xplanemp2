@@ -133,9 +133,9 @@ XPMPPlane::doInstanceUpdate(const CullInfo &gl_camera)
 		if (!mInstanceData->mCulled && mInstanceData->mDistanceSqr <= (Render_LabelDistance * Render_LabelDistance)) {
 			float tx, ty;
 
-			gl_camera.ConvertTo2D(Render_LabelViewport, lx, ly, lz, 1.0, &tx, &ty);
+			gl_camera.ConvertTo2D(lx, ly, lz, 1.0, &tx, &ty);
 			gLabelList.emplace_back(Label{
-				static_cast<int>(tx), static_cast<int>(ty),	
+				tx, ty,
 				mInstanceData->mDistanceSqr,
 				string(mPosition.label) 
 			});
@@ -145,6 +145,26 @@ XPMPPlane::doInstanceUpdate(const CullInfo &gl_camera)
 	return 0.0;
 }
 
+void
+XPMPPlane::queueLabel(const CullInfo &camera)
+{
+	if (mCSL) {
+		// do labels.
+		if (mInstanceData->mDistanceSqr <= (Render_LabelDistance * Render_LabelDistance)) {
+			double	lx,ly,lz;
+
+			XPLMWorldToLocal(mPosition.lat, mPosition.lon, mPosition.elevation * kFtToMeters, &lx, &ly, &lz);
+
+			if (camera.SphereIsVisible(lx, ly, lz, 50.0)) {
+				float tx, ty;
+
+				camera.ConvertTo2D(lx, ly, lz, 1.0, &tx, &ty);
+				gLabelList.emplace_back(
+					Label{tx, ty, mInstanceData->mDistanceSqr, string(mPosition.label)});
+			}
+		}
+	}
+}
 
 void
 XPMPPlane::setCSL(const PlaneType &type)

@@ -58,6 +58,28 @@ CullInfo::init()
 	}
 }
 
+void 
+CullInfo::multMatrixVec4f(float dst[4], const float m[16], const float v[4])
+{
+	dst[0] = v[0] * m[0] + v[1] * m[4] + v[2] * m[8] + v[3] * m[12];
+	dst[1] = v[0] * m[1] + v[1] * m[5] + v[2] * m[9] + v[3] * m[13];
+	dst[2] = v[0] * m[2] + v[1] * m[6] + v[2] * m[10] + v[3] * m[14];
+	dst[3] = v[0] * m[3] + v[1] * m[7] + v[2] * m[11] + v[3] * m[15];
+}
+
+void
+CullInfo::normalizeMatrix(float vec[4])
+{
+	if (vec[3] != 0.0) {
+		float w = 1.0f / vec[3];
+		vec[0] *= w;
+		vec[1] *= w;
+		vec[2] *= w;
+		vec[3] = 1.0;
+	}
+}
+
+
 CullInfo::CullInfo()
 {
 	// First, just read out the current OpenGL matrices...do this once at setup because it's not the fastest thing to do.
@@ -130,12 +152,20 @@ CullInfo::GetCurrentViewport(GLfloat vp[])
 }
 
 bool
+CullInfo::checkClip(const float eye[4], const float clip[4], float r)
+{
+	return ((eye[0] * clip[0] + eye[1] * clip[1] + eye[2] * clip[2] + clip[3] + r) < 0);
+}
+
+bool
 CullInfo::SphereIsVisible(float x, float y, float z, float r) const
 {
+	float	objCoord[4] = { x, y, z, 1.0f };
+	float	objProj[4];
+
 	// First: we transform our coordinate into eye coordinates from model-view.
-	float xp = x * model_view[0] + y * model_view[4] + z * model_view[ 8] + model_view[12];
-	float yp = x * model_view[1] + y * model_view[5] + z * model_view[ 9] + model_view[13];
-	float zp = x * model_view[2] + y * model_view[6] + z * model_view[10] + model_view[14];
+	multMatrixVec4f(objProj, model_view, objCoord);
+	normalizeMatrix(objProj);
 
 	// Now - we apply the "plane equation" of each clip plane to see how far from the clip plane our point is.
 	// The clip planes are directed: positive number distances mean we are INSIDE our viewing area by some distance;
@@ -143,12 +173,12 @@ CullInfo::SphereIsVisible(float x, float y, float z, float r) const
 	// We are not visible!  We do the near clip plane, then sides, then far, in an attempt to try the planes
 	// that will eliminate the most geometry first...half the world is behind the near clip plane, but not much is
 	// behind the far clip plane on sunny day.
-	if ((xp * nea_clip[0] + yp * nea_clip[1] + zp * nea_clip[2] + nea_clip[3] + r) < 0)	return false;
-	if ((xp * bot_clip[0] + yp * bot_clip[1] + zp * bot_clip[2] + bot_clip[3] + r) < 0)	return false;
-	if ((xp * top_clip[0] + yp * top_clip[1] + zp * top_clip[2] + top_clip[3] + r) < 0)	return false;
-	if ((xp * lft_clip[0] + yp * lft_clip[1] + zp * lft_clip[2] + lft_clip[3] + r) < 0)	return false;
-	if ((xp * rgt_clip[0] + yp * rgt_clip[1] + zp * rgt_clip[2] + rgt_clip[3] + r) < 0)	return false;
-	if ((xp * far_clip[0] + yp * far_clip[1] + zp * far_clip[2] + far_clip[3] + r) < 0)	return false;
+	if (checkClip(objProj, nea_clip, r)) return false;
+	if (checkClip(objProj, bot_clip, r)) return false;
+	if (checkClip(objProj, top_clip, r)) return false;
+	if (checkClip(objProj, lft_clip, r)) return false;
+	if (checkClip(objProj, rgt_clip, r)) return false;
+	if (checkClip(objProj, far_clip, r)) return false;
 	return true;
 }
 
@@ -162,22 +192,23 @@ CullInfo::SphereDistanceSqr(float x, float y, float z) const
 }
 
 void
-CullInfo::ConvertTo2D(const float * vp, float x, float y, float z, float w, float * out_x, float * out_y) const
+CullInfo::ConvertTo2D(float x, float y, float z, float w, float * out_x, float * out_y) const
 {
-	float xe = x * model_view[0] + y * model_view[4] + z * model_view[ 8] + w * model_view[12];
-	float ye = x * model_view[1] + y * model_view[5] + z * model_view[ 9] + w * model_view[13];
-	float ze = x * model_view[2] + y * model_view[6] + z * model_view[10] + w * model_view[14];
-	float we = x * model_view[3] + y * model_view[7] + z * model_view[11] + w * model_view[15];
+	float	mvVec[4] = {x, y, z, w};
+	float	eye[4];
+	float	screen[4];
 
-	float xc = xe * proj[0] + ye * proj[4] + ze * proj[ 8] + we * proj[12];
-	float yc = xe * proj[1] + ye * proj[5] + ze * proj[ 9] + we * proj[13];
-	//	float zc = xe * proj[2] + ye * proj[6] + ze * proj[10] + we * proj[14];
-	float wc = xe * proj[3] + ye * proj[7] + ze * proj[11] + we * proj[15];
+	multMatrixVec4f(eye, model_view, mvVec);
+	multMatrixVec4f(screen, proj, eye);
+	normalizeMatrix(screen);
 
-	xc /= wc;
-	yc /= wc;
-	//	zc /= wc;
+	*out_x = screen[0];
+	*out_y = screen[1];
+}
 
-	*out_x = vp[0] + (1.0f + xc) * vp[2] / 2.0f;
-	*out_y = vp[1] + (1.0f + yc) * vp[3] / 2.0f;
+void 
+CullInfo::ProjectToViewport(const float *vp, float x, float y, float *out_x, float *out_y)
+{
+	*out_x = vp[0] + (1.0f + x) * vp[2] / 2.0f;
+	*out_y = vp[0] + (1.0f + y) * vp[3] / 2.0f;
 }

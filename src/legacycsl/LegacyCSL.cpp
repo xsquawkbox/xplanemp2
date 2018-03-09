@@ -172,13 +172,25 @@ void
 LegacyCSL::doRender(int isBlend)
 {
 	if (isBlend) {
+		CullInfo camera;
 		for (const auto &p: gRenderList) {
-			p.second.csl->drawPlane(p.second.instanceData, isBlend, LegacyCSL_Models);
+			if (camera.SphereIsVisible(
+				static_cast<float>(p.second.instanceData->mX),
+				static_cast<float>(p.second.instanceData->mY),
+				static_cast<float>(p.second.instanceData->mZ),
+				50.0)) {
+				p.second.csl->drawPlane(p.second.instanceData, isBlend, LegacyCSL_Models);
+			}
 		}
-
 		_BeginLightDrawing();
 		for (const auto &p: gRenderList) {
-			p.second.csl->drawPlane(p.second.instanceData, isBlend, LegacyCSL_Lights);
+			if (camera.SphereIsVisible(
+				static_cast<float>(p.second.instanceData->mX),
+				static_cast<float>(p.second.instanceData->mY),
+				static_cast<float>(p.second.instanceData->mZ),
+				50.0)) {
+				p.second.csl->drawPlane(p.second.instanceData, isBlend, LegacyCSL_Lights);
+			}
 		}
 	}
 }

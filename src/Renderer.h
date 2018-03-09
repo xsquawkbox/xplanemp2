@@ -13,11 +13,10 @@ extern XPLMProbeRef		gTerrainProbe;
 
 extern double	Render_LabelDistance;
 extern double	Render_FullPlaneDistance;
-extern GLfloat	Render_LabelViewport[4];
 
 struct Label {
-	int			x;
-	int			y;
+	double		x;
+	double		y;
 	float 		distSqr;
 	std::string	labelText;
 };

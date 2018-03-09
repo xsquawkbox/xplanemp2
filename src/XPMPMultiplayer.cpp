@@ -161,7 +161,7 @@ XPMPMultiplayerEnable()
 		XPLMDebugString("WARNING: " XPMP_CLIENT_LONGNAME " did not acquire multiplayer planes!!\n");
 
 	// put in the rendering hook now
-	Renderer_Attach_Callbacks();
+	//Renderer_Attach_Callbacks();
 
 	return "";
 }
@@ -169,7 +169,8 @@ XPMPMultiplayerEnable()
 void
 XPMPMultiplayerDisable(void)
 {
-	Renderer_Detach_Callbacks();
+	gPlanes.clear();
+	Renderer_Detach_Callbacks();	
 	XPLMReleasePlanes();
 }
 
@@ -238,6 +239,9 @@ XPMPCreatePlane(
 	gPlanes.push_back(std::move(plane));
 	
 	XPMPPlanePtr planePtr = gPlanes.back().get();
+	if (gPlanes.size() == 1) {
+		Renderer_Attach_Callbacks();
+	}
 	return planePtr;
 }
 
@@ -272,6 +276,9 @@ XPMPCreatePlaneWithModelName(
 	gPlanes.push_back(std::move(plane));
 
 	XPMPPlanePtr planePtr = gPlanes.back().get();
+	if (gPlanes.size() == 1) {
+		Renderer_Attach_Callbacks();
+	}
 	return planePtr;
 }
 
@@ -282,6 +289,10 @@ XPMPDestroyPlane(XPMPPlaneID inID)
 	XPMPPlanePtr plane = XPMPPlaneFromID(inID, &iter);
 
 	gPlanes.erase(iter);
+	if (gPlanes.size() == 0) {
+		Renderer_Detach_Callbacks();
+	}
+
 }
 
 int

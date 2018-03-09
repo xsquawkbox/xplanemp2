@@ -220,10 +220,5 @@ CSL::updateInstance(
 			instanceData->mCulled = true;
 		}
 	}
-	if (!instanceData->mCulled) {
-		//FIXME: the 50-unit sphere is too small when we're zoomed with some models.
-		instanceData->mCulled = !cullInfo.SphereIsVisible(
-			static_cast<float>(x), static_cast<float>(y), static_cast<float>(z), 50.0);
-	}
 	instanceData->updateInstance(this, x, y, z, pitch, roll, heading, lights, state);
 }

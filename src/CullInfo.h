@@ -46,6 +46,10 @@ private:
 	static XPLMDataRef	viewportRef;
 	static bool 		useGlFallback;
 
+	static void multMatrixVec4f(float dst[4], const float m[16], const float v[4]);
+	static void normalizeMatrix(float vec[4]);
+	static bool	checkClip(const float eye[4], const float clip[4], float r);
+
 protected:
 	float model_view[16];	// The model view matrix, to get from local OpenGL to eye coordinates.
 	float proj[16];			// Proj matrix - this is just a hack to use for gluProject.
@@ -68,7 +72,8 @@ public:
 
 	float SphereDistanceSqr(float x, float y, float z) const;
 
-	void ConvertTo2D(const float *vp, float x, float y, float z, float w, float *out_x, float *out_y) const;
+	void ConvertTo2D(float x, float y, float z, float w, float *out_x, float *out_y) const;
+	static void ProjectToViewport(const float *vp, float x, float y, float *out_x, float *out_y);
 };
 
 

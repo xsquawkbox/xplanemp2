@@ -57,6 +57,7 @@ public:
 	 * @returns the square of the distance from the camera
 	 */
 	float doInstanceUpdate(const CullInfo &gl_camera);
+	void queueLabel(const CullInfo &camera);
 
 	// instanceData is public for the convenience of the main render loop only.
 	CSLInstanceData *	mInstanceData;
