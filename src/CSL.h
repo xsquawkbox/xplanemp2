@@ -186,36 +186,4 @@ protected:
 	double mPreferencesVertOffset = 0.0;
 };
 
-
-#if 0
-	std::string 				mObjectName;     // Basename of the object file
-	std::string 				mTextureName;    // Basename of the texture file
-
-
-	std::string mFilePath;        // Where do we load from (oz and obj, debug-use-only for OBJ8)
-
-	/* distance between the origin point of an object and the lowest point of the object
-	 * (usually a bottom point of the gears) along the vertical axis (y axis in the sim)
-	 * for onground clamping purposes.
-	 *
-	 * in simple words, correct vert offset for accurate putting planes on the ground.
-	 * (in meters)
-	 */
-
-};
-
-class AustinCSL : public CSL {
-protected:
-	// plane_Austin
-	int austin_idx;
-
-};
-
-class Obj8CSL : public CSL {
-protected:
-	// plane_Obj8
-	vector <obj_for_acf> attachments;
-};
-#endif
-
-#endif CSL_H
+#endif //CSL_H

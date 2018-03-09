@@ -37,7 +37,7 @@ public:
 	void setTexture(std::string textureFileName, std::string texturePath, std::string textureLitPath);
 
 	std::string		getModelName() const override;
-	std::string		getModelType() const;
+	std::string		getModelType() const override;
 	virtual bool	isUsable() const override;
 
 	/* drawPlane renders the plane when called from within the rendering callback */

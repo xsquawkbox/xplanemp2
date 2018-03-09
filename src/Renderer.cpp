@@ -3,6 +3,8 @@
 //
 
 #include <map>
+#include <utility>
+
 #if IBM
 #define WIN32_MEAN_AND_LEAN
 #include <Windows.h>
@@ -31,6 +33,8 @@
 #include "TCASHack.h"
 
 #include "legacycsl/LegacyCSL.h"
+
+using namespace std;
 
 XPLMDataRef			gVisDataRef = nullptr;	// Current air visiblity for culling.
 XPLMProbeRef		gTerrainProbe = nullptr;
@@ -79,7 +83,7 @@ Renderer_Init()
 double	Render_LabelDistance = 0.0;
 double	Render_FullPlaneDistance = 0.0;
 
-static void
+void
 Render_PrepLists()
 {
 	gLabelList.clear();
@@ -97,7 +101,7 @@ Render_PrepLists()
 
 	// Culling - read the camera pos and figure out what's visible.
 	double	maxDist = XPLMGetDataf(gVisDataRef);
-	Render_LabelDistance = min(maxDist, gConfiguration.maxLabelDistance) * x_camera.zoom;		// Labels get easier to see when users zooms.
+	Render_LabelDistance = min<double>(maxDist, gConfiguration.maxLabelDistance) * x_camera.zoom;		// Labels get easier to see when users zooms.
 	Render_FullPlaneDistance = x_camera.zoom * (5280.0 / 3.2) * gConfiguration.maxFullAircraftRenderingDistance;	// Only draw planes fully within 3 miles.
 
 	for (auto &plane: gPlanes) {
@@ -148,11 +152,6 @@ XPMP_RenderCallback_Aircraft(XPLMDrawingPhase, int, void *)
 
 			CullInfo::GetCurrentViewport(vp);
 
-			XPLMCameraPosition_t x_camera;
-			XPLMReadCameraPosition(&x_camera);	// only for zoom!
-			double	maxDist = XPLMGetDataf(gVisDataRef);
-			double  labelDist = min(maxDist, gConfiguration.maxLabelDistance) * x_camera.zoom;		// Labels get easier to see when users zooms.
-
 			double	x_scale = 1.0;
 			double	y_scale = 1.0;
 			if (gMSAAXRatioRef) {
@@ -178,7 +177,7 @@ XPMP_RenderCallback_Aircraft(XPLMDrawingPhase, int, void *)
 
 			float c[4] = { 1, 1, 0, 1 };
 			for (const auto &label : gLabelList) {
-				float rat = 1.0f - (label.distSqr / static_cast<float>(labelDist * labelDist));
+				float rat = 1.0f - (label.distSqr / static_cast<float>(Render_LabelDistance * Render_LabelDistance));
 				c[0] = c[1] = 0.5f + 0.5f * rat;
 				c[2] = 0.5f - 0.5f * rat;		// gray -> yellow - no alpha in the SDK - foo!
 
