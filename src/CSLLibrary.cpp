@@ -31,6 +31,7 @@
 #include <cctype>
 #include <string>
 
+#include <XPLMPlugin.h>
 #include <XPLMUtilities.h>
 
 #include "XPMPMultiplayer.h"

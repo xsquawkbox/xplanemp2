@@ -87,7 +87,7 @@ protected:
 public:
 	static std::vector<float> 		dref_values; // from Obj8CSL.cpp
 
-	virtual void newInstanceData(CSLInstanceData *&newInstanceData) const;
+	virtual void newInstanceData(CSLInstanceData *&newInstanceData) const override;
 
 	Obj8CSL(std::vector<std::string> dirNames, std::string objectName);
 	void addAttachment(Obj8Attachment &att);

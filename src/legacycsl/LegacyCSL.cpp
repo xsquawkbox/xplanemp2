@@ -12,6 +12,7 @@
 #include <GL/glu.h>
 #endif
 #include <queue>
+#include <cmath>
 
 #include <XPLMGraphics.h>
 #include <XPLMProcessing.h>

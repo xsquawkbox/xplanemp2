@@ -2,8 +2,7 @@
 // Created by kuroneko on 2/03/2018.
 //
 
-#include "XPMPMultiplayer.h"
-
+#include <cstdlib>
 #include <sstream>
 #if IBM
 #include <GL/gl.h>
@@ -19,8 +18,11 @@
 
 #include <XPLMUtilities.h>
 
+#include "XPMPMultiplayer.h"
 #include "XOGLUtils.h"
 #include "GlDebug.h"
+
+using namespace std;
 
 #ifdef DEBUG_GL
 

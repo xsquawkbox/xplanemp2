@@ -241,9 +241,9 @@ find_first_bit_set(unsigned int x)
 
 	asm ("bsfl %[out], %[x]"
 	 	: [out] "=r" (out)
-	 	: [x] "rm" (x) );
+	 	: [x] "r" (x) );
 
-	return r;
+	return out;
 }
 #  else
 #define find_first_bit_set(x) purec_find_first_bit_set(x)
