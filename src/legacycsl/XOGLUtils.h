@@ -24,34 +24,11 @@
 #ifndef _XOGLUtils_h_
 #define _XOGLUtils_h_
 
-#if IBM
-#include <windows.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
-#elif LIN
-#define GLX_GLXEXT_PROTOTYPES
-#define GL_GLEXT_PROTOTYPES
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
-#include <GL/glx.h>
-#elif APL
-
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#include <OpenGL/glext.h>
-#endif
-
-#if LIN
-#define GLX_GLXEXT_PROTOTYPES
-#endif
+#include "SysOpenGL.h"
 
 // Open GL Extension Defintion
 #if APL
 #define APIENTRY
-#endif
-#if APL || LIN
 #define GL_ARRAY_BUFFER_ARB               0x8892
 #define GL_ARRAY_BUFFER_BINDING_ARB       0x8894
 #endif

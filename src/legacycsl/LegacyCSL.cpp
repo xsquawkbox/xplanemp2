@@ -1,31 +1,21 @@
-#if IBM
-#define WIN32_MEAN_AND_LEAN
-#include <Windows.h> 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
-#elif APL
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
 #include <queue>
 #include <cmath>
+#include <cstddef>
+#include "SysOpenGL.h"
 
 #include <XPLMGraphics.h>
 #include <XPLMProcessing.h>
 #include <XPLMUtilities.h>
 
+
 #include "XPMPMultiplayer.h"
 #include "CSLLibrary.h"
 #include "LegacyObj.h"
-#include "XOGLUtils.h"
-#include "GlDebug.h"
 #include "XUtils.h"
 #include "LegacyCSL.h"
 #include "XObjReadWrite.h"
+#include "GlDebug.h"
+#include "XOGLUtils.h"
 
 using namespace std;
 

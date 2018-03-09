@@ -20,6 +20,7 @@
  * THE SOFTWARE.
  *
  */
+#include "SysOpenGL.h"
 #include "XOGLUtils.h"
 #include <set>
 #include <string>

@@ -20,31 +20,23 @@
  * THE SOFTWARE.
  *
  */
-#include "XPLMGraphics.h"
-#include "TexUtils.h"
-#include "XPLMUtilities.h"
-#include "legacycsl/XOGLUtils.h"
-#include "XPMPMultiplayerVars.h"
+#include "SysOpenGL.h"
 #include <utility>
 #include <algorithm>
 #include <string>
 #include <sstream>
 #include <cstdio>
 #include <cstring>
-#include <XPMPMultiplayer.h>
-#if IBM
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
-#elif APL
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
 
-using std::swap;
+#include <XPLMGraphics.h>
+#include <XPLMUtilities.h>
+
+#include "XPMPMultiplayer.h"
+#include "XPMPMultiplayerVars.h"
+#include "legacycsl/TexUtils.h"
+#include "legacycsl/XOGLUtils.h"
+
+using namespace std;
 
 float	xpmp_tex_maxAnisotropy = 1.0;
 bool	xpmp_tex_useAnisotropy = false;

@@ -4,17 +4,7 @@
 
 #include <cstdlib>
 #include <sstream>
-#if IBM
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
-#elif APL
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
+#include "SysOpenGL.h"
 
 #include <XPLMUtilities.h>
 
