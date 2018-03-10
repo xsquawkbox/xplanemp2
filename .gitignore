@@ -3,6 +3,10 @@
 
 # Build directory
 build/
+cmake-build-*/
+
+# CLion, etc, prefs
+.idea/
  
 # XCode user specific files
 xcuserdata/
