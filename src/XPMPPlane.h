@@ -14,20 +14,14 @@ private:
 	// world state
 	PlaneType			mPlaneType;
 
-	int 				mPosAge;
 	XPMPPlanePosition_t	mPosition;
-
-	int 				mSurfaceAge;
 	XPMPPlaneSurfaces_t	mSurface;
-
-	int 					mSurveillanceAge;
 	XPMPPlaneSurveillance_t	mSurveillance;
 
 	// rendering data
 	CSL *				mCSL;
 	int					mMatchQuality;
 
-	friend void	XPMP2DefaultPlaneRenderer(int is_blend);
 	friend void Render_PrepLists();
 public:
 	XPMPPlane();

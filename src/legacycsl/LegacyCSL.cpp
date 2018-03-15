@@ -195,11 +195,13 @@ LegacyCSL::updateInstance(
 	double roll,
 	double heading,
 	double pitch,
-	XPLMPlaneDrawState_t *state,
+	bool clampToSurface,
 	xpmp_LightStatus lights,
-	CSLInstanceData *&instanceData)
+	CSLInstanceData *&instanceData,
+	XPLMPlaneDrawState_t *state)
 {
-	CSL::updateInstance(cullInfo, x, y, z, roll, heading, pitch, state, lights, instanceData);
+	CSL::updateInstance(
+		cullInfo, x, y, z, roll, heading, pitch, clampToSurface, lights, instanceData, state);
 	if (nullptr != instanceData && !instanceData->mCulled) {
 		// if we are to render this CSL, make sure the resources are ready.
 		if (getResources()) {

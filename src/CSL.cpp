@@ -176,9 +176,10 @@ CSL::updateInstance(
 	double roll,
 	double heading,
 	double pitch,
-	XPLMPlaneDrawState_t *state,
+	bool clampToSurface,
 	xpmp_LightStatus lights,
-	CSLInstanceData *&instanceData)
+	CSLInstanceData *&instanceData,
+	XPLMPlaneDrawState_t *state)
 {
 	if (instanceData == nullptr) {
 		newInstanceData(instanceData);
@@ -188,7 +189,7 @@ CSL::updateInstance(
 	}
 
 	// clamp to the surface if enabled
-	if (gConfiguration.enableSurfaceClamping) {
+	if (gConfiguration.enableSurfaceClamping && clampToSurface) {
 		XPLMProbeInfo_t	probeResult = {
 			sizeof(XPLMProbeInfo_t),
 		};

@@ -22,13 +22,10 @@
 using namespace std;
 
 XPMPPlane::XPMPPlane() :
-	mPlaneType("", "", "")
+	mPlaneType("", "", ""),
+	mCSL(nullptr),
+	mInstanceData(nullptr)
 {
-	mCSL = nullptr;
-	mInstanceData = nullptr;
-	mPosAge = -1;
-	mSurfaceAge = -1;
-	mSurveillanceAge = -1;
 }
 
 XPMPPlane::~XPMPPlane()
@@ -60,21 +57,18 @@ XPMPPlane::setCSL(CSL *csl)
 void
 XPMPPlane::updatePosition(const XPMPPlanePosition_t &newPosition)
 {
-	mPosAge = XPLMGetCycleNumber();
 	memcpy(&mPosition, &newPosition, min(newPosition.size, sizeof(mPosition)));
 }
 
 void
 XPMPPlane::updateSurfaces(const XPMPPlaneSurfaces_t &newSurfaces)
 {
-	mSurfaceAge = XPLMGetCycleNumber();
 	memcpy(&mSurface, &newSurfaces, min(newSurfaces.size, sizeof(mSurface)));
 }
 
 void
 XPMPPlane::updateSurveillance(const XPMPPlaneSurveillance_t &newSurveillance)
 {
-	mSurveillanceAge = XPLMGetCycleNumber();
 	memcpy(&mSurveillance, &newSurveillance, min(newSurveillance.size, sizeof(mSurveillance)));
 }
 
@@ -107,9 +101,10 @@ XPMPPlane::doInstanceUpdate(const CullInfo &gl_camera)
 			mPosition.roll,
 			mPosition.heading,
 			mPosition.pitch,
-			&planeState,
+			mPosition.clamp,
 			mSurface.lights,
-			mInstanceData);
+			mInstanceData,
+			&planeState);
 
 		if (mInstanceData == nullptr) {
 			return 0.0;

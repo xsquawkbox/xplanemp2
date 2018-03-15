@@ -43,7 +43,7 @@ public:
 	/* drawPlane renders the plane when called from within the rendering callback */
 	virtual void	drawPlane(CSLInstanceData *instanceData, bool is_blend, int data) const override;
 
-	virtual void 	updateInstance(
+	virtual void updateInstance(
 		const CullInfo &cullInfo,
 		double &x,
 		double &y,
@@ -51,9 +51,10 @@ public:
 		double roll,
 		double heading,
 		double pitch,
-		XPLMPlaneDrawState_t *state,
+		bool clampToSurface,
 		xpmp_LightStatus lights,
-		CSLInstanceData *&instanceData) override;
+		CSLInstanceData *&instanceData,
+		XPLMPlaneDrawState_t *state) override;
 
 protected:
 	// plane_Obj

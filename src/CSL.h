@@ -158,9 +158,10 @@ public:
 		double roll,
 		double heading,
 		double pitch,
-		XPLMPlaneDrawState_t *state,
+		bool clampToSurface,
 		xpmp_LightStatus lights,
-		CSLInstanceData *&instanceData);
+		CSLInstanceData *&instanceData,
+		XPLMPlaneDrawState_t *state);
 
 	/* drawPlane is responsible for rendering the plane.
 	 */
