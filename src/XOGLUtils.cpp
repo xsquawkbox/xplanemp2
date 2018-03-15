@@ -35,6 +35,8 @@ PFNGLCLIENTACTIVETEXTUREARBPROC glClientActiveTextureARB = NULL;
 PFNGLMULTITEXCOORD2FARBPROC		glMultiTexCoord2fARB	 = NULL;
 PFNGLMULTITEXCOORD2FVARBPROC	glMultiTexCoord2fvARB	 = NULL;
 PFNGLGENERATEMIPMAPPROC			glGenerateMipmap		 = NULL;
+PFNGLGENVERTEXARRAYSPROC 		glGenVertexArrays   	 = NULL;
+PFNGLDELETEVERTEXARRAYSPROC		glDeleteVertexArrays	 = NULL;
 #endif
 
 #ifdef DEBUG
@@ -97,7 +99,9 @@ bool	OGL_UtilsInit()
 		glMultiTexCoord2fARB	 = (PFNGLMULTITEXCOORD2FARBPROC )	 wglGetProcAddress("glMultiTexCoord2fARB"    );
 		glMultiTexCoord2fvARB	 = (PFNGLMULTITEXCOORD2FVARBPROC )	 wglGetProcAddress("glMultiTexCoord2fvARB"   );
 		glGenerateMipmap		 = (PFNGLGENERATEMIPMAPPROC)		 wglGetProcAddress("glGenerateMipmap"		 );
-#endif		
+		glGenVertexArrays   	 = (PFNGLGENVERTEXARRAYSPROC)		 wglGetProcAddress("glGenVertexArrays");
+		glDeleteVertexArrays	 = (PFNGLDELETEVERTEXARRAYSPROC)	 wglGetProcAddress("glDeleteVertexArrays");
+#endif
 #ifdef DEBUG_GL
 		if (OGL_HasExtension("GL_KHR_debug")) {
 #if IBM

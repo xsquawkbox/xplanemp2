@@ -50,6 +50,7 @@ add_library(xplanemp
 	src/XPMPMultiplayer.cpp
 	src/CSLLibrary.cpp
 	src/CSLLibrary.h
+	src/XOGLUtils.cpp
 	src/XPMPMultiplayerVars.cpp
 	src/XPMPMultiplayerVars.h
 	src/XPMPPlane.cpp
@@ -75,7 +76,6 @@ add_library(xplanemp
 	src/legacycsl/TexUtils.cpp
 	src/legacycsl/XObjDefs.cpp
 	src/legacycsl/XObjReadWrite.cpp
-	src/legacycsl/XOGLUtils.cpp
 	src/legacycsl/LegacyObj.cpp
 	)
 target_include_directories(xplanemp

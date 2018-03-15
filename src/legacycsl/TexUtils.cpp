@@ -34,7 +34,7 @@
 #include "XPMPMultiplayer.h"
 #include "XPMPMultiplayerVars.h"
 #include "legacycsl/TexUtils.h"
-#include "legacycsl/XOGLUtils.h"
+#include "XOGLUtils.h"
 
 using namespace std;
 

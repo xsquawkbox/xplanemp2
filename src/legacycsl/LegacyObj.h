@@ -30,7 +30,7 @@
 #include "XPMPMultiplayer.h"	// for light status
 #include "legacycsl/ResourceManager.h"
 #include "legacycsl/XObjDefs.h"
-#include "legacycsl/XOGLUtils.h"
+#include "XOGLUtils.h"
 #include "legacycsl/TexUtils.h"
 
 /*****************************************************

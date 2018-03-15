@@ -46,6 +46,8 @@ extern PFNGLMULTITEXCOORD2FVARBPROC		glMultiTexCoord2fvARB;
 extern PFNGLACTIVETEXTUREARBPROC		glActiveTextureARB;
 extern PFNGLCLIENTACTIVETEXTUREARBPROC	glClientActiveTextureARB;
 extern PFNGLGENERATEMIPMAPPROC          glGenerateMipmap;
+extern PFNGLGENVERTEXARRAYSPROC 		glGenVertexArrays;
+extern PFNGLDELETEVERTEXARRAYSPROC		glDeleteVertexArrays;
 #endif
 
 #ifdef DEBUG_GL

@@ -5,6 +5,7 @@
 #ifndef SYSOPENGL_H
 #define SYSOPENGL_H
 
+
 #if IBM
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
