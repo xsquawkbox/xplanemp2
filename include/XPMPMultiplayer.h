@@ -24,6 +24,8 @@
 #ifndef _XPLMMultiplayer_h_
 #define _XPLMMultiplayer_h_
 
+#include <stddef.h>
+
 #include "XPLMDefs.h"
 
 #ifndef XPMP_CLIENT_NAME
@@ -111,7 +113,7 @@ void XPMPGetConfiguration(XPMPConfiguration_t *outConfig);
  * ***********************************************************************************/
 
 /**
- * XPMPPosition_t contains the basic position info for an aircraft.
+ * XPMPPosition_t contains the basic position info for an aircraft.size-size
  *
  * Lat and lon are the position of the aircraft in the world.  They are double-precision to
  * provide reasonably precise positioning anywhere.  Elevation is in feet above mean sea level.
