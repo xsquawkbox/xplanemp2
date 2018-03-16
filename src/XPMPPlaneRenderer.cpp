@@ -42,13 +42,7 @@
 #include <math.h>
 #include <algorithm>
 
-#if IBM
-#include <GL/gl.h>
-#elif APL
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
+#include "SysOpenGL.h"
 
 #include <vector>
 #include <string>

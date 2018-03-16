@@ -25,16 +25,7 @@
 #ifndef CULLINFO_H
 #define CULLINFO_H
 
-#if IBM
-#define WIN32_MEAN_AND_LEAN
-#include <Windows.h>
-#include <GL/gl.h>
-#elif APL
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
-
+#include "SysOpenGL.h"
 #include <XPLMDataAccess.h>
 
 // This struct has everything we need to cull fast!

@@ -22,20 +22,7 @@
  *
  */
 
-#if IBM
-#define WIN32_MEAN_AND_LEAN
-#include <windows.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/glext.h>
-#elif APL
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
-
+#include "SysOpenGL.h"
 #include <XPLMDataAccess.h>
 
 #include "CullInfo.h"
