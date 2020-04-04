@@ -23,9 +23,6 @@
 #ifndef XUTILS_H
 #define XUTILS_H
 
-struct	XObjCmd;
-struct	XObj;
-
 #include <string>
 #include <vector>
 #include <memory>
@@ -33,104 +30,11 @@ struct	XObj;
 
 #include "XPMPMultiplayer.h"
 
-class	StTextFileScanner {
-public:
-
-	StTextFileScanner(const char * inFileName, bool skip_blanks);
-	~StTextFileScanner();
-
-	void	skip_blanks(bool skip_blanks);
-	bool	done();
-	void	next();
-	std::string	get();
-
-private:
-
-	void	read_next(void);
-
-	FILE *	mFile;
-	std::string	mBuf;
-	bool	mDone;
-	bool	mSkipBlanks;
-};	
-
-void	BreakString(const std::string& line, std::vector<std::string>& words);
-
 void	StringToUpper(std::string&);
 
 bool	HasExtNoCase(const std::string& inStr, const char * inExt);
 
-void	ChangePolyCmdCW(XObjCmd& ioCmd);
-
-bool	GetNextNoComments(StTextFileScanner& f, std::string& s);
-
-// WARNING: this is a dumb radius, a radius from 0,0,0.  It is not
-// the radius of a bounding sphere!  Why it is in this translation
-// unit is also rather questionable.
-double	GetObjRadius(const XObj& inObj);
-
-//void	StripPath(string& ioPath);
-//void	StripPathCP(string& ioPath);
-//void	ExtractPath(string& ioPath);
-
-int		PickRandom(std::vector<double>& chances);
-bool	RollDice(double inProb);
-double	RandRange(double mmin, double mmax);
-double	RandRangeBias(double mmin, double mmax, double biasRatio, double randomAmount);
-
-#if APL && !defined(XUTILS_EXCLUDE_MAC_CRAP)
-
-#include <MacTypes.h>
-#include <Files.h>
-
-void	AppPath(string& outString);
-OSErr	FindSuperFolder(const FSSpec& inItem, FSSpec& outFolder);
-void	FSSpec_2_String(const FSSpec& inSpec, string& outString);
-#endif
-
-void	ExtractFixedRecordString(	
-		const std::string&		inLine,
-		int						inBegin,
-		int						inEnd,
-		std::string&			outString);
-
-bool	ExtractFixedRecordLong(
-		const std::string&		inLine,
-		int						inBegin,
-		int						inEnd,
-		long&					outLong);
-
-bool	ExtractFixedRecordUnsignedLong(
-		const std::string&		inLine,
-		int						inBegin,
-		int						inEnd,
-		unsigned long&			outUnsignedLong);
-
-class	XPointPool {
-public:
-
-	XPointPool();
-	~XPointPool();
-	void	clear();
-	//int	accumulate(const float xyz[3], const float st[2]);
-	int		count(void);
-	void	get(int index, float xyz[3], float st[2]);
-
-private:
-
-	XPointPool(const XPointPool&);
-	XPointPool& operator=(const XPointPool&);
-	
-	struct	XPointPoolImp;
-
-	std::unique_ptr<XPointPoolImp> mImp;
-
-};
-
-void	DecomposeObjCmd(const XObjCmd& inCmd, std::vector<XObjCmd>& outCmd, int maxValence);
-void	DecomposeObj(const XObj& inObj, XObj& outObj, int maxValence);
-
-bool DoesFileExist(const std::string &filePath);
+bool    DoesFileExist(const std::string &filePath);
 
 struct XPLMDump {
 	XPLMDump() { }

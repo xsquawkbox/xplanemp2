@@ -1,5 +1,6 @@
-/* 
- * Copyright (c) 2006, Laminar Research.
+/*
+ * Copyright (c) 2013, Laminar Research.
+ * Copyright (c) 2018,2020, Christopher Collins.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -20,39 +21,22 @@
  * THE SOFTWARE.
  *
  */
-#ifndef _Interpolation_h_
-#define _Interpolation_h_
 
-/* Interpolation Utilities.  These are defined inline in the hope of speed. */
+#ifndef OBJ8COMMON_H
+#define OBJ8COMMON_H
 
-double	clamp(double v, double min, double max);
+enum class Obj8DrawType {
+	LightsOnly = 0,
+	LowLevelOfDetail,
+	Solid
+};
+const size_t Obj8DrawTypeCount=3;
 
-double	BilinearInterpolate1d(
-		double		v0,
-		double		v1,
-		double		position);
+enum class Obj8LoadState {
+	None = 0,		// not loaded, no attempt yet.
+	Loading,		// async load requested.
+	Loaded,			// (a)sync load complete
+	Failed			// (a)sync load failed
+};
 
-double	BilinearInterpolate2d(
-		double		v0,	double	v1,
-		double		v2, double	v3,
-		double		hPosition,
-		double		vPosition);
-
-double	BicubicInterpolate1d(
-		double		v0,
-		double		v1,
-		double		v2,
-		double		v3,
-		double		position);
-
-double	BicubicInterpolate2d(
-		double		v0,		double	v1,		double	v2,		double	v3,
-		double		v4,		double	v5,		double	v6,		double	v7,
-		double		v8,		double	v9,		double	v10,	double	v11,
-		double		v12,	double	v13,	double	v14,	double	v15,
-		double		hPosition,
-		double		vPosition);
-
-#include "Interpolation.i"
-
-#endif
+#endif //OBJ8COMMON_H

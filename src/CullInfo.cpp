@@ -22,27 +22,28 @@
  *
  */
 
-#include "SysOpenGL.h"
+#include "CullInfo.h"
 #include <XPLMDataAccess.h>
 
-#include "CullInfo.h"
+#include "XUtils.h"
+
 
 XPLMDataRef		CullInfo::projectionMatrixRef = nullptr;
 XPLMDataRef		CullInfo::modelviewMatrixRef = nullptr;
-XPLMDataRef		CullInfo::viewportRef = nullptr;
 
 void
 CullInfo::init()
 {
 	if (modelviewMatrixRef == nullptr) {
 		modelviewMatrixRef = XPLMFindDataRef("sim/graphics/view/modelview_matrix");
+	} else {
+	    XPLMDump() << "Was unable to get the modelview matrix from the simulator.  plane rendering may not work correctly.";
 	}
 	if (projectionMatrixRef == nullptr) {
 		projectionMatrixRef = XPLMFindDataRef("sim/graphics/view/projection_matrix");
-	}
-	if (viewportRef == nullptr) {
-		viewportRef = XPLMFindDataRef("sim/graphics/view/viewport");
-	}
+	} else {
+        XPLMDump() << "Was unable to get the projection matrix from the simulator.  plane rendering may not work correctly.";
+    }
 }
 
 void 
@@ -70,10 +71,7 @@ CullInfo::normalizeMatrix(float vec[4])
 CullInfo::CullInfo()
 {
 	// First, just read out the current OpenGL matrices...do this once at setup because it's not the fastest thing to do.
-	if (!modelviewMatrixRef || !projectionMatrixRef) {
-		glGetFloatv(GL_MODELVIEW_MATRIX, model_view);
-		glGetFloatv(GL_PROJECTION_MATRIX, proj);
-	} else {
+	if (modelviewMatrixRef && projectionMatrixRef) {
 		XPLMGetDatavf(modelviewMatrixRef, model_view, 0, 16);
 		XPLMGetDatavf(projectionMatrixRef, proj, 0, 16);
 	}
@@ -119,22 +117,6 @@ CullInfo::CullInfo(const CullInfo &src)
 		top_clip[c] = src.top_clip[c];
 		nea_clip[c] = src.nea_clip[c];
 		far_clip[c] = src.far_clip[c];
-	}
-}
-
-
-void
-CullInfo::GetCurrentViewport(GLfloat vp[])
-{
-	if (viewportRef) {
-		int tempvp[4];
-		XPLMGetDatavi(viewportRef, tempvp, 0, 4);
-		vp[0] = static_cast<GLfloat>(tempvp[0]); // left
-		vp[1] = static_cast<GLfloat>(tempvp[1]); // bottom
-		vp[2] = static_cast<GLfloat>(tempvp[2] - tempvp[0]);
-		vp[3] = static_cast<GLfloat>(tempvp[3] - tempvp[1]);
-	} else {
-		glGetFloatv(GL_VIEWPORT, vp);
 	}
 }
 
@@ -191,11 +173,4 @@ CullInfo::ConvertTo2D(float x, float y, float z, float w, float * out_x, float *
 
 	*out_x = screen[0];
 	*out_y = screen[1];
-}
-
-void 
-CullInfo::ProjectToViewport(const float *vp, float x, float y, float *out_x, float *out_y)
-{
-	*out_x = vp[0] + (1.0f + x) * vp[2] / 2.0f;
-	*out_y = vp[0] + (1.0f + y) * vp[3] / 2.0f;
 }

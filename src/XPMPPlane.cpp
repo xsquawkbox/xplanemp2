@@ -93,18 +93,19 @@ XPMPPlane::doInstanceUpdate(const CullInfo &gl_camera)
 		planeState.yokeHeading = mSurface.yokeHeading;
 		planeState.yokeRoll = mSurface.yokeRoll;
 
-		mCSL->updateInstance(
-			gl_camera,
-			lx,
-			ly,
-			lz,
-			mPosition.roll,
-			mPosition.heading,
-			mPosition.pitch,
-			mPosition.clamp,
-			mSurface.lights,
-			mInstanceData,
-			&planeState);
+        mCSL->updateInstance(
+            gl_camera,
+            lx,
+            ly,
+            lz,
+            mPosition.roll,
+            mPosition.heading,
+            mPosition.pitch,
+            mPosition.clampToGround,
+            mPosition.offsetScale,
+            mSurface.lights,
+            mInstanceData,
+            &planeState);
 
 		if (mInstanceData == nullptr) {
 			return 0.0;
@@ -139,27 +140,6 @@ XPMPPlane::doInstanceUpdate(const CullInfo &gl_camera)
 		return mInstanceData->mDistanceSqr;
 	}
 	return 0.0;
-}
-
-void
-XPMPPlane::queueLabel(const CullInfo &camera)
-{
-	if (mCSL) {
-		// do labels.
-		if (mInstanceData->mDistanceSqr <= (Render_LabelDistance * Render_LabelDistance)) {
-			double	lx,ly,lz;
-
-			XPLMWorldToLocal(mPosition.lat, mPosition.lon, mPosition.elevation * kFtToMeters, &lx, &ly, &lz);
-
-			if (camera.SphereIsVisible(lx, ly, lz, 50.0)) {
-				float tx, ty;
-
-				camera.ConvertTo2D(lx, ly, lz, 1.0, &tx, &ty);
-				gLabelList.emplace_back(
-					Label{tx, ty, mInstanceData->mDistanceSqr, string(mPosition.label)});
-			}
-		}
-	}
 }
 
 void

@@ -23,9 +23,6 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	set(XPMP_PLATFORM_LIBRARIES opengl32 glu32)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	set(XPMP_DEFINES ${XPMP_DEFINES} APL=1)
-	set(XPMP_PLATFORM_SOURCES
-		src/AplFSUtil.cpp
-		src/AplFSUtil.h)
 	find_library(OPENGL OpenGL)
 	set(XPMP_PLATFORM_LIBRARIES ${OPENGL})
 endif()
@@ -50,8 +47,7 @@ add_library(xplanemp
 	src/XPMPMultiplayer.cpp
 	src/CSLLibrary.cpp
 	src/CSLLibrary.h
-	src/XOGLUtils.cpp
-	src/XPMPMultiplayerVars.cpp
+        src/XPMPMultiplayerVars.cpp
 	src/XPMPMultiplayerVars.h
 	src/XPMPPlane.cpp
 	src/XPMPPlane.h
@@ -59,24 +55,12 @@ add_library(xplanemp
 	src/XStringUtils.h
 	src/XUtils.cpp
 
-	src/obj8/InstanceCompat.h
-	src/obj8/InstanceCompat.cpp
-	src/obj8/InstanceWrapper.cpp
-	src/obj8/InstanceWrapper.h
 	src/obj8/Obj8CSL.cpp
 	src/obj8/Obj8CSL.h
-
-	src/legacycsl/BitmapUtils.cpp
-	src/legacycsl/GlDebug.cpp
-	src/legacycsl/GlDebug.h
-	src/legacycsl/Interpolation.h
-	src/legacycsl/LegacyCSL.cpp
-	src/legacycsl/LegacyCSL.h
-	src/legacycsl/ResourceManager.h
-	src/legacycsl/TexUtils.cpp
-	src/legacycsl/XObjDefs.cpp
-	src/legacycsl/XObjReadWrite.cpp
-	src/legacycsl/LegacyObj.cpp
+	src/obj8/Obj8Attachment.cpp
+	src/obj8/Obj8Attachment.h
+	src/obj8/Obj8InstanceData.cpp
+	src/obj8/Obj8InstanceData.h
 	)
 target_include_directories(xplanemp
 	PUBLIC 

@@ -6,6 +6,7 @@
 #define XPMP_TCASHACK_H
 
 #include <vector>
+#include <map>
 
 #include <XPLMDataAccess.h>
 #include <XPLMDisplay.h>

@@ -1,6 +1,26 @@
-//
-// Created by kuroneko on 2/03/2018.
-//
+/*
+ * Copyright (c) 2013, Laminar Research.
+ * Copyright (c) 2018,2020, Christopher Collins.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
 
 #include <string>
 #include <cstring>
@@ -8,39 +28,11 @@
 #include <XPLMScenery.h>
 
 #include "CSL.h"
-#include "CullInfo.h"
 #include "XPMPMultiplayerVars.h"
 #include "Renderer.h"
 #include "TCASHack.h"
 
 using namespace std;
-
-void
-RenderedCSLInstanceData::updateInstance(
-	CSL *csl,
-	double x,
-	double y,
-	double z,
-	double pitch,
-	double roll,
-	double heading,
-	xpmp_LightStatus lights,
-	XPLMPlaneDrawState_t *state)
-{
-	mX = x;
-	mY = y;
-	mZ = z;
-	mPitch = pitch;
-	mRoll = roll;
-	mHeading = heading;
-	mLights = lights;
-	mFull = true;
-	if (mDistanceSqr > (Render_FullPlaneDistance * Render_FullPlaneDistance)) {
-		mFull = false;
-	}
-
-	memcpy(&mState, state, sizeof(mState));
-};
 
 CSL::CSL()
 {
@@ -49,7 +41,7 @@ CSL::CSL()
 }
 
 CSL::CSL(std::vector<std::string> dirNames) :
-	mDirNames(dirNames)
+	mDirNames(std::move(dirNames))
 {
 	mMovingGear = true;
 	mOffsetSource = VerticalOffsetSource::None;
@@ -162,30 +154,30 @@ CSL::drawPlane(CSLInstanceData *instanceData, bool is_blend, int data) const
 }
 
 void
-CSL::newInstanceData(CSLInstanceData *&newInstanceData) const
-{
-	newInstanceData = new RenderedCSLInstanceData();
-}
-
-void
-CSL::updateInstance(
-	const CullInfo &cullInfo,
-	double &x,
-	double &y,
-	double &z,
-	double roll,
-	double heading,
-	double pitch,
-	bool clampToSurface,
-	xpmp_LightStatus lights,
-	CSLInstanceData *&instanceData,
-	XPLMPlaneDrawState_t *state)
+CSL::updateInstance(const CullInfo &cullInfo,
+                    double &x,
+                    double &y,
+                    double &z,
+                    double roll,
+                    double heading,
+                    double pitch,
+                    bool clampToSurface,
+                    float offsetScale,
+                    xpmp_LightStatus lights,
+                    CSLInstanceData *&instanceData,
+                    XPLMPlaneDrawState_t *state)
 {
 	if (instanceData == nullptr) {
 		newInstanceData(instanceData);
 	}
 	if (instanceData == nullptr) {
 		return;
+	}
+
+	double appliedOffset = 0.0;
+	if (offsetScale >= 0.0) {
+        appliedOffset = offsetScale*getVertOffset();
+	    y += appliedOffset;
 	}
 
 	// clamp to the surface if enabled
@@ -203,7 +195,10 @@ CSL::updateInstance(
 				instanceData->mClamped = false;
 			}
 		}
+	} else {
+	    instanceData->mClamped = false;
 	}
+
 	instanceData->mDistanceSqr = cullInfo.SphereDistanceSqr(x, y, z);
 
 	// TCAS checks.

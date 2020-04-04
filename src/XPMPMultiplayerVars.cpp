@@ -28,27 +28,18 @@
 #include "PlaneType.h"
 #include "XPMPMultiplayerVars.h"
 
-
-using namespace std;
-
 XPMPConfiguration_t				gConfiguration = {
-	100,	// maxPlaneRenderCount
 	3.0,	// maxFullAircraftRenderingDistance
-	5000.0,	// maxLabelDistance
 	false,	// enableSurfaceClamping
-	true,	// drawLabels
-	{ 5, true, 0.0 },	// legacyCSL Options
 	{ false, true }	// debug options
 };
 
 PlaneType						gDefaultPlane;
-string							gPreferenceDir;
-
 
 XPMPPlaneVector					gPlanes;
 int								gDumpOneRenderCycle = 0;
 
-vector<CSLPackage_t>			gPackages;
-map<string, string>				gGroupings;
+std::vector<CSLPackage_t>		gPackages;
+std::unordered_map<std::string, std::string>		gGroupings;
 
-map<string, CSLAircraftCode_t>	gAircraftCodes;
+std::unordered_map<std::string, CSLAircraftCode_t>	gAircraftCodes;

@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include "XPLMScenery.h"
+
 extern XPLMDataRef		gVisDataRef;		// Current air visiblity for culling.
 extern XPLMProbeRef		gTerrainProbe;
 

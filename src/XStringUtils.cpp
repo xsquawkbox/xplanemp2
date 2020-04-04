@@ -11,17 +11,18 @@ using namespace std;
 
 namespace xpmp {
 
-	vector<string> tokenize(const string &str, const string &delim)
+	vector<string>
+    tokenize(const string &str, const string &delim, int n)
 	{
 		string			dup = str;
 		vector<string>	result;
-		if (delim.empty())
+		if (delim.empty() || n == 1)
 		{
-			result.push_back(dup);
-			return result;
+			result.emplace_back(std::move(dup));
+			return std::move(result);
 		}
 
-		if (dup.empty()) return result;
+		if (dup.empty()) return std::move(result);
 
 		while (true)
 		{
@@ -30,13 +31,17 @@ namespace xpmp {
 
 			if (!token.empty())
 			{
-				result.push_back(token);
+				result.emplace_back(std::move(token));
 			}
 
 			// Nothing remaining
-			if (position == string::npos) return result;
+			if (position == string::npos) return std::move(result);
 
 			dup = dup.substr(position + 1);
+			if (n > 0 && result.size() >= (n-1)) {
+			    result.emplace_back(std::move(dup));
+			    return std::move(result);
+			}
 		}
 	}
 

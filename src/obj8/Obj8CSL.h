@@ -1,104 +1,94 @@
-//
-// Created by kuroneko on 2/03/2018.
-//
+/*
+ * Copyright (c) 2013, Laminar Research.
+ * Copyright (c) 2018,2020, Christopher Collins.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
 
 #ifndef OBJ8CSL_H
 #define OBJ8CSL_H
 
+#include <unordered_map>
 #include <queue>
 
 #include <XPLMScenery.h>
+#include <XPLMInstance.h>
 
 #include "CullInfo.h"
 #include "CSL.h"
-#include "obj8/InstanceWrapper.h"
+#include "Obj8Common.h"
+#include "Obj8Attachment.h"
 
-enum class Obj8DrawType {
-	None,
-	LightsOnly,
-	LowLevelOfDetail,
-	Solid
-};
-
-enum class Obj8LoadState {
-	None = 0,		// not loaded, no attempt yet.
-	Loading,		// async load requested.
-	Loaded,			// (a)sync load complete
-	Failed			// (a)sync load failed
-};
-
-class Obj8Attachment {
-private:
-	static void	loadCallback(XPLMObjectRef inObject, void *inRefcon);
-	static std::queue<Obj8Attachment *>	loadQueue;
-
-	void enqueueLoad();
+class Obj8CSL: public CSL {
 public:
-	Obj8Attachment(std::string fileName, Obj8DrawType drawType);
-	Obj8Attachment(const Obj8Attachment &copySrc);
-	Obj8Attachment(Obj8Attachment &&moveSrc);
+    using attachment_pointer = std::shared_ptr<Obj8Attachment>;
+    using attachment_array = std::vector<attachment_pointer>;
+    using attachment_map = std::unordered_map<Obj8DrawType, attachment_array>;
 
-	virtual ~Obj8Attachment();
+    void newInstanceData(CSLInstanceData *&newInstanceData) const override;
 
-	/** try to get the object handle.  Queue it for loading if it's not available.
-	 * @returns The XPLMObjectRef for this attachment
-	 */
-	XPLMObjectRef	getObjectHandle();
+    Obj8CSL(std::vector<std::string> dirNames, std::string objectName);
 
-	Obj8DrawType		mDrawType;
+    void addAttachment(Obj8DrawType draw_type, attachment_pointer att)
+    {
+        mAttachments[draw_type].emplace_back(std::move(att));
+    }
 
+    bool hasAttachmentsFor(Obj8DrawType drawType) const
+    {
+        auto attIter = mAttachments.find(drawType);
+        if (attIter == mAttachments.end()) {
+            return false;
+        }
+        return !(attIter->second.empty());
+    };
+
+    const attachment_array *
+    getAttachmentsFor(Obj8DrawType drawType) const
+    {
+        auto attIter = mAttachments.find(drawType);
+        if (attIter == mAttachments.end()) {
+            return nullptr;
+        }
+        return &(attIter->second);
+    }
+
+    std::string getModelName() const override;
+
+    std::string getModelType() const override;
+
+    static void Init();
+    static const char * dref_names[];
 protected:
-	std::string			mFile;
-	XPLMObjectRef		mHandle;
-	Obj8LoadState		mLoadState;
-};
 
-class Obj8InstanceData : public CSLInstanceData {
-public:
-	xp11InstanceRef		mainInstance;
-	Obj8DrawType 		mainType;
-
-	Obj8InstanceData();
-	~Obj8InstanceData();
-
-	friend class Obj8CSL;
-
-protected:
-	virtual void updateInstance(
-		CSL *csl,
-		double x,
-		double y,
-		double z,
-		double pitch,
-		double roll,
-		double heading,
-		xpmp_LightStatus lights,
-		XPLMPlaneDrawState_t *state) override;
+    attachment_map mAttachments;
+    std::string mObjectName;     // Basename of the object file
 
 private:
-	void resetModel();
-};
 
-class Obj8CSL : public CSL
-{
-protected:
-	std::string 					mObjectName;     // Basename of the object file
-	std::vector<Obj8Attachment>		mAttachments;
-public:
-	static std::vector<float> 		dref_values; // from Obj8CSL.cpp
-
-	virtual void newInstanceData(CSLInstanceData *&newInstanceData) const override;
-
-	Obj8CSL(std::vector<std::string> dirNames, std::string objectName);
-	void addAttachment(Obj8Attachment &att);
-	void addAttachment(Obj8Attachment &&att);
-
-	Obj8Attachment *	getAttachmentFor(Obj8DrawType drawType);
-
-	std::string	getModelName() const override;
-	std::string getModelType() const override;
-
-	static void Init();
+    /* these  statics are used for passing animation datarefs into non-instanced
+     * rendering
+    */
+    static float    obj8_dref_read(void *inRefcon);
+    static void     obj8_dref_write(void *inRefcon, float inValue);
+    static std::vector<float> dref_values; // from Obj8CSL.cpp
 };
 
 

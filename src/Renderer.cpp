@@ -4,42 +4,30 @@
 
 #include <map>
 #include <utility>
-
-#include "SysOpenGL.h"
+#include <algorithm>
 
 #include <XPLMDataAccess.h>
 #include <XPLMUtilities.h>
 #include <XPLMDisplay.h>
 #include <XPLMGraphics.h>
 #include <XPLMProcessing.h>
+#include <XPLMInstance.h>
+#include <XPLMCamera.h>
 
-#include "obj8/InstanceWrapper.h"
 #include "Renderer.h"
 
 #include "XPMPMultiplayerVars.h"
-#include "CullInfo.h"
 #include "TCASHack.h"
-
-#include "legacycsl/LegacyCSL.h"
 
 using namespace std;
 
 XPLMDataRef			gVisDataRef = nullptr;	// Current air visiblity for culling.
 XPLMProbeRef		gTerrainProbe = nullptr;
 
-static XPLMDataRef	gWorldRenderTypeRef = nullptr;
-static XPLMDataRef	gPlaneRenderTypeRef = nullptr;
-
-bool				gMSAAHackInitialised = false;
-static XPLMDataRef  gMSAAXRatioRef = nullptr;
-static XPLMDataRef	gMSAAYRatioRef = nullptr;
-
 void
 Renderer_Init()
 {
 	// SETUP - mostly just fetch datarefs.
-	gWorldRenderTypeRef = XPLMFindDataRef("sim/graphics/view/world_render_type");
-	gPlaneRenderTypeRef = XPLMFindDataRef("sim/graphics/view/plane_render_type");
 	gVisDataRef = XPLMFindDataRef("sim/graphics/view/visibility_effective_m");
 	if (gVisDataRef == nullptr)
 		gVisDataRef = XPLMFindDataRef("sim/weather/visibility_effective_m");
@@ -49,7 +37,6 @@ Renderer_Init()
 	gTerrainProbe = XPLMCreateProbe(xplm_ProbeY);
 	CullInfo::init();
 	TCAS::Init();
-	InstanceCompat_Init();
 
 #if RENDERER_STATS
 	XPLMRegisterDataAccessor("hack/renderer/planes", xplmType_Int, 0, GetRendererStat, NULL,
@@ -68,14 +55,11 @@ Renderer_Init()
 
 }
 
-double	Render_LabelDistance = 0.0;
 double	Render_FullPlaneDistance = 0.0;
 
 void
 Render_PrepLists()
 {
-	gLabelList.clear();
-	LegacyCSL::cleanFrame();
 	TCAS::cleanFrame();
 
 	if (gPlanes.empty()) {
@@ -89,15 +73,12 @@ Render_PrepLists()
 
 	// Culling - read the camera pos and figure out what's visible.
 	double	maxDist = XPLMGetDataf(gVisDataRef);
-	Render_LabelDistance = min<double>(maxDist, gConfiguration.maxLabelDistance) * x_camera.zoom;		// Labels get easier to see when users zooms.
 	Render_FullPlaneDistance = x_camera.zoom * (5280.0 / 3.2) * gConfiguration.maxFullAircraftRenderingDistance;	// Only draw planes fully within 3 miles.
 
 	for (auto &plane: gPlanes) {
 		plane->doInstanceUpdate(gl_camera);
 	}
 }
-
-vector<Label>	gLabelList;
 
 /*
  * RenderingCallback
@@ -119,95 +100,21 @@ XPMP_RenderCallback_Aircraft(XPLMDrawingPhase, int, void *)
 		Render_PrepLists();
 		rendLastCycle = thisCycle;
 	}
-	bool is_blend = false;
-	bool is_shadow = (gWorldRenderTypeRef && XPLMGetDatai(gWorldRenderTypeRef));
-	if (gPlaneRenderTypeRef) {
-		is_blend = (XPLMGetDatai(gPlaneRenderTypeRef) == 2);
-	}
-
-	LegacyCSL::doRender(is_blend);
-
-	if (is_blend && !is_shadow) {
-		CullInfo	glCamera;
-
-		gLabelList.clear();
-		for (auto &plane : gPlanes) {
-			plane->queueLabel(glCamera);
-		}
-
-		if (!gLabelList.empty()) {
-			GLfloat		vp[4];
-
-			CullInfo::GetCurrentViewport(vp);
-
-			double	x_scale = 1.0;
-			double	y_scale = 1.0;
-			if (gMSAAXRatioRef) {
-				x_scale = XPLMGetDataf(gMSAAXRatioRef);
-			}
-			if (gMSAAYRatioRef) {
-				y_scale = XPLMGetDataf(gMSAAYRatioRef);
-			}
-			
-			/* setup an ortho projection */
-			glMatrixMode(GL_PROJECTION);
-			glPushMatrix();
-			glLoadIdentity();
-			glOrtho(0, vp[2], 0, vp[3], -1, 1);
-
-			/* and load the identity modelview matrix */
-			glMatrixMode(GL_MODELVIEW);
-			glPushMatrix();
-			glLoadIdentity();
-			if (x_scale > 1.0 || y_scale > 1.0) {
-				glScalef(x_scale, y_scale, 1.0);
-			}
-
-			float c[4] = { 1, 1, 0, 1 };
-			for (const auto &label : gLabelList) {
-				float rat = 1.0f - (label.distSqr / static_cast<float>(Render_LabelDistance * Render_LabelDistance));
-				c[0] = c[1] = 0.5f + 0.5f * rat;
-				c[2] = 0.5f - 0.5f * rat;		// gray -> yellow - no alpha in the SDK - foo!
-
-				float lx, ly;
-				CullInfo::ProjectToViewport(vp, label.x, label.y, &lx, &ly);
-
-				XPLMDrawString(c, lx / x_scale, (ly / y_scale) + 10, (char *)label.labelText.c_str(), nullptr, xplmFont_Basic);
-			}
-
-			/* restore the projection and modelview matrixes */
-			glMatrixMode(GL_PROJECTION);
-			glPopMatrix();
-			glMatrixMode(GL_MODELVIEW);
-			glPopMatrix();
-		}
-	}
-	
 	return 1;
 }
 
 void
 Renderer_Attach_Callbacks()
 {
-	// don't look for the MSAA datarefs until we've attached the rendering hooks for the first time - for whatever reason, they don't exist during early sim-start.
-	if (!gMSAAHackInitialised) {
-		gMSAAHackInitialised = true;
-		gMSAAXRatioRef = XPLMFindDataRef("sim/private/controls/hdr/fsaa_ratio_x");
-		gMSAAYRatioRef = XPLMFindDataRef("sim/private/controls/hdr/fsaa_ratio_y");
-	}
-
-
 	XPLMRegisterDrawCallback(&XPMP_RenderCallback_Aircraft,
 		xplm_Phase_Airplanes, 0, nullptr);
 
-	InstanceCompat_Start();
 	TCAS::EnableHooks();
 }
 
 void
 Renderer_Detach_Callbacks()
 {
-	InstanceCompat_Stop();
 	TCAS::DisableHooks();
 
 	XPLMUnregisterDrawCallback(&XPMP_RenderCallback_Aircraft,

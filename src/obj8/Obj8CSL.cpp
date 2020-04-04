@@ -1,25 +1,42 @@
-//
-// Created by kuroneko on 2/03/2018.
-//
+/*
+ * Copyright (c) 2013, Laminar Research.
+ * Copyright (c) 2018,2020, Christopher Collins.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ */
+
+#include "Obj8CSL.h"
+
 #include <string>
 #include <deque>
 #include <queue>
 #include <utility>
-#include <XPLMScenery.h>
-#include <XPLMPlanes.h>
-#include <CullInfo.h>
 #include <XPMPMultiplayerVars.h>
 #include <XPLMDataAccess.h>
 
-#include "Obj8CSL.h"
-#include "XPMPMultiplayerObj8.h"
-#include "XUtils.h"
+#include "Obj8InstanceData.h"
 
 using namespace std;
 
-std::queue<Obj8Attachment *>	Obj8Attachment::loadQueue;
 
-static const char * dref_names[] = {
+const char * Obj8CSL::dref_names[] = {
 	"libxplanemp/controls/gear_ratio",
 	"libxplanemp/controls/flap_ratio",
 	"libxplanemp/controls/spoiler_ratio",
@@ -47,8 +64,8 @@ typedef void (* XPLMSetDataf_f)(
 typedef float (* XPLMGetDataf_f)(
 	void *               inRefcon);
 
-static float
-obj8_dref_read(void *inRefcon)
+float
+Obj8CSL::obj8_dref_read(void *inRefcon)
 {
 	intptr_t idx = reinterpret_cast<intptr_t>(inRefcon);
 	if (idx > static_cast<intptr_t>(Obj8CSL::dref_values.size()) || idx < 0) {
@@ -57,8 +74,8 @@ obj8_dref_read(void *inRefcon)
 	return Obj8CSL::dref_values[idx];
 }
 
-static void
-obj8_dref_write(void *inRefcon, float inValue)
+void
+Obj8CSL::obj8_dref_write(void *inRefcon, float inValue)
 {
 	intptr_t idx = reinterpret_cast<intptr_t>(inRefcon);
 	if (idx > static_cast<intptr_t>(Obj8CSL::dref_values.size()) || idx < 0) {
@@ -76,7 +93,7 @@ Obj8CSL::Init()
 			xplmType_Float,
 			true,  // writable
 			nullptr, nullptr, // int
-			obj8_dref_read, obj8_dref_write, // float
+            Obj8CSL::obj8_dref_read, Obj8CSL::obj8_dref_write, // float
 			nullptr, nullptr, // double
 			nullptr, nullptr, // int array
 			nullptr, nullptr, // float array
@@ -84,209 +101,14 @@ Obj8CSL::Init()
 			reinterpret_cast<void *>(n), // read refcon
 			reinterpret_cast<void *>(n)	 // write refcon
 		);
-		Obj8CSL::dref_values.emplace_back(0.0);
-	}
-}
-
-void
-Obj8Attachment::loadCallback(XPLMObjectRef inObject, void *inRefcon)
-{
-	auto *sThis = reinterpret_cast<Obj8Attachment *>(inRefcon);
-
-	sThis->mHandle = inObject;
-	if (nullptr == inObject) {
-		sThis->mLoadState = Obj8LoadState::Failed;
-		XPLMDump() << XPMP_CLIENT_NAME << " failed to load obj8: " << sThis->mFile << "\n";
-	} else {
-		XPLMDump() << XPMP_CLIENT_NAME << " did load obj8: " << sThis->mFile << "\n";
-		sThis->mLoadState = Obj8LoadState::Loaded;
-	}
-
-	if (!loadQueue.empty()) {
-		Obj8Attachment *nextAtt = nullptr;
-		nextAtt = loadQueue.front();
-		loadQueue.pop();
-		if (nextAtt) {
-			XPLMLoadObjectAsync(nextAtt->mFile.c_str(), &Obj8Attachment::loadCallback, reinterpret_cast<void *>(nextAtt));
-		}
-	}
-}
-
-void
-Obj8Attachment::enqueueLoad()
-{
-	if (mLoadState != Obj8LoadState::None) {
-		return;
-	}
-	if (mFile.empty()) {
-		return;
-	}
-	mLoadState = Obj8LoadState::Loading;
-	if (loadQueue.empty()) {
-		XPLMLoadObjectAsync(mFile.c_str(), &Obj8Attachment::loadCallback, reinterpret_cast<void *>(this));
-	} else {
-		loadQueue.push(this);
-	}
-}
-
-Obj8Attachment::Obj8Attachment(std::string fileName, Obj8DrawType drawType) :
-	mFile(fileName), mDrawType(drawType)
-{
-	mHandle = nullptr;
-	mLoadState = Obj8LoadState::None;
-}
-
-Obj8Attachment::Obj8Attachment(const Obj8Attachment &copySrc) :
-	mFile(copySrc.mFile), mDrawType(copySrc.mDrawType)
-{
-	mHandle = nullptr;
-	mLoadState = Obj8LoadState::None;
-}
-
-Obj8Attachment::Obj8Attachment(Obj8Attachment &&moveSrc) :
-	mFile(std::move(moveSrc.mFile)),
-	mDrawType(moveSrc.mDrawType)
-{
-	mHandle = moveSrc.mHandle;
-	moveSrc.mHandle = nullptr;
-
-	mLoadState = moveSrc.mLoadState;
-	moveSrc.mLoadState = Obj8LoadState::None;
-}
-
-Obj8Attachment::~Obj8Attachment()
-{
-	if (mHandle != nullptr) {
-		XPLMUnloadObject(mHandle);
-		mLoadState = Obj8LoadState::None;
-	}
-}
-
-XPLMObjectRef
-Obj8Attachment::getObjectHandle()
-{
-	switch (mLoadState) {
-	case Obj8LoadState::None:
-		enqueueLoad();
-		return nullptr;
-	case Obj8LoadState::Loaded:
-		return mHandle;
-	case Obj8LoadState::Failed:
-	case Obj8LoadState::Loading:
-		return nullptr;
-	}
-	return nullptr;
-}
-
-Obj8InstanceData::Obj8InstanceData() {
-	mainInstance = nullptr;
-	mainType = Obj8DrawType::None;
-}
-
-Obj8InstanceData::~Obj8InstanceData() {
-	resetModel();
-}
-
-void
-Obj8InstanceData::resetModel()
-{
-	if (mainInstance) {
-		(*xp11DestroyInstance)(mainInstance);
-		mainInstance = nullptr;
-	}
-	mainType = Obj8DrawType::None;
-}
-
-void
-Obj8InstanceData::updateInstance(
-	CSL *csl,
-	double x,
-	double y,
-	double z,
-	double pitch,
-	double roll,
-	double heading,
-	xpmp_LightStatus lights,
-	XPLMPlaneDrawState_t *state)
-{
-	Obj8CSL *myCSL = reinterpret_cast<Obj8CSL *>(csl);
-
-	// determine which instance type we want.
-	//FIXME: use lowlod + lights as appropriate.
-	Obj8DrawType desiredObj = Obj8DrawType::Solid;
-	if (mDistanceSqr > (gConfiguration.maxFullAircraftRenderingDistance * gConfiguration.maxFullAircraftRenderingDistance)) {
-		desiredObj = Obj8DrawType::LightsOnly;
-		if (!myCSL->getAttachmentFor(desiredObj)) {
-			desiredObj = Obj8DrawType::LowLevelOfDetail;
-			if (!myCSL->getAttachmentFor(desiredObj)) {
-				desiredObj = Obj8DrawType::Solid;
-			}
-		}
-	}
-	if (mainType != desiredObj) {
-		auto att = myCSL->getAttachmentFor(desiredObj);
-		if (att != nullptr) {
-			auto objHandle = att->getObjectHandle();
-			if (objHandle != nullptr) {
-				// unload the old object (if applicable) and create the new one.
-				resetModel();
-				mainInstance = (*xp11CreateInstance)(objHandle, dref_names);
-				mainType = att->mDrawType;
-			}
-		}
-	}
-
-	// build the state objects.
-	XPLMDrawInfo_t	objPosition = {};
-
-	objPosition.structSize = sizeof(objPosition);
-	objPosition.x = x;
-	objPosition.y = y;
-	objPosition.z = z;
-	objPosition.heading = heading;
-	objPosition.pitch = pitch;
-	objPosition.roll = roll;
-
-	// these must be in the same order as defined by dref_names
-	float		dataRefValues[] = {
-		state->gearPosition,
-		state->flapRatio,
-		state->spoilerRatio,
-		state->speedBrakeRatio,
-		state->slatRatio,
-		state->wingSweep,
-		state->thrust,
-		state->yokePitch,
-		state->yokeHeading,
-		state->yokeRoll,
-		static_cast<float>((state->thrust < 0.0) ? 1.0 : 0.0),
-		static_cast<float>(lights.taxiLights),
-		static_cast<float>(lights.landLights),
-		static_cast<float>(lights.bcnLights),
-		static_cast<float>(lights.strbLights),
-		static_cast<float>(lights.navLights)
-	};
-	if (mainInstance) {
-		(*xp11InstanceSetPosition)(mainInstance, &objPosition, dataRefValues);
+		Obj8CSL::dref_values.emplace_back(0.0f);
 	}
 }
 
 Obj8CSL::Obj8CSL(std::vector<std::string> dirNames, std::string objectName) :
-	CSL(dirNames),
-	mObjectName(objectName)
+	CSL(std::move(dirNames)),
+	mObjectName(std::move(objectName))
 {
-}
-
-void
-Obj8CSL::addAttachment(Obj8Attachment &att)
-{
-	mAttachments.push_back(att);
-}
-
-void
-Obj8CSL::addAttachment(Obj8Attachment &&att)
-{
-	mAttachments.push_back(std::move(att));
 }
 
 string
@@ -305,18 +127,6 @@ std::string
 Obj8CSL::getModelType() const
 {
 	return "Obj8";
-}
-
-
-Obj8Attachment *
-Obj8CSL::getAttachmentFor(Obj8DrawType drawType)
-{
-	for (auto &att: mAttachments) {
-		if (att.mDrawType == drawType) {
-			return &att;
-		}
-	}
-	return nullptr;
 }
 
 void

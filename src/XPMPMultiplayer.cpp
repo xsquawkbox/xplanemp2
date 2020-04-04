@@ -48,9 +48,7 @@
 #include "CSLLibrary.h"
 #include "XUtils.h"
 #include "Renderer.h"
-#include "obj8/InstanceWrapper.h"
 #include "obj8/Obj8CSL.h"
-#include "legacycsl/LegacyCSL.h"
 
 
 // This prints debug info on our process of loading Austin's planes.
@@ -73,34 +71,17 @@ XPMPPlaneFromID(XPMPPlaneID inID, XPMPPlaneVector::iterator * outIter=nullptr)
  * SETUP
  ********************************************************************************/
 
-const char * 	XPMPMultiplayerInit(
-	XPMPConfiguration_t *inConfiguration,
-	const char * inRelated,
-	const char * inDoc8643,
-	const char * resourceDir)
+const char *
+XPMPMultiplayerInit(XPMPConfiguration_t *inConfiguration,
+                    const char *inRelated,
+                    const char *inDoc8643)
 {
 	if (nullptr != inConfiguration) {
 		memcpy(&gConfiguration, inConfiguration, sizeof(gConfiguration));
 	}
 
-	// set up the OBJ8 instancing support wrapper.
-	InstanceCompat_Init();
 	// set up OBJ8 support
 	Obj8CSL::Init();
-
-	char	cPrefPath[512]; // length as defined by SDK documentation
-	XPLMGetPrefsPath(cPrefPath);
-	string	prefPath(cPrefPath);
-
-	string::size_type pathEnd = prefPath.find_last_of(XPLMGetDirectorySeparator());
-	if (pathEnd == string::npos) {
-		gPreferenceDir = resourceDir;
-	} else {
-		gPreferenceDir = prefPath.substr(0, pathEnd+1);
-	}
-	XPLMDump() << XPMP_CLIENT_NAME << " storing preferences and other user data in " << gPreferenceDir << "\n";
-
-	//cslVertOffsetCalc.setResourcesDir(gPreferenceDir);
 
 	bool	problem = false;
 
@@ -125,16 +106,6 @@ XPMPGetConfiguration(XPMPConfiguration_t *outConfig)
 	memcpy(outConfig, &gConfiguration, sizeof(gConfiguration));
 }
 
-const char *    XPMPMultiplayerOBJ7SupportEnable(const char * inTexturePath) {
-	bool problem = false;
-	if (!LegacyCSL::Init(inTexturePath))
-		problem = true;
-
-	if (problem) return "There was a problem initializing " XPMP_CLIENT_LONGNAME ". Please examine X-Plane's Log.txt file for detailed information.";
-	else         return "";
-}
-
-
 const char *	XPMPMultiplayerLoadCSLPackages(const char * inPackagePath) {
 	bool problem = !CSL_LoadCSL(inPackagePath);
 
@@ -145,8 +116,6 @@ const char *	XPMPMultiplayerLoadCSLPackages(const char * inPackagePath) {
 void XPMPMultiplayerCleanup()
 {
 	Renderer_Detach_Callbacks();
-	LegacyCSL::DeInit();
-	OGLDEBUG(glDebugMessageCallback(NULL, NULL));
 }
 
 
@@ -365,7 +334,6 @@ int			XPMPModelMatchQuality(
 void		XPMPDumpOneCycle(void)
 {
 	CSL_Dump();
-	gDumpOneRenderCycle = true;
 }
 
 void		XPMPUpdatePlanes(

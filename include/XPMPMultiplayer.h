@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004, Ben Supnik and Chris Serio.
+ * Copyright (c) 2018,2020, Chris Collins.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -29,11 +30,11 @@
 #include "XPLMDefs.h"
 
 #ifndef XPMP_CLIENT_NAME
-#define XPMP_CLIENT_NAME "XSB"
+#define XPMP_CLIENT_NAME "A CLIENT"
 #endif
 
 #ifndef XPMP_CLIENT_LONGNAME
-#define XPMP_CLIENT_LONGNAME "XSquawkBox"
+#define XPMP_CLIENT_LONGNAME "A Client"
 #endif
 
 #ifdef __cplusplus
@@ -45,24 +46,43 @@ extern "C" {
  * X-PLANE MULTIPLAYER
  ************************************************************************************/
 
-
-/*
-	Multiplayer - THEORY OF OPERATION
-	
-	The multiplayer API allows plug-ins to control aircraft visible to other plug-ins and
-	the user via x-plane.  It effectively provides glue between a series of observers
-	that wish to render or in other ways act upon those planes.
-	
-	A plug-in can control zero or more planes, and zero or more plug-ins can control planes.
-	However, each plane is controlled by exactly one plug-in.  A plug-in thus dynamically
-	allocates planes to control.  A plug-in registers a callback which is used to pull
-	information.  The plug-in may decide to not return information or state that that
-	information is unchanged.
-	
-	A plug-in can also read the current aircrafts or any of their data.  Aircraft data is
-	cached to guarantee minimum computing of data.
-	
-	Each 'kind' of data has an enumeration and corresponding structure.
+/**
+ * @mainpage
+ *
+ * X-Plane Multiplayer Library 2.x (for X-Plane 11 and newer).
+ *
+ * a.k.a:  `xplanemp` or `xpmp2`
+ *
+ * Historically, X-Plane only has a very limited integrated traffic system - it
+ * uses full detail ACFs and simulates the flight model for each aircraft every
+ * frame.    This is fine for light simulated traffic, but wasn't enough for
+ * high traffic environments (such as VATSIM or IVAO) or lower performance
+ * systems.
+ *
+ * xplanemp was originally glue that provided OpenGL-based independent traffic
+ * rendering inside the simulator, allowing users to provide simplified 3D
+ * models which the pilot client could have injected into the world, without
+ * incurring the full overhead of an ACF.
+ *
+ * X-Plane has changed - now it has multiple rendering backends and we have a
+ * API for loading and rendering instances of standard objects.  xplanemp
+ * provides the model definition and matching glue, efficient resource
+ * management, and participation in a few key hacks (such as TCAS faking, ground
+ * level clamping, amongst others).
+ *
+ * Because we can no longer trivially tell if an aircraft's data is needed as
+ * we no longer directly control rendering, the API has been shifted to a push
+ * model for data, where clients push updates for registered aircraft every
+ * frame.
+ *
+ * Collections of aircraft models are known as CSLs (short for "Common Shape
+ * Library") as that was the term used by the Microsoft Flight Simulator client,
+ * SquawkBox, before XSquawkBox, the first major X-Plane client and the origin
+ * for a good portion of the original xplanemp code, came into existence.
+ *
+ * `xpmp2` is **NOT** API compatible with the original `xplanemp`.  Please
+ * study the source and this documentation carefully before including it into
+ * an existing project.
 */
 
 /** XPMPConfiguration_t contains all of the configurable paramaters for
@@ -73,20 +93,11 @@ extern "C" {
  * with it's actual use.
  */
 typedef struct XPMPConfiguration_s {
-	unsigned int			maxPlaneRenderCount;		// Maximum aircraft to draw
-	float					maxFullAircraftRenderingDistance;	// Beyond what distance do we start using lights-only rendering?
-	float 					maxLabelDistance;			// Maximum distance to render labels at
-	bool 					enableSurfaceClamping;		// do we clamp the aircraft to the surface?
-	bool					drawLabels;					// do we render labels?
+	float					maxFullAircraftRenderingDistance;	/// Beyond what distance do we start using lights-only rendering?
+	bool 					enableSurfaceClamping;		/// do we clamp all aircraft to the surface?
 	struct {
-		unsigned int		maxResolution;				// what is the maximum texture resolution we should permit for LegacyCSL?
-		bool				useAnisotropicFiltering;	// should we permit the CSL textures to be rendered using anisotropic filtering?
-		float				textureAnisotropicFilteringLevel;
-	} legacyCslOptions;
-
-	struct {
-		bool modelMatching;								// Enable Verbose Debugging about Model matching
-		bool allowObj8AsyncLoad;						// Enable the asynchronous Obj8 model loader (was buggy)
+		bool modelMatching;								/// Enable Verbose Debugging about Model matching
+		bool allowObj8AsyncLoad;						/// Enable the asynchronous Obj8 model loader (was buggy)
 	} debug;
 } XPMPConfiguration_t;
 
@@ -135,7 +146,8 @@ typedef	struct {
 	float	roll;
 	float	heading;
 	char 	label[32];
-	bool 	clamp;
+    float 	offsetScale;
+    bool 	clampToGround;
 } XPMPPlanePosition_t;
 
 
@@ -219,26 +231,16 @@ typedef	struct {
 } XPMPPlaneSurveillance_t;
 
 /**
- * The XPMPPlaneData enum defines the different categories of aircraft information we can query about.
- *
- */
-enum {
-	xpmpDataType_Position 	= 1L << 1,
-	xpmpDataType_Surfaces 	= 1L << 2,
-	xpmpDataType_Radar 		= 1L << 3
-};
-typedef	int			XPMPPlaneDataType;
-
-/**
  * XPMPPlaneID is a unique ID for an aircraft created by a plug-in.
  *
  */
 typedef	void *		XPMPPlaneID;
 
-
 /** XPMPPlaneUpdate is used to feed updates in aircraft state data into libxplanemp
  */
 typedef struct {
+    /// plane refers to the plane to update - it can be set to 0, in which case
+    /// that update will be ignored in it's entirety.
 	XPMPPlaneID				plane;
 	XPMPPlanePosition_t		*position;
 	XPMPPlaneSurfaces_t		*surfaces;
@@ -263,27 +265,21 @@ void removeUserVertOffset(const char *inMtlCode);
  * @param inConfiguration can point to a XPMPConfiguration_t with the initial parameters for the library
  * @param inRelated path to the related.txt table
  * @param inDoc8643 path to the doc8643.txt table
- * @param resourceDir path to the user configuration directory to use.
  * @return NULL if OK, a C string if an error occured.
  */
-const char * 	XPMPMultiplayerInit(
-	XPMPConfiguration_t *inConfiguration,
-	const char * inRelated,
-	const char * inDoc8643,
-	const char * resourceDir);
+const char *
+XPMPMultiplayerInit(XPMPConfiguration_t *inConfiguration,
+                    const char *inRelated,
+                    const char *inDoc8643);
 
-
-
-/** XPMPMultiplayerOBJ7SupportEnable tells libxplanemp to load the LegacyCSL
- * specific resources and set up the LegacyCSL renderer.
+/** XPMPMultiplayerLoadCSLPackages loads all CSL packages from the nominated path
  *
- * This should be called after all other init functions (other than LoadPackage)
+ * @param inPackagePath relative (or absolute) path to the base folder for a CSL package
+ * @return NULL if the load was successful, otherwise a C string with an error message describing the failure
  *
- * @param inTexturePath Path to the legacy CSL resources (lights texture)
- * @return NULL if OK, a C string if an error occured.
+ * @note The error message is actually generic - it just refers the user to read
+ *    the log file.
  */
-const char *    XPMPMultiplayerOBJ7SupportEnable(const char * inTexturePath);
-
 const char *	XPMPMultiplayerLoadCSLPackages(const char * inPackagePath);
 
 /*

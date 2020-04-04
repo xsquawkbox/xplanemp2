@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2005, Ben Supnik and Chris Serio.
+ * Copyright (c) 2018,2020, Christopher Collins.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,15 +22,17 @@
  *
  */
 
-#include <cstdio>
 #include <algorithm>
-#include <cerrno>
-#include <cstring>
 #include <fstream>
 #include <sstream>
 #include <functional>
-#include <cctype>
 #include <string>
+#include <unordered_map>
+
+#include <cstdio>
+#include <cerrno>
+#include <cstring>
+#include <cctype>
 
 #include <XPLMPlugin.h>
 #include <XPLMUtilities.h>
@@ -39,7 +42,6 @@
 #include "XStringUtils.h"
 #include "XUtils.h"
 #include "obj8/Obj8CSL.h"
-#include "legacycsl/LegacyCSL.h"
 
 using namespace std;
 using namespace xpmp;
@@ -145,81 +147,27 @@ ParseDependencyCommand(
 }
 
 static bool
+ParseAircraftCommand(
+	const std::vector<std::string> &tokens, CSLPackage_t &package, const string &path, int lineNum, const string &line)
+{
+	XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " ERROR: Encountered legacy AIRCRAFT directive - ACF CSLs are not supported anymore.\n";
+	return false;
+}
+
+static bool
 ParseObjectCommand(
 	const std::vector<std::string> &tokens, CSLPackage_t &package, const string &path, int lineNum, const string &line)
 {
-	std::vector<std::string> dupTokens = tokens;
-	BreakStringPvt(line.c_str(), dupTokens, 2, " \t\r\n");
-	if (tokens.size() != 2) {
-		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJECT command takes 1 argument.\n";
-		return false;
-	}
-	std::string relativePath(tokens[1]);
-	MakePartialPathNativeObj(relativePath);
-	std::string fullPath(relativePath);
-	if (!DoPackageSub(fullPath)) {
-		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: package not found.\n";
-		return false;
-	}
-
-	std::vector<std::string> dirNames;
-	BreakStringPvt(relativePath.c_str(), dirNames, 0, "/");
-	// Replace the first one being the package name with the package root dir
-	std::string packageRootDir = package.path.substr(package.path.find_last_of('/') + 1);
-	dirNames[0] = packageRootDir;
-	// Remove the last one being the obj itself
-	string objFileName = dirNames.back();
-	dirNames.pop_back();
-
-	// Remove *.obj extension
-	objFileName.erase(objFileName.find_last_of('.'));
-
-	LegacyCSL *csl = new LegacyCSL(dirNames, objFileName, fullPath, OBJ_DefaultModel(fullPath));
-	package.planes.push_back(csl);
-#if DEBUG_CSL_LOADING
-	XPLMDebugString("      Got Object: ");
-	XPLMDebugString(fullPath.c_str());
-	XPLMDebugString("\n");
-#endif
-
-	return true;
+	XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " ERROR: Encountered legacy OBJECT directive - Legacy (OBJ7) CSLs are not supported anymore.\n";
+	return false;
 }
 
 static bool
 ParseTextureCommand(
 	const std::vector<std::string> &tokens, CSLPackage_t &package, const string &path, int lineNum, const string &line)
 {
-	if (tokens.size() != 2) {
-		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: TEXTURE command takes 1 argument.\n";
-		return false;
-	}
-
-	// Load regular texture
-	string relativeTexPath = tokens[1];
-	MakePartialPathNativeObj(relativeTexPath);
-	string absoluteTexPath(relativeTexPath);
-
-	if (!DoPackageSub(absoluteTexPath)) {
-		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: package not found.\n";
-		return false;
-	}
-
-	string textureFilename = absoluteTexPath;
-	// Remove directory if present.
-	textureFilename.erase(0, textureFilename.find_last_of('/') + 1);
-	// Remove extension if present.
-	textureFilename.erase(textureFilename.find_last_of('.'));
-
-	LegacyCSL *myCSL = dynamic_cast<LegacyCSL *>(package.planes.back());
-	myCSL->setTexture(textureFilename, absoluteTexPath, OBJ_GetLitTextureByTexture(absoluteTexPath));
-
-#if DEBUG_CSL_LOADING
-	XPLMDebugString("      Got texture: ");
-	XPLMDebugString(absoluteTexPath.c_str());
-	XPLMDebugString("\n");
-#endif
-
-	return true;
+	XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " ERROR: Encountered legacy TEXTURE directive - Legacy (OBJ7) CSLs are not supported anymore.\n";
+	return false;
 }
 
 static bool
@@ -249,11 +197,14 @@ ParseObj8Command(
 	// OBJ8 <group> <animate YES|NO> <filename>
 	if (tokens.size() != 4) {
 		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: OBJ8 command takes 3 arguments.\n";
+		if (tokens.size() < 4)
+			return false;
 	}
-
 	auto *myCSL = dynamic_cast<Obj8CSL *>(package.planes.back());
+
 	// err - obj8 record at stupid place in file
 	if (package.planes.empty() || myCSL == nullptr) {
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " ERROR: Got OBJ8 command outside of plane definition\n";
 		return false;
 	}
 
@@ -267,25 +218,16 @@ ParseObj8Command(
 			if (tokens[1] == "SOLID") {
 				dt = Obj8DrawType::Solid;
 			} else {
-				// err crap enum
+				if (tokens[1] == "GLASS") {
+					XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: Got GLASS part - GLASS parts are deprecated.  Treating as SOLID\n";
+					dt = Obj8DrawType::Solid;
+				} else {
+					XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: Got unknown part type " << tokens[1] << " - ignoring\n";
+					return false;
+				}
 			}
 		}
 	}
-
-
-#if 0
-	// dataref costs are pretty negligable with the instancing API - obj8's are now always animated
-	bool needs_animation = false;
-	if (tokens[2] == "YES") {
-		needs_animation = true;
-	} else {
-		if (tokens[2] == "NO") {
-			needs_animation = false;
-		} else {
-			// crap flag
-		}
-	}
-#endif
 
 	string relativePath = tokens[3];
 	MakePartialPathNativeObj(relativePath);
@@ -295,23 +237,20 @@ ParseObj8Command(
 		return false;
 	}
 
+	// convert the absolute path back to a relative one
 	char xsystem[1024];
 	XPLMGetSystemPath(xsystem);
-#if APL
-	if (XPLMIsFeatureEnabled("XPLM_USE_NATIVE_PATHS") == 0)
-		HFS2PosixPath(xsystem, xsystem, 1024);
-#endif
 
 	size_t sys_len = strlen(xsystem);
 	if (absolutePath.size() > sys_len) {
 		absolutePath.erase(absolutePath.begin(), absolutePath.begin() + sys_len);
 	} else {
-		// should probaby freak out here.
+		// should probably freak out here since we can't truncate the absolute path back to a relative one
+		// that said - it could also be perfectly valid, so we'll bleed it through.
 	}
 
-	Obj8Attachment att(absolutePath, dt);
-
-	myCSL->addAttachment(std::move(att));
+	auto att = Obj8Attachment::getAttachmentForFile(absolutePath);
+	myCSL->addAttachment(dt, std::move(att));
 
 	return true;
 }
@@ -495,7 +434,7 @@ ParsePackageHeader(const string &path, const string &content)
 	using command = std::function<bool(
 		const std::vector<std::string> &, CSLPackage_t &, const string &, int, const string &)>;
 
-	static const std::map<std::string, command> commands{{"EXPORT_NAME", &ParseExportCommand}};
+	static const std::unordered_map<std::string, command> commands{{"EXPORT_NAME", &ParseExportCommand}};
 
 	CSLPackage_t package;
 	stringstream sin(content);
@@ -531,7 +470,7 @@ ParseFullPackage(const std::string &content, CSLPackage_t &package)
 	using command = std::function<bool(
 		const std::vector<std::string> &, CSLPackage_t &, const string &, int, const string &)>;
 
-	static const std::map<std::string, command> commands {
+	static const std::unordered_map<std::string, command> commands {
 		{"EXPORT_NAME", &ParseDummyCommand},
 		{"DEPENDENCY", &ParseDependencyCommand},
 		{"OBJECT", &ParseObjectCommand},
@@ -543,6 +482,7 @@ ParseFullPackage(const std::string &content, CSLPackage_t &package)
 		{"ICAO", &ParseIcaoCommand},
 		{"AIRLINE", &ParseAirlineCommand},
 		{"LIVERY", &ParseLiveryCommand},
+		{ "AIRCRAFT", &ParseAircraftCommand},
 	};
 
 	stringstream sin(content);
@@ -599,7 +539,8 @@ CSL_LoadData(const char *inRelated, const char *inDoc8643)
 		char buf[1024];
 		while (fgets_multiplatform(buf, sizeof(buf), aircraft_fi)) {
 			vector<string> tokens;
-			BreakStringPvt(buf, tokens, 0, "\t\r\n");
+
+			tokens = tokenize(buf, "\t", 5);
 
 			// Sample line. Fields are separated by tabs
 			// ABHCO	SA-342 Gazelle 	GAZL	H1T	-
@@ -626,14 +567,13 @@ CSL_LoadData(const char *inRelated, const char *inDoc8643)
 		char buf[1024];
 		while (fgets_multiplatform(buf, sizeof(buf), related_fi)) {
 			if (buf[0] != ';') {
-				vector<string> tokens;
-				BreakStringPvt(buf, tokens, 0, " \t\r\n");
+				vector<string> tokens = tokenize(buf, " \t\r\n");
 				string group;
-				for (size_t n = 0; n < tokens.size(); ++n) {
-					if (n != 0) {
+				for (const auto &tok: tokens) {
+					if (!group.empty()) {
 						group += " ";
 					}
-					group += tokens[n];
+					group += tok;
 				}
 				for (const auto &tok: tokens) {
 					gGroupings[tok] = group;
@@ -757,7 +697,7 @@ CSL_MatchPlane(const PlaneType &type,int *match_quality, bool allow_default)
 	string group;
 	string key;
 
-	map<string, string>::iterator group_iter = gGroupings.find(type.mICAO);
+	auto group_iter = gGroupings.find(type.mICAO);
 	if (group_iter != gGroupings.end()) {
 		group = group_iter->second;
 	}

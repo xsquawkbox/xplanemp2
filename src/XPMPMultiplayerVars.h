@@ -33,16 +33,13 @@
 #include <vector>
 #include <set>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <memory>
 
 #include "XPMPMultiplayer.h"
 
 #include "CSL.h"
 #include "PlaneType.h"
-#include "obj8/XPMPMultiplayerObj8.h"    // for obj8 attachment info
-#include "legacycsl/XObjDefs.h"
-#include "legacycsl/LegacyObj.h"
 
 const	double	kFtToMeters = 0.3048;
 const	double	kMaxDistTCAS = 40.0 * 6080.0 * kFtToMeters;
@@ -86,67 +83,34 @@ struct	CSLPackage_t {
 	std::string					name;
 	std::string					path;
 	std::vector<CSL *>			planes;
-	std::map<std::string, int>	matches[match_count];
+	std::unordered_map<std::string, int>	matches[match_count];
 };
 
 extern std::vector<CSLPackage_t>		gPackages;
 
-extern std::map<std::string, std::string>		gGroupings;
+extern std::unordered_map<std::string, std::string>		gGroupings;
 
 /**************** Model matching using ICAO doc 8643
 		(http://www.icao.int/anb/ais/TxtFiles/Doc8643.txt) ***********/
 
 struct CSLAircraftCode_t {
-	string				icao;		// aircraft ICAO code
-	string				equip;		// equipment code (L1T, L2J etc)
+	std::string			icao;		// aircraft ICAO code
+    std::string			equip;		// equipment code (L1T, L2J etc)
 	char				category;	// L, M, H, V (vertical = helo)
 };
 
-extern map<string, CSLAircraftCode_t>	gAircraftCodes;
+extern std::unordered_map<std::string, CSLAircraftCode_t>	gAircraftCodes;
 
 /**************** PLANE OBJECTS ********************/
 
 #include "XPMPPlane.h"
 
 typedef	XPMPPlane *								XPMPPlanePtr;
-typedef	vector<std::unique_ptr<XPMPPlane>>		XPMPPlaneVector;
+typedef	std::vector<std::unique_ptr<XPMPPlane>>		XPMPPlaneVector;
 
 extern XPMPConfiguration_t				gConfiguration;
 extern PlaneType						gDefaultPlane;
-extern std::string						gPreferenceDir;
 
 extern XPMPPlaneVector					gPlanes;				// All planes
-extern int								gDumpOneRenderCycle;	// Debug
 
-// Helper funcs
-namespace xmp {
-	inline std::string trim(std::string inStr, bool inLeft = true, bool inRight = true, const std::string &inDelim = " \t\f\v\r\n") {
-		if (inRight)
-		{
-			inStr.erase(inStr.find_last_not_of(inDelim) + 1);//trim right side
-		}
-		if (inLeft)
-		{
-			inStr.erase(0, inStr.find_first_not_of(inDelim));//trim left side
-		}
-		return inStr;
-	}
-
-	inline std::vector<std::string> explode(const std::string &inStr, const std::string &inDelim = " \t\f\v\r\n") {
-		std::vector<std::string> out;
-		std::size_t found = inStr.find_first_of(inDelim);
-		std::size_t lastFound = 0;
-
-		while (found != std::string::npos) {
-			if (lastFound != found)
-				out.push_back(trim(inStr.substr(lastFound, found - lastFound)));
-			found = inStr.find_first_of(inDelim, lastFound = found + 1);
-		}
-
-		if (lastFound != inStr.size())  // Critical end
-			out.push_back(trim(inStr.substr(lastFound, inStr.size() - lastFound)));
-
-		return out;
-	}
-}
 #endif
