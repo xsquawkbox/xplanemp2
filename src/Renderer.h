@@ -13,7 +13,6 @@
 extern XPLMDataRef		gVisDataRef;		// Current air visiblity for culling.
 extern XPLMProbeRef		gTerrainProbe;
 
-extern double	Render_LabelDistance;
 extern double	Render_FullPlaneDistance;
 
 struct Label {
@@ -22,8 +21,6 @@ struct Label {
 	float 		distSqr;
 	std::string	labelText;
 };
-
-extern std::vector<Label>	gLabelList;
 
 void	Renderer_Init();
 void	Renderer_Attach_Callbacks();

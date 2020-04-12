@@ -127,6 +127,7 @@ XPMPPlane::doInstanceUpdate(const CullInfo &gl_camera)
 		}
 
 		// do labels.
+#if 0
 		if (!mInstanceData->mCulled && mInstanceData->mDistanceSqr <= (Render_LabelDistance * Render_LabelDistance)) {
 			float tx, ty;
 
@@ -137,6 +138,7 @@ XPMPPlane::doInstanceUpdate(const CullInfo &gl_camera)
 				string(mPosition.label) 
 			});
 		}
+#endif
 		return mInstanceData->mDistanceSqr;
 	}
 	return 0.0;
