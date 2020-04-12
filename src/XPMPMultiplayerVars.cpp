@@ -31,12 +31,12 @@
 XPMPConfiguration_t				gConfiguration = {
 	3.0,	// maxFullAircraftRenderingDistance
 	false,	// enableSurfaceClamping
-	{ false, true }	// debug options
+	{ false }	// debug options
 };
 
 PlaneType						gDefaultPlane;
 
-XPMPPlaneVector					gPlanes;
+XPMPPlaneMap					gPlanes;
 int								gDumpOneRenderCycle = 0;
 
 std::vector<CSLPackage_t>		gPackages;

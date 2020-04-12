@@ -55,15 +55,14 @@
 #define	DEBUG_MANUAL_LOADING	0
 
 static XPMPPlanePtr
-XPMPPlaneFromID(XPMPPlaneID inID, XPMPPlaneVector::iterator * outIter=nullptr)
+XPMPPlaneFromID(XPMPPlaneID inID, XPMPPlaneMap::iterator * outIter=nullptr)
 {
 	assert(inID);
-	if (outIter) {
-		*outIter = std::find_if(gPlanes.begin(), gPlanes.end(), [inID] (const auto &p) {
-			return p.get() == inID;
-		});
-		assert(*outIter != gPlanes.end());
-	}
+    auto planeIter = gPlanes.find(inID);
+	assert(planeIter != gPlanes.end());
+    if (outIter) {
+        *outIter = planeIter;
+    }
 	return static_cast<XPMPPlanePtr>(inID);
 }
 
@@ -204,10 +203,8 @@ XPMPCreatePlane(
 	auto plane = std::make_unique<XPMPPlane>();
 	plane->setType(PlaneType(inICAOCode, inAirline, inLivery));
 	plane->updateCSL();
-
-	gPlanes.push_back(std::move(plane));
-	
-	XPMPPlanePtr planePtr = gPlanes.back().get();
+	XPMPPlanePtr planePtr = plane.get();
+	gPlanes.emplace(planePtr, std::move(plane));
 	if (gPlanes.size() == 1) {
 		Renderer_Attach_Callbacks();
 	}
@@ -242,10 +239,9 @@ XPMPCreatePlaneWithModelName(
 		plane->updateCSL();
 	}
 
-	gPlanes.push_back(std::move(plane));
-
-	XPMPPlanePtr planePtr = gPlanes.back().get();
-	if (gPlanes.size() == 1) {
+    XPMPPlanePtr planePtr = plane.get();
+	gPlanes.emplace(planePtr, std::move(plane));
+    if (gPlanes.size() == 1) {
 		Renderer_Attach_Callbacks();
 	}
 	return planePtr;
@@ -254,14 +250,13 @@ XPMPCreatePlaneWithModelName(
 void
 XPMPDestroyPlane(XPMPPlaneID inID)
 {
-	XPMPPlaneVector::iterator iter;
+	XPMPPlaneMap::iterator iter;
 	XPMPPlanePtr plane = XPMPPlaneFromID(inID, &iter);
 
 	gPlanes.erase(iter);
 	if (gPlanes.size() == 0) {
 		Renderer_Detach_Callbacks();
 	}
-
 }
 
 int
@@ -296,15 +291,6 @@ long			XPMPCountPlanes(void)
 {
 	return static_cast<long>(gPlanes.size());
 }
-
-XPMPPlaneID		XPMPGetNthPlane(
-		long 					index)
-{
-	if ((index < 0) || (index >= static_cast<long>(gPlanes.size())))
-		return NULL;
-
-	return gPlanes[index].get();
-}							
 
 bool			XPMPIsICAOValid(
 		const char *				inICAO)
@@ -349,6 +335,11 @@ void		XPMPUpdatePlanes(
 		// our default structure is 4 pointers long.
 		if (inUpdateSize < (sizeof(void *) * 4))
 			continue;
+
+		/** if the plane ID is null, skip */
+		if (thisUpdate->plane == nullptr) {
+			continue;
+		}
 
 		auto *plane = XPMPPlaneFromID(thisUpdate->plane);
 

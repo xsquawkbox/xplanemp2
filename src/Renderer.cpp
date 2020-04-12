@@ -79,8 +79,8 @@ Render_PrepLists()
     Render_FullPlaneDistance = x_camera.zoom * (5280.0 / 3.2) *
                                gConfiguration.maxFullAircraftRenderingDistance;    // Only draw planes fully within 3 miles.
 
-    for (auto &plane: gPlanes) {
-        plane->doInstanceUpdate(gl_camera);
+    for (auto &planePair: gPlanes) {
+        planePair.second->doInstanceUpdate(gl_camera);
     }
 }
 

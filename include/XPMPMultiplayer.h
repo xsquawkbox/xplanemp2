@@ -97,7 +97,6 @@ typedef struct XPMPConfiguration_s {
 	bool 					enableSurfaceClamping;		/// do we clamp all aircraft to the surface?
 	struct {
 		bool modelMatching;								/// Enable Verbose Debugging about Model matching
-		bool allowObj8AsyncLoad;						/// Enable the asynchronous Obj8 model loader (was buggy)
 	} debug;
 } XPMPConfiguration_t;
 
@@ -436,15 +435,6 @@ void	XPMPSetDefaultPlaneICAO(
  * @return total count of planes active in libxplanemp
  */
 long			XPMPCountPlanes(void);
-
-/** XPMPGetNthPlane returns the plane ID of the Nth registered plane.
- *
- * @param index the index of the plane ID to retrieve
- * @returns the ID for the plane requested.  NULL if not found.
- */
-XPMPPlaneID	XPMPGetNthPlane(
-		long 					index);
-
 
 /** XPMPUpdatePlanes performs a bulk update on a number of aircraft positions or
  * states

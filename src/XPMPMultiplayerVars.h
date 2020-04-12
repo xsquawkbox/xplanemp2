@@ -106,11 +106,11 @@ extern std::unordered_map<std::string, CSLAircraftCode_t>	gAircraftCodes;
 #include "XPMPPlane.h"
 
 typedef	XPMPPlane *								XPMPPlanePtr;
-typedef	std::vector<std::unique_ptr<XPMPPlane>>		XPMPPlaneVector;
+typedef	std::unordered_map<void *, std::unique_ptr<XPMPPlane>>		XPMPPlaneMap;
 
 extern XPMPConfiguration_t				gConfiguration;
 extern PlaneType						gDefaultPlane;
 
-extern XPMPPlaneVector					gPlanes;				// All planes
+extern XPMPPlaneMap					gPlanes;				// All planes
 
 #endif
