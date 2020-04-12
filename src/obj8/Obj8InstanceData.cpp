@@ -44,8 +44,8 @@ Obj8InstanceData::updateInstance(
     // determine which instance type we want.
     //FIXME: use lowlod + lights as appropriate.
     Obj8DrawType desiredObj = Obj8DrawType::Solid;
-    if (mDistanceSqr > (gConfiguration.maxFullAircraftRenderingDistance *
-                        gConfiguration.maxFullAircraftRenderingDistance)) {
+	auto fullRenderDistance = gConfiguration.maxFullAircraftRenderingDistance * 1000.0f;
+    if (mDistanceSqr > (fullRenderDistance * fullRenderDistance)) {
         desiredObj = Obj8DrawType::LightsOnly;
         if (!myCSL->hasAttachmentsFor(desiredObj)) {
             desiredObj = Obj8DrawType::LowLevelOfDetail;
@@ -141,10 +141,12 @@ Obj8InstanceData::instancePartsForType(const Obj8CSL *csl,
     auto &instances = mInstances[instIdx];
     const auto &attachments = *attSet;
     for (unsigned int i = 0; i < attachments.size(); i++) {
-        if (instances[i] == nullptr &&
-            attachments[i]->getLoadState() == Obj8LoadState::Loaded) {
-            instances[i] = XPLMCreateInstance(attachments[i]->getObjectHandle(),
-                                              Obj8CSL::dref_names);
+        if (instances[i] == nullptr) {
+        	auto *objHandle = attachments[i]->getObjectHandle();
+        	if (nullptr != objHandle) {
+				instances[i] = XPLMCreateInstance(attachments[i]->getObjectHandle(),
+					                              Obj8CSL::dref_names);
+            }
         }
     }
 }
