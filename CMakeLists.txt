@@ -20,17 +20,9 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	set(XPMP_DEFINES ${XPMP_DEFINES} LIN=1)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	set(XPMP_DEFINES ${XPMP_DEFINES} IBM=1)
-	set(XPMP_PLATFORM_LIBRARIES opengl32 glu32)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Darwin")
 	set(XPMP_DEFINES ${XPMP_DEFINES} APL=1)
-	find_library(OPENGL OpenGL)
-	set(XPMP_PLATFORM_LIBRARIES ${OPENGL})
 endif()
-#if(PNG_FOUND)
-	add_definitions(-DBITMAP_USE_PNG=1)
-#endif()
-
-add_definitions(-DXPLM200=1 -DXPLM210=1)
 
 add_library(xplanemp
 	${XPMP_PLATFORM_SOURCES}
@@ -73,6 +65,7 @@ target_link_libraries(xplanemp
 	PRIVATE ${XPSDK_XPLM_LIBRARIES}
 	${PNG_LIBRARY}
 	${XPMP_PLATFORM_LIBRARIES})
-target_compile_definitions(xplanemp PRIVATE ${XPMP_DEFINES} PUBLIC XUTILS_EXCLUDE_MAC_CRAP=1)
+target_compile_definitions(xplanemp
+		PRIVATE ${XPMP_DEFINES} XPLM200=1 XPLM210=1 XPLM300=1)
 set_property(TARGET xplanemp PROPERTY CXX_STANDARD_REQUIRED 11)
 set_property(TARGET xplanemp PROPERTY CXX_STANDARD 14)
