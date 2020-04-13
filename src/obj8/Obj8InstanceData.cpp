@@ -23,8 +23,11 @@
  */
 
 #include "Obj8InstanceData.h"
+
 #include <cassert>
 #include <XPMPMultiplayerVars.h>
+
+#include "Obj8CSL.h"
 
 void
 Obj8InstanceData::updateInstance(

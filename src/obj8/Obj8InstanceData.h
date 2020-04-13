@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef XSQUAWKBOX_VATSIM_OBJ8INSTANCEDATA_H
-#define XSQUAWKBOX_VATSIM_OBJ8INSTANCEDATA_H
+#ifndef OBJ8INSTANCEDATA_H
+#define OBJ8INSTANCEDATA_H
 
 #include <deque>
 #include <XPLMInstance.h>
@@ -69,6 +69,4 @@ private:
 	void resetModel();
 };
 
-#include "Obj8CSL.h"
-
-#endif //XSQUAWKBOX_VATSIM_OBJ8INSTANCEDATA_H
+#endif //OBJ8INSTANCEDATA_H

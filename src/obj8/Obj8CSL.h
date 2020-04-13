@@ -92,4 +92,4 @@ private:
 };
 
 
-#endif //XSQUAWKBOX_VATSIM_OBJ8CSL_H
+#endif //OBJ8CSL_H

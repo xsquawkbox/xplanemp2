@@ -25,13 +25,15 @@
 #ifndef OBJ8ATTACHMENT_H
 #define OBJ8ATTACHMENT_H
 
-#include "Obj8Common.h"
 #include <string>
 #include <utility>
 #include <queue>
 #include <memory>
 #include <unordered_map>
+
 #include <XPLMScenery.h>
+
+#include "Obj8Common.h"
 
 /** Obj8Attachment is a single obj8 component loaded and ready for rendering.
  */
