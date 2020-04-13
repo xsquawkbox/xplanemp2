@@ -11,9 +11,15 @@
 
 class XPMPMapRendering {
 public:
-    explicit XPMPMapRendering(const std::string &iconSheet, int s = 0, int t = 0, int sheetsize_s = 1, int sheetsize_t = 1);
+    static void Init();
+    static void Shutdown();
 
-    virtual ~XPMPMapRendering();
+    static void ConfigureIcon(const std::string &iconSheet,
+                              int s = 0,
+                              int t = 0,
+                              int sheetsize_s = 1,
+                              int sheetsize_t = 1,
+                              float iconSize = 35.0f);
 
 protected:
     enum MapLayerInstances {
@@ -35,12 +41,13 @@ protected:
         }
     }
 
-    void tryCreateMapLayers(const char *mapIdentifier, int position);
+    static void tryCreateMapLayers(const char *mapIdentifier, int position);
 
-    XPLMMapLayerID mAircraftLayers[ML_COUNT];
-    std::string     mMapSheetPath;
-    int             mThisS, mThisT;
-    int             mSizeS, mSizeT;
+    static XPLMMapLayerID gAircraftLayers[ML_COUNT];
+    static std::string     gMapSheetPath;
+    static int             gThisS, gThisT;
+    static int             gSizeS, gSizeT;
+    static float           gIconScale;
 
     static void IconCallback(
         XPLMMapLayerID inLayer,
@@ -51,13 +58,6 @@ protected:
         XPLMMapProjectionID projection,
         void *inRefcon);
 
-    void drawIcons(XPLMMapLayerID inLayer,
-                   const float *inMapBoundsLeftTopRightBottom,
-                   float zoomRatio,
-                   float mapUnitsPerUserInterfaceUnit,
-                   XPLMMapStyle mapStyle,
-                   XPLMMapProjectionID projection);
-
     static void LabelCallback(
         XPLMMapLayerID inLayer,
         const float *inMapBoundsLeftTopRightBottom,
@@ -67,12 +67,9 @@ protected:
         XPLMMapProjectionID projection,
         void *inRefcon);
 
-    void drawLabels(XPLMMapLayerID inLayer,
-                    const float *inMapBoundsLeftTopRightBottom,
-                    float zoomRatio,
-                    float mapUnitsPerUserInterfaceUnit,
-                    XPLMMapStyle mapStyle,
-                    XPLMMapProjectionID projection);
+    static void MapCreatedCallback(
+        const char *mapIdentifier,
+        void *refcon);
 
 };
 

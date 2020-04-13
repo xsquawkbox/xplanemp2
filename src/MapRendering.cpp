@@ -4,22 +4,78 @@
 
 #include "MapRendering.h"
 #include "XPMPMultiplayerVars.h"
+#include <cmath>
 
-XPMPMapRendering::XPMPMapRendering(const std::string &iconSheet, int s, int t, int sheetsize_s, int sheetsize_t):
-    mMapSheetPath(iconSheet),
-    mThisS(s),
-    mThisT(t),
-    mSizeS(sheetsize_s),
-    mSizeT(sheetsize_t),
-    mAircraftLayers{nullptr, nullptr,}
+#ifndef M_PI
+#define M_PI 3.141592653589793
+#endif
+
+#include <cstring>
+
+/* map layers */
+XPLMMapLayerID XPMPMapRendering::gAircraftLayers[ML_COUNT] = {
+    nullptr,
+    nullptr,
+};
+
+/* icon sheet parameters */
+std::string     XPMPMapRendering::gMapSheetPath;
+int             XPMPMapRendering::gThisS = 0;
+int             XPMPMapRendering::gThisT = 0;
+int             XPMPMapRendering::gSizeS = 1;
+int             XPMPMapRendering::gSizeT = 1;
+float           XPMPMapRendering::gIconScale = 30.0f;
+
+void
+XPMPMapRendering::Init()
 {
-    // Create the Aircraft Layers
+    // bind the map creation callback
+    XPLMRegisterMapCreationHook(&MapCreatedCallback, nullptr);
+
+    // Create the Layers for existing maps
     for (int ml = 0; ml < ML_COUNT; ml++) {
         const char *mapLayerIdentifier = MapLayerInstanceToString(static_cast<MapLayerInstances>(ml));
         if (XPLMMapExists(mapLayerIdentifier)) {
             tryCreateMapLayers(mapLayerIdentifier, ml);
         }
     }
+}
+
+void
+XPMPMapRendering::Shutdown()
+{
+    for (int ml = 0; ml < ML_COUNT; ml++) {
+        if (gAircraftLayers[ml]) {
+            XPLMDestroyMapLayer(gAircraftLayers[ml]);
+            gAircraftLayers[ml] = nullptr;
+        }
+    }
+}
+
+void
+XPMPMapRendering::MapCreatedCallback(const char *mapIdentifier, void *refcon)
+{
+    if (!strcmp(mapIdentifier, XPLM_MAP_USER_INTERFACE)) {
+        tryCreateMapLayers(mapIdentifier, ML_UserInterface);
+    } else if (!strcmp(mapIdentifier, XPLM_MAP_IOS)) {
+        tryCreateMapLayers(mapIdentifier, ML_IOS);
+    }
+}
+
+void
+XPMPMapRendering::ConfigureIcon(const std::string &iconSheet,
+                                int s,
+                                int t,
+                                int sheetsize_s,
+                                int sheetsize_t,
+                                float iconSize)
+{
+    gMapSheetPath = iconSheet;
+    gThisS = s;
+    gThisT = t;
+    gSizeS = sheetsize_s;
+    gSizeT = sheetsize_t;
+    gIconScale = iconSize;
 }
 
 void
@@ -36,18 +92,10 @@ XPMPMapRendering::tryCreateMapLayers(const char *mapIdentifier, int position)
         &LabelCallback,
         1,
         "Aircraft",
-        this
+        nullptr
     };
-    mAircraftLayers[position] = XPLMCreateMapLayer(&mapLayerData);
-}
-
-XPMPMapRendering::~XPMPMapRendering()
-{
-    for (int ml = 0; ml < ML_COUNT; ml++) {
-        if (mAircraftLayers[ml]) {
-            XPLMDestroyMapLayer(mAircraftLayers[ml]);
-            mAircraftLayers[ml] = nullptr;
-        }
+    if (gAircraftLayers[position] == nullptr) {
+        gAircraftLayers[position] = XPLMCreateMapLayer(&mapLayerData);
     }
 }
 
@@ -60,48 +108,12 @@ XPMPMapRendering::IconCallback(XPLMMapLayerID inLayer,
                                XPLMMapProjectionID projection,
                                void *inRefcon)
 {
-    auto *me = reinterpret_cast<XPMPMapRendering *>(inRefcon);
-
-    me->drawIcons(inLayer,
-                  inMapBoundsLeftTopRightBottom,
-                  zoomRatio,
-                  mapUnitsPerUserInterfaceUnit,
-                  mapStyle,
-                  projection);
-}
-
-void
-XPMPMapRendering::LabelCallback(XPLMMapLayerID inLayer,
-                                const float *inMapBoundsLeftTopRightBottom,
-                                float zoomRatio,
-                                float mapUnitsPerUserInterfaceUnit,
-                                XPLMMapStyle mapStyle,
-                                XPLMMapProjectionID projection,
-                                void *inRefcon)
-{
-    auto *me = reinterpret_cast<XPMPMapRendering *>(inRefcon);
-
-    me->drawLabels(inLayer,
-                   inMapBoundsLeftTopRightBottom,
-                   zoomRatio,
-                   mapUnitsPerUserInterfaceUnit,
-                   mapStyle,
-                   projection);
-}
-
-
-void
-XPMPMapRendering::drawIcons(XPLMMapLayerID inLayer,
-                            const float *inMapBoundsLeftTopRightBottom,
-                            float zoomRatio,
-                            float mapUnitsPerUserInterfaceUnit,
-                            XPLMMapStyle mapStyle,
-                            XPLMMapProjectionID projection)
-{
-    if (mMapSheetPath.empty()) {
+    if (gMapSheetPath.empty()) {
         return;
     }
+
     float mapX, mapY;
+
     for (const auto &aircraftPair: gPlanes) {
         XPLMMapProject(projection,
                        aircraftPair.second->mPosition.lat,
@@ -113,26 +125,47 @@ XPMPMapRendering::drawIcons(XPLMMapLayerID inLayer,
                              aircraftPair.second->mPosition.heading;
         iconRotation = fmod(iconRotation, 360.0f);
         XPLMDrawMapIconFromSheet(inLayer,
-                                 mMapSheetPath.c_str(),
-                                 mThisS, mThisT,
-                                 mSizeS, mSizeT,
+                                 gMapSheetPath.c_str(),
+                                 gThisS, gThisT,
+                                 gSizeS, gSizeT,
                                  mapX,
                                  mapY,
                                  xplm_MapOrientation_Map,
                                  iconRotation,
-                                 16);
+                                 gIconScale * mapUnitsPerUserInterfaceUnit);
     }
-
 }
 
 void
-XPMPMapRendering::drawLabels(XPLMMapLayerID inLayer,
-                             const float *inMapBoundsLeftTopRightBottom,
-                             float zoomRatio,
-                             float mapUnitsPerUserInterfaceUnit,
-                             XPLMMapStyle mapStyle,
-                             XPLMMapProjectionID projection)
+XPMPMapRendering::LabelCallback(XPLMMapLayerID inLayer,
+                                const float *inMapBoundsLeftTopRightBottom,
+                                float zoomRatio,
+                                float mapUnitsPerUserInterfaceUnit,
+                                XPLMMapStyle mapStyle,
+                                XPLMMapProjectionID projection,
+                                void *inRefcon)
 {
+    float offsetX = 0.0f;
+    float offsetY = 0.0f;
+    XPLMMapOrientation labelOrientation = xplm_MapOrientation_UI;
+
+    if (!gMapSheetPath.empty()) {
+        // calculate the offset.
+        /*
+         * BUG: Right now the XPLMMaps API doesn't give us a way to build a
+         *     transform to rotate the label offset to counteract the map
+         *     orientation when the map is running in heading up mode.
+         *
+         * because of this, we keep the labels in map orientation if we're
+         * rendering icons for now.
+         */
+        float linearOffset = (gIconScale * mapUnitsPerUserInterfaceUnit) / 1.5f;
+
+        offsetX = 0.0f;
+        offsetY = -linearOffset;
+        labelOrientation = xplm_MapOrientation_Map;
+    }
+
     float mapX, mapY;
     for (const auto &aircraftPair: gPlanes) {
         XPLMMapProject(projection,
@@ -142,9 +175,9 @@ XPMPMapRendering::drawLabels(XPLMMapLayerID inLayer,
                        &mapY);
         XPLMDrawMapLabel(inLayer,
                          aircraftPair.second->mPosition.label,
-                         mapX,
-                         mapY,
-                         xplm_MapOrientation_UI,
+                         mapX + offsetX,
+                         mapY + offsetY,
+                         labelOrientation,
                          0);
     }
 }

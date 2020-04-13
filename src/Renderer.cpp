@@ -15,7 +15,7 @@
 #include <XPLMCamera.h>
 
 #include "Renderer.h"
-
+#include "MapRendering.h"
 #include "XPMPMultiplayerVars.h"
 #include "TCASHack.h"
 
@@ -40,6 +40,7 @@ Renderer_Init()
     gTerrainProbe = XPLMCreateProbe(xplm_ProbeY);
     CullInfo::init();
     TCAS::Init();
+    XPMPMapRendering::Init();
 
 #if RENDERER_STATS
     XPLMRegisterDataAccessor("hack/renderer/planes", xplmType_Int, 0, GetRendererStat, NULL,
@@ -55,7 +56,6 @@ Renderer_Init()
                              NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
                              &gACFPlanes, NULL);
 #endif
-
 }
 
 double Render_FullPlaneDistance = 0.0;

@@ -497,6 +497,19 @@ int			XPMPModelMatchQuality(
  */
 void		XPMPDumpOneCycle(void);
 
+/************************************************************************************
+ * MAP RENDERING API
+ ************************************************************************************/
+
+/** XPMPSetMapIcon configures the map renderer to use the specified icon from a png
+ * icon sheet.  This uses the XPLMDrawMapIconFromSheet internally, so your s/t/ds/dt
+ * should match those.  iconSize is the size in meters your icons should aim to be on
+ * the maps.
+ *
+ * Unless this is called, only labels will be rendered.
+ */
+void XPMPSetMapIcon(const char *spritePng, int s, int t, int ds, int dt, float iconSize);
+
 #ifdef __cplusplus
 }
 #endif
