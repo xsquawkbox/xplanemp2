@@ -38,6 +38,8 @@ add_library(xplanemp
 	src/CSL.h
 	src/CullInfo.cpp
 	src/CullInfo.h
+	src/MapRendering.cpp
+	src/MapRendering.h
 	src/PlaneType.cpp
 	src/PlaneType.h
 	src/Renderer.cpp
@@ -47,7 +49,7 @@ add_library(xplanemp
 	src/XPMPMultiplayer.cpp
 	src/CSLLibrary.cpp
 	src/CSLLibrary.h
-        src/XPMPMultiplayerVars.cpp
+	src/XPMPMultiplayerVars.cpp
 	src/XPMPMultiplayerVars.h
 	src/XPMPPlane.cpp
 	src/XPMPPlane.h

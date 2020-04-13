@@ -9,6 +9,8 @@
 #include "PlaneType.h"
 #include "CullInfo.h"
 
+class XPMPMapRendering;
+
 class XPMPPlane {
 private:
 	// world state
@@ -23,6 +25,7 @@ private:
 	int					mMatchQuality;
 
 	friend void Render_PrepLists();
+	friend class XPMPMapRendering;
 public:
 	XPMPPlane();
 	virtual ~XPMPPlane();
