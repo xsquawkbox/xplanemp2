@@ -26,6 +26,7 @@
 #include <cmath>
 
 #ifndef M_PI
+#warning M_PI is not being defiend by your cmath header.  Fix your compiler defines.
 #define M_PI 3.141592653589793
 #endif
 
@@ -166,37 +167,33 @@ XPMPMapRendering::LabelCallback(XPLMMapLayerID inLayer,
 {
     float offsetX = 0.0f;
     float offsetY = 0.0f;
-    XPLMMapOrientation labelOrientation = xplm_MapOrientation_UI;
-
+    float linearOffset = 0.0f;
+    float mapX, mapY;
+    double rotation;
     if (!gMapSheetPath.empty()) {
         // calculate the offset.
-        /*
-         * BUG: Right now the XPLMMaps API doesn't give us a way to build a
-         *     transform to rotate the label offset to counteract the map
-         *     orientation when the map is running in heading up mode.
-         *
-         * because of this, we keep the labels in map orientation if we're
-         * rendering icons for now.
-         */
-        float linearOffset = (gIconScale * mapUnitsPerUserInterfaceUnit) / 1.5f;
-
-        offsetX = 0.0f;
-        offsetY = -linearOffset;
-        labelOrientation = xplm_MapOrientation_Map;
+        linearOffset = -(gIconScale * mapUnitsPerUserInterfaceUnit);
     }
 
-    float mapX, mapY;
     for (const auto &aircraftPair: gPlanes) {
         XPLMMapProject(projection,
                        aircraftPair.second->mPosition.lat,
                        aircraftPair.second->mPosition.lon,
                        &mapX,
                        &mapY);
+        // rotation needs to be in radians for the sin/cos
+        if (linearOffset != 0.0f) {
+            rotation =
+                XPLMMapGetNorthHeading(projection, mapX, mapY) * M_PI / 180.0;
+
+            offsetX = static_cast<float>(-sin(rotation) * linearOffset);
+            offsetY = static_cast<float>(cos(rotation) * linearOffset);
+        }
         XPLMDrawMapLabel(inLayer,
                          aircraftPair.second->mPosition.label,
                          mapX + offsetX,
                          mapY + offsetY,
-                         labelOrientation,
+                         xplm_MapOrientation_UI,
                          0);
     }
 }
