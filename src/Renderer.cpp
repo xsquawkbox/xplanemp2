@@ -54,7 +54,6 @@ Renderer_Init()
     gTerrainProbe = XPLMCreateProbe(xplm_ProbeY);
     CullInfo::init();
     TCAS::Init();
-    XPMPMapRendering::Init();
 
 #if RENDERER_STATS
     XPLMRegisterDataAccessor("hack/renderer/planes", xplmType_Int, 0, GetRendererStat, NULL,
@@ -77,6 +76,14 @@ double Render_FullPlaneDistance = 0.0;
 void
 Render_PrepLists()
 {
+    // guard against multiple calls per frame.
+    static int rendLastCycle = -1;
+    int thisCycle = XPLMGetCycleNumber();
+    if (thisCycle == rendLastCycle) {
+        return;
+    }
+    rendLastCycle = thisCycle;
+
     TCAS::cleanFrame();
 
     if (gPlanes.empty()) {
@@ -116,33 +123,15 @@ XPMP_PrepListHook(float inElapsedSinceLastCall,
                   int inCounter,
                   void *inRefcon)
 {
-    int thisCycle = XPLMGetCycleNumber();
-    if (thisCycle != rendLastCycle) {
-        Render_PrepLists();
-        rendLastCycle = thisCycle;
-    }
+    Render_PrepLists();
 
     return -1.0f;
-}
-
-static int
-XPMP_RenderCallback_Aircraft(XPLMDrawingPhase, int, void *)
-{
-    // if we haven't yet done our rendering setup, do it now.
-    int thisCycle = XPLMGetCycleNumber();
-    if (thisCycle != rendLastCycle) {
-        Render_PrepLists();
-        rendLastCycle = thisCycle;
-    }
-    return 1;
 }
 
 void
 Renderer_Attach_Callbacks()
 {
     XPLMRegisterFlightLoopCallback(&XPMP_PrepListHook, -1, nullptr);
-    XPLMRegisterDrawCallback(&XPMP_RenderCallback_Aircraft,
-                             xplm_Phase_Airplanes, 0, nullptr);
 
     TCAS::EnableHooks();
 }
@@ -153,7 +142,4 @@ Renderer_Detach_Callbacks()
     TCAS::DisableHooks();
 
     XPLMUnregisterFlightLoopCallback(&XPMP_PrepListHook, nullptr);
-
-    XPLMUnregisterDrawCallback(&XPMP_RenderCallback_Aircraft,
-                               xplm_Phase_Airplanes, 0, nullptr);
 }

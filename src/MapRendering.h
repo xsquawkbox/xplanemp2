@@ -30,7 +30,7 @@
 
 class XPMPMapRendering {
 public:
-    static void Init();
+    static void Start();
     static void Shutdown();
 
     static void ConfigureIcon(const std::string &iconSheet,

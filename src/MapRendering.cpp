@@ -47,7 +47,7 @@ int             XPMPMapRendering::gSizeT = 1;
 float           XPMPMapRendering::gIconScale = 30.0f;
 
 void
-XPMPMapRendering::Init()
+XPMPMapRendering::Start()
 {
     // bind the map creation callback
     XPLMRegisterMapCreationHook(&MapCreatedCallback, nullptr);
@@ -167,12 +167,19 @@ XPMPMapRendering::LabelCallback(XPLMMapLayerID inLayer,
 {
     float offsetX = 0.0f;
     float offsetY = 0.0f;
-    float linearOffset = 0.0f;
     float mapX, mapY;
-    double rotation;
     if (!gMapSheetPath.empty()) {
         // calculate the offset.
-        linearOffset = -(gIconScale * mapUnitsPerUserInterfaceUnit);
+        const float midX = (inMapBoundsLeftTopRightBottom[0] +
+                            inMapBoundsLeftTopRightBottom[2]) / 2.0f;
+        const float midY = (inMapBoundsLeftTopRightBottom[1] +
+                            inMapBoundsLeftTopRightBottom[3]) / 2.0f;
+        const float linearOffset = -(gIconScale * mapUnitsPerUserInterfaceUnit);
+        // rotation needs to be in radians for the sin/cos
+        const float rotation =
+            XPLMMapGetNorthHeading(projection, midX, midY) * M_PI / 180.0;
+        offsetX = static_cast<float>(-sin(rotation) * linearOffset);
+        offsetY = static_cast<float>(cos(rotation) * linearOffset);
     }
 
     for (const auto &aircraftPair: gPlanes) {
@@ -181,14 +188,6 @@ XPMPMapRendering::LabelCallback(XPLMMapLayerID inLayer,
                        aircraftPair.second->mPosition.lon,
                        &mapX,
                        &mapY);
-        // rotation needs to be in radians for the sin/cos
-        if (linearOffset != 0.0f) {
-            rotation =
-                XPLMMapGetNorthHeading(projection, mapX, mapY) * M_PI / 180.0;
-
-            offsetX = static_cast<float>(-sin(rotation) * linearOffset);
-            offsetY = static_cast<float>(cos(rotation) * linearOffset);
-        }
         XPLMDrawMapLabel(inLayer,
                          aircraftPair.second->mPosition.label,
                          mapX + offsetX,

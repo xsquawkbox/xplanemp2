@@ -34,13 +34,9 @@
 #include <utility>
 
 #include <XPLMUtilities.h>
-#include <XPLMProcessing.h>
 #include <XPLMPlanes.h>
-#include <XPLMDataAccess.h>
-#include <XPLMDisplay.h>
-#include <XPLMPlugin.h>
-#include <XPLMUtilities.h>
 #include <XPMPMultiplayer.h>
+#include "PlanesHandoff.h"
 
 #include "XPMPMultiplayer.h"
 #include "XPMPMultiplayerVars.h"
@@ -121,22 +117,23 @@ XPMPMultiplayerCleanup()
     Renderer_Detach_Callbacks();
 }
 
+static void MPPlanesAcquired(void *refcon)
+{
+    TCAS::EnableHooks();
+}
+
+static void MPPlanesReleased(void *refcon)
+{
+    TCAS::DisableHooks();
+}
 
 const char *
 XPMPMultiplayerEnable()
 {
-    // Attempt to grab multiplayer planes, then analyze.
-    int result = XPLMAcquirePlanes(nullptr, nullptr, nullptr);
-    if (result) {
-        XPLMSetActiveAircraftCount(1);
-    } else {
-        XPLMDebugString("WARNING: " XPMP_CLIENT_LONGNAME " did not acquire multiplayer planes!!\n");
-    }
-    XPMPMapRendering::Init();
-
+    Planes_SafeAcquire(&MPPlanesAcquired, &MPPlanesReleased, nullptr, 0);
     // put in the rendering hook now
-    //Renderer_Attach_Callbacks();
-
+    Renderer_Attach_Callbacks();
+    XPMPMapRendering::Start();
     return "";
 }
 
@@ -144,9 +141,9 @@ void
 XPMPMultiplayerDisable(void)
 {
     XPMPMapRendering::Shutdown();
-    gPlanes.clear();
     Renderer_Detach_Callbacks();
-    XPLMReleasePlanes();
+    Planes_SafeRelease();
+    gPlanes.clear();
 }
 
 void

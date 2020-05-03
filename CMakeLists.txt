@@ -32,6 +32,8 @@ add_library(xplanemp
 	src/CullInfo.h
 	src/MapRendering.cpp
 	src/MapRendering.h
+	src/PlanesHandoff.c
+	include/PlanesHandoff.h
 	src/PlaneType.cpp
 	src/PlaneType.h
 	src/Renderer.cpp
