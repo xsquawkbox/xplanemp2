@@ -26,6 +26,8 @@ endif()
 
 add_library(xplanemp
 	${XPMP_PLATFORM_SOURCES}
+	src/AplFSUtil.cpp
+	src/AplFSUtil.h
 	src/CSL.cpp
 	src/CSL.h
 	src/CullInfo.cpp
@@ -57,16 +59,19 @@ add_library(xplanemp
 	src/obj8/Obj8Attachment.h
 	src/obj8/Obj8InstanceData.cpp
 	src/obj8/Obj8InstanceData.h
-	)
+)
 target_include_directories(xplanemp
-	PUBLIC 
+	PUBLIC
 		${XPSDK_INCLUDE_DIRS}
 		${CMAKE_CURRENT_SOURCE_DIR}/include
-		${CMAKE_CURRENT_SOURCE_DIR}/src)
+		${CMAKE_CURRENT_SOURCE_DIR}/src
+)
 target_link_libraries(xplanemp
-	PRIVATE ${XPSDK_XPLM_LIBRARIES}
-	${PNG_LIBRARY}
-	${XPMP_PLATFORM_LIBRARIES})
+	PRIVATE
+		${XPSDK_XPLM_LIBRARIES}
+		${PNG_LIBRARY}
+		${XPMP_PLATFORM_LIBRARIES}
+)
 target_compile_definitions(xplanemp
 		PRIVATE ${XPMP_DEFINES} XPLM200=1 XPLM210=1 XPLM300=1)
 set_property(TARGET xplanemp PROPERTY CXX_STANDARD_REQUIRED 11)
