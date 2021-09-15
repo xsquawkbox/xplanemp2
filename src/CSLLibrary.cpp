@@ -265,6 +265,12 @@ ParseVertOffsetCommand(
 		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: VERT_OFFSET command takes 1 argument.\n";
 		return false;
 	}
+	
+	if (package.planes.empty()) {
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " ERROR: Got VERT_OFFSET command outside of plane definition\n";
+		return false;
+	}
+	
 	package.planes.back()->setVerticalOffset(VerticalOffsetSource::Model, stof(tokens[1].c_str()));
 	return true;
 }
@@ -277,6 +283,11 @@ ParseHasGearCommand(
 	if (tokens.size() != 2 || (tokens[1] != "YES" && tokens[1] != "NO")) {
 		XPLMDump(path, lineNum, line)
 			<< XPMP_CLIENT_NAME " WARNING: HASGEAR takes one argument that must be YES or NO.\n";
+		return false;
+	}
+	
+	if (package.planes.empty()) {
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " ERROR: Got HASGEAR command outside of plane definition\n";
 		return false;
 	}
 
@@ -306,6 +317,11 @@ ParseIcaoCommand(
 		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: ICAO command takes 1 argument.\n";
 		return false;
 	}
+	
+	if (package.planes.empty()) {
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " ERROR: Got ICAO command outside of plane definition\n";
+		return false;
+	}
 
 	std::string icao = tokens[1];
 	package.planes.back()->setICAO(icao);
@@ -331,7 +347,11 @@ ParseAirlineCommand(
 		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: AIRLINE command takes two arguments.\n";
 		return false;
 	}
-
+	
+	if (package.planes.empty()) {
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " ERROR: Got AIRLINE command outside of plane definition\n";
+		return false;
+	}
 
 	std::string icao = tokens[1];
 	std::string airline = tokens[2];
@@ -364,6 +384,11 @@ ParseLiveryCommand(
 	// LIVERY <code> <airline> <livery>
 	if (tokens.size() != 4) {
 		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " WARNING: LIVERY command takes two arguments.\n";
+		return false;
+	}
+	
+	if (package.planes.empty()) {
+		XPLMDump(path, lineNum, line) << XPMP_CLIENT_NAME " ERROR: Got LIVERY command outside of plane definition\n";
 		return false;
 	}
 
